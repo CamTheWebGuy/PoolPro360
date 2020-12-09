@@ -7,11 +7,16 @@ import Landing from './components/landing/Landing';
 
 import Login from './components/Layout/Login';
 import Pricing from './components/Layout/Pricing';
+import BookingForms from './components/Layout/BookingForms';
+import FormCreator from './components/Layout/FormCreator';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './App.css';
+// import 'bootstrap/dist/css/bootstrap.min.css';
+
+import 'jquery/dist/jquery.min.js';
+import 'bootstrap/dist/js/bootstrap.min.js';
 
 import './argon.css';
+import './App.css';
 
 function App() {
   return (
@@ -23,6 +28,8 @@ function App() {
             <Route exact path='/pricing' component={Pricing} />
             <Route exact path='/login' component={Login} />
             <Route exact path='/dashboard' component={Dashboard} />
+            <Route exact path='/booking-forms' component={BookingForms} />
+            <Route exact path='/booking-forms/add' component={FormCreator} />
           </Switch>
         </Fragment>
       </Router>
