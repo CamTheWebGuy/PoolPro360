@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import uuid from 'uuid/v4';
 import styled from 'styled-components';
@@ -15,6 +15,7 @@ import {
 } from 'reactstrap';
 
 import FormItemController from './FormItemController';
+import FormSettingsController from './FormSettingsController';
 
 // a little function to help us with reordering the result
 const reorder = (list, startIndex, endIndex) => {
@@ -197,6 +198,8 @@ export default class FormCreator extends Component {
     form: []
   };
 
+  editPictureList(itemData) {}
+
   editPictureField(itemId, label, itemData) {
     const formState = this.state.form;
     let foundIndex = formState.findIndex(e => e.id == itemId);
@@ -270,101 +273,110 @@ export default class FormCreator extends Component {
   render() {
     // console.log(this.state.form);
     return (
-      <DragDropContext onDragEnd={this.onDragEnd}>
-        <Droppable droppableId='ITEMS' isDropDisabled={true}>
-          {(provided, snapshot) => (
-            <Kiosk
-              ref={provided.innerRef}
-              isDraggingOver={snapshot.isDraggingOver}
-              className='builder__sidebar'
-            >
-              <h3 className='text-center text-white'>Control Panel</h3>
-              {ITEMS.map((item, index) => (
-                <Draggable key={item.id} draggableId={item.id} index={index}>
-                  {(provided, snapshot) => (
-                    <React.Fragment>
-                      <Item
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        isDragging={snapshot.isDragging}
-                        style={provided.draggableProps.style}
-                        className='text-center creator__block'
-                      >
-                        <div className='width-100'>
-                          <i className={`fas ${item.icon}`}></i>
-                          <h4 className='text-white fweight-normal'>
-                            {item.content}
-                          </h4>
-                        </div>
-                      </Item>
-                      {snapshot.isDragging && (
-                        <Clone>
-                          {' '}
-                          <div className='width-100 text-center creator__block'>
+      <Fragment>
+        <FormSettingsController />
+        <DragDropContext onDragEnd={this.onDragEnd}>
+          <Droppable droppableId='ITEMS' isDropDisabled={true}>
+            {(provided, snapshot) => (
+              <Kiosk
+                ref={provided.innerRef}
+                isDraggingOver={snapshot.isDraggingOver}
+                className='builder__sidebar'
+              >
+                <h3 className='text-center text-white'>Control Panel</h3>
+                {ITEMS.map((item, index) => (
+                  <Draggable key={item.id} draggableId={item.id} index={index}>
+                    {(provided, snapshot) => (
+                      <React.Fragment>
+                        <Item
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          isDragging={snapshot.isDragging}
+                          style={provided.draggableProps.style}
+                          className='text-center creator__block'
+                        >
+                          <div className='width-100'>
                             <i className={`fas ${item.icon}`}></i>
                             <h4 className='text-white fweight-normal'>
                               {item.content}
                             </h4>
                           </div>
-                        </Clone>
-                      )}
-                    </React.Fragment>
-                  )}
-                </Draggable>
-              ))}
+                        </Item>
+                        {snapshot.isDragging && (
+                          <Clone>
+                            {' '}
+                            <div className='width-100 text-center creator__block'>
+                              <i className={`fas ${item.icon}`}></i>
+                              <h4 className='text-white fweight-normal'>
+                                {item.content}
+                              </h4>
+                            </div>
+                          </Clone>
+                        )}
+                      </React.Fragment>
+                    )}
+                  </Draggable>
+                ))}
 
-              {provided.placeholder}
-            </Kiosk>
-          )}
-        </Droppable>
-        <Content>
-          {Object.keys(this.state).map((list, i) => (
-            <Droppable key={list} droppableId={list}>
-              {(provided, snapshot) => (
-                <Container
-                  ref={provided.innerRef}
-                  isDraggingOver={snapshot.isDraggingOver}
-                >
-                  <div className='text-center'>
-                    <i className='fas fa-plus-square'></i>
-                    <p>
-                      Drag and drop a item from the control panel to get
-                      started.
-                    </p>
-                  </div>
+                {provided.placeholder}
+              </Kiosk>
+            )}
+          </Droppable>
+          <Content>
+            {Object.keys(this.state).map((list, i) => (
+              <Droppable key={list} droppableId={list}>
+                {(provided, snapshot) => (
+                  <Container
+                    ref={provided.innerRef}
+                    isDraggingOver={snapshot.isDraggingOver}
+                  >
+                    <div className='text-center'>
+                      <i className='fas fa-plus-square'></i>
+                      <p>
+                        Drag and drop a item from the control panel to get
+                        started.
+                      </p>
+                    </div>
 
-                  {this.state[list].length
-                    ? this.state[list].map((item, index) => (
-                        <Draggable
-                          key={item.id}
-                          draggableId={item.id}
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <Item
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              isDragging={snapshot.isDragging}
-                              style={provided.draggableProps.style}
-                            >
-                              <Handle {...provided.dragHandleProps}>
-                                <svg width='24' height='24' viewBox='0 0 24 24'>
-                                  <path
-                                    fill='currentColor'
-                                    d='M3,15H21V13H3V15M3,19H21V17H3V19M3,11H21V9H3V11M3,5V7H21V5H3Z'
-                                  />
-                                </svg>
-                              </Handle>
-                              <FormItemController
-                                item={item}
-                                deleteItem={this.deleteItem.bind(this)}
-                                editItem={this.editItem.bind(this)}
-                                editPictureField={this.editPictureField.bind(
-                                  this
-                                )}
-                              />
-                              {/* {item.content}
+                    {this.state[list].length
+                      ? this.state[list].map((item, index) => (
+                          <Draggable
+                            key={item.id}
+                            draggableId={item.id}
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
+                              <Item
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                isDragging={snapshot.isDragging}
+                                style={provided.draggableProps.style}
+                              >
+                                <Handle {...provided.dragHandleProps}>
+                                  <svg
+                                    width='24'
+                                    height='24'
+                                    viewBox='0 0 24 24'
+                                  >
+                                    <path
+                                      fill='currentColor'
+                                      d='M3,15H21V13H3V15M3,19H21V17H3V19M3,11H21V9H3V11M3,5V7H21V5H3Z'
+                                    />
+                                  </svg>
+                                </Handle>
+                                <FormItemController
+                                  item={item}
+                                  deleteItem={this.deleteItem.bind(this)}
+                                  editItem={this.editItem.bind(this)}
+                                  editPictureField={this.editPictureField.bind(
+                                    this
+                                  )}
+                                  editPictureList={this.editPictureList.bind(
+                                    this
+                                  )}
+                                />
+                                {/* {item.content}
                               
                               <div className='mgn-left-30'>
                                 <Button size='sm' color='info'>
@@ -378,18 +390,21 @@ export default class FormCreator extends Component {
                                   Delete
                                 </Button>
                               </div> */}
-                            </Item>
-                          )}
-                        </Draggable>
-                      ))
-                    : !provided.placeholder && <Notice>Drop items here</Notice>}
-                  {provided.placeholder}
-                </Container>
-              )}
-            </Droppable>
-          ))}
-        </Content>
-      </DragDropContext>
+                              </Item>
+                            )}
+                          </Draggable>
+                        ))
+                      : !provided.placeholder && (
+                          <Notice>Drop items here</Notice>
+                        )}
+                    {provided.placeholder}
+                  </Container>
+                )}
+              </Droppable>
+            ))}
+          </Content>
+        </DragDropContext>
+      </Fragment>
     );
   }
 }

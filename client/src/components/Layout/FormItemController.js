@@ -1,5 +1,7 @@
 import React, { Fragment, useState } from 'react';
 
+import uuid from 'uuid/v4';
+
 import {
   Button,
   Row,
@@ -20,9 +22,14 @@ const FormItemController = ({
   item,
   deleteItem,
   editItem,
-  editPictureField
+  editPictureField,
+  editPictureList
 }) => {
   const [modal, setModal] = useState(false);
+  const [isHovered, setHover] = useState({
+    id: '',
+    isActive: false
+  });
 
   const [formData, setFormData] = useState({
     label: item.label,
@@ -33,6 +40,23 @@ const FormItemController = ({
     label: item.label,
     items: item.items
   });
+
+  const onPictureAddOption = () => {
+    const itemsList = pictureData.items;
+
+    const sliced = itemsList.slice();
+
+    const newOption = {
+      id: uuid(),
+      label: 'New Option',
+      priceChange: 'increase',
+      amount: '0'
+    };
+
+    const newList = [...sliced, newOption];
+
+    setPictureData({ ...pictureData, items: newList });
+  };
 
   const onPictureOptionLabelChange = (e, itemId) => {
     const itemsList = pictureData.items;
@@ -49,6 +73,30 @@ const FormItemController = ({
   const onPictureLabelChange = e =>
     setPictureData({ ...pictureData, [e.target.name]: e.target.value });
 
+  const onPicturePriceChange = (e, itemId) => {
+    const itemsList = pictureData.items;
+
+    const sliced = itemsList.slice();
+
+    let foundIndex = sliced.findIndex(e => e.id == itemId);
+
+    sliced[foundIndex].priceChange = e.target.value;
+
+    setPictureData({ ...pictureData, items: sliced });
+  };
+
+  const onPictureAmountChange = (e, itemId) => {
+    const itemsList = pictureData.items;
+
+    const sliced = itemsList.slice();
+
+    let foundIndex = sliced.findIndex(e => e.id == itemId);
+
+    sliced[foundIndex].amount = e.target.value;
+
+    setPictureData({ ...pictureData, items: sliced });
+  };
+
   const onChange = e =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -62,6 +110,12 @@ const FormItemController = ({
     setModal(!modal);
   };
 
+  const hoverController = (value, option) => {
+    setHover({
+      isActive: value,
+      id: option.id
+    });
+  };
   return (
     <Fragment>
       {item.content === 'Picture Choice' ? pictureData.label : formData.label}
@@ -96,19 +150,57 @@ const FormItemController = ({
                 </FormGroup>
 
                 <FormGroup>
+                  <Label>Options:</Label>
                   {item.items.length >= 2 && (
                     <Fragment>
                       {pictureData.items.map((option, index) => (
                         <Row key={index} className='mgn-top-10'>
                           <Col md='4'>
-                            <img
-                              className='width-100'
-                              src='https://lh3.googleusercontent.com/proxy/y-JA2ABFXKrppSjtsqdMs069O_zDy8H6NRvJvOm3mzORdANpNXztfOpcff-HozCWNAzjQg21CwrfbVtvZIZk3lpziCOBjQ3x97d1QWpr'
-                              alt=''
-                            />
+                            <div
+                              className='imageContainer'
+                              onMouseOver={() => hoverController(true, option)}
+                              onMouseLeave={() =>
+                                hoverController(false, option)
+                              }
+                            >
+                              <img
+                                className='width-100'
+                                src='https://pbjc.com/wp-content/themes/pbjc/assets/images/home/021.jpg'
+                                alt=''
+                              />
+
+                              {isHovered.isActive &&
+                                isHovered.id === option.id && (
+                                  <Fragment>
+                                    <div className='overlay'></div>
+                                    <Button
+                                      size='sm'
+                                      style={{
+                                        position: 'absolute',
+                                        top: '5px',
+                                        right: '20px'
+                                      }}
+                                      color='primary'
+                                    >
+                                      Change Image
+                                    </Button>
+                                    <Button
+                                      size='sm'
+                                      style={{
+                                        position: 'absolute',
+                                        top: '40px',
+                                        right: '30px'
+                                      }}
+                                      color='danger'
+                                    >
+                                      Delete Option
+                                    </Button>
+                                  </Fragment>
+                                )}
+                            </div>
                           </Col>
                           <Col md='4'>
-                            <Label for='placeholderField'>Label</Label>
+                            <Label for='label'>Label</Label>
                             <Input
                               type='text'
                               placeholder='Option...'
@@ -120,13 +212,16 @@ const FormItemController = ({
                             />
                           </Col>
                           <Col md='4'>
-                            <Label for='placeholderField'>Price Change</Label>
+                            <Label for='select'>Price Change</Label>
                             <Row>
                               <Col>
                                 <Input
                                   type='select'
                                   name='select'
                                   className='pr-0'
+                                  onChange={e =>
+                                    onPicturePriceChange(e, option.id)
+                                  }
                                 >
                                   <option
                                     value='increase'
@@ -147,7 +242,13 @@ const FormItemController = ({
                                 </Input>
                               </Col>
                               <Col>
-                                <Input type='text' value={option.amount} />
+                                <Input
+                                  type='text'
+                                  value={option.amount}
+                                  onChange={e =>
+                                    onPictureAmountChange(e, option.id)
+                                  }
+                                />
                               </Col>
                             </Row>
                           </Col>
@@ -159,6 +260,7 @@ const FormItemController = ({
                     className='btn-icon btn-3 mgn-top-10'
                     color='primary'
                     type='button'
+                    onClick={e => onPictureAddOption()}
                     block
                   >
                     <span className='btn-inner--icon'>
