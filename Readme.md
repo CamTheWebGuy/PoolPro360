@@ -9,7 +9,7 @@ Features/functions listed below are subject to change as time goes on, this is b
 
 
 ## Backend:
-- [ ] Login/Register Routes & Verification
+- [x] Login/Register Routes & Verification
 - [ ] User Authorization & Admin Check
 - [ ] Add/Update Customers
 - [ ] Add/Update Users
@@ -26,12 +26,12 @@ Features/functions listed below are subject to change as time goes on, this is b
 - [x] Dashboard
 - [x] Export Customers List to CSV
 - [x] Chart.js Setup
-- [ ] Redux Integretion
-- [ ] Login/Logout Functionality
-- [ ] Route Protection
+- [x] Redux Integretion
+- [x] Login/Logout Functionality
+- [x] Route Protection
+- [x] Customer List Page
 - [ ] Form Builder System (Working On Now)
 - [ ] Customer Info Page
-- [ ] Customer List Page
 - [ ] Profile/Settings Page
 - [ ] Work Orders Page
 - [ ] Payments/Billing Page
