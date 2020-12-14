@@ -6,15 +6,6 @@ import { Scrollbars } from 'react-custom-scrollbars';
 
 import logo from '../../img/brand/blue.png';
 
-import {
-  Collapse,
-  NavbarBrand,
-  Navbar,
-  NavItem,
-  NavLink,
-  Nav
-} from 'reactstrap';
-
 import $ from 'jquery';
 
 $(document).ready(function() {
@@ -28,7 +19,7 @@ const Sidebar = props => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (sidebarOpen) {
-    if (window.innerWidth > 1200) {
+    if (window.innerWidth > 1199) {
       document.body.classList.add('g-sidenav-pinned');
       document.body.classList.add('g-sidenav-show');
     }

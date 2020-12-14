@@ -1,12 +1,39 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
+
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+
+import { Link } from 'react-router-dom';
+import { logout } from '../../actions/auth';
 
 import userImg from '../../img/theme/team-1.jpg';
 import userImg2 from '../../img/theme/team-2.jpg';
 import userImg3 from '../../img/theme/team-3.jpg';
-import userImg4 from '../../img/theme/team-4.jpg';
-import userImg5 from '../../img/theme/team-5.jpg';
 
-const Dashnav = () => {
+import $ from 'jquery';
+
+if (window.innerWidth < 1200) {
+  $('body').click(function() {
+    document.body.classList.remove('g-sidenav-pinned');
+    document.body.classList.remove('g-sidenav-show');
+  });
+}
+
+const Dashnav = ({ logout }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navHandler = e => {
+    setSidebarOpen(!sidebarOpen);
+    e.stopPropagation();
+    if (sidebarOpen) {
+      document.body.classList.add('g-sidenav-pinned');
+      document.body.classList.add('g-sidenav-show');
+    } else {
+      document.body.classList.remove('g-sidenav-pinned');
+      document.body.classList.remove('g-sidenav-show');
+    }
+  };
+
   return (
     <Fragment>
       <nav className='navbar navbar-top navbar-expand navbar-dark bg-primary border-bottom'>
@@ -43,7 +70,7 @@ const Dashnav = () => {
             </form>
             {/* Navbar links */}
             <ul className='navbar-nav align-items-center  ml-md-auto '>
-              <li className='nav-item d-xl-none'>
+              <li className='nav-item d-xl-none' onClick={e => navHandler(e)}>
                 {/* Sidenav toggler */}
                 <div
                   className='pr-3 sidenav-toggler sidenav-toggler-dark'
@@ -333,10 +360,10 @@ const Dashnav = () => {
                     <span>Support</span>
                   </a>
                   <div className='dropdown-divider' />
-                  <a href='#!' className='dropdown-item'>
+                  <Link to='#!' className='dropdown-item' onClick={logout}>
                     <i className='ni ni-user-run' />
                     <span>Logout</span>
-                  </a>
+                  </Link>
                 </div>
               </li>
             </ul>
@@ -347,4 +374,13 @@ const Dashnav = () => {
   );
 };
 
-export default Dashnav;
+Dashnav.propTypes = {
+  logout: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired
+};
+
+const mapStateToProps = state => ({
+  auth: state.auth
+});
+
+export default connect(mapStateToProps, { logout })(Dashnav);

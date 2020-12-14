@@ -23,7 +23,6 @@ const Login = ({ login, isAuthenticated }) => {
   };
 
   const onSubmit = async e => {
-    console.log('FIRED');
     e.preventDefault();
     login(email, password);
   };

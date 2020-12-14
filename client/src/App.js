@@ -10,6 +10,10 @@ import Pricing from './components/Layout/Pricing';
 import BookingForms from './components/Layout/BookingForms';
 import FormCreator from './components/Layout/FormCreator';
 
+import Customers from './components/Layout/Customers';
+
+import PrivateRoute from './components/routing/PrivateRoute';
+
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 import 'jquery/dist/jquery.min.js';
@@ -40,9 +44,18 @@ function App() {
             <Route exact path='/' component={Landing} />
             <Route exact path='/pricing' component={Pricing} />
             <Route exact path='/login' component={Login} />
-            <Route exact path='/dashboard' component={Dashboard} />
-            <Route exact path='/booking-forms' component={BookingForms} />
-            <Route exact path='/booking-forms/add' component={FormCreator} />
+            <PrivateRoute exact path='/dashboard' component={Dashboard} />
+            <PrivateRoute exact path='/customers' component={Customers} />
+            <PrivateRoute
+              exact
+              path='/booking-forms'
+              component={BookingForms}
+            />
+            <PrivateRoute
+              exact
+              path='/booking-forms/add'
+              component={FormCreator}
+            />
           </Switch>
         </Fragment>
       </Router>
