@@ -17,13 +17,15 @@ import {
   Input,
   FormText
 } from 'reactstrap';
+import { useEffect } from 'react';
 
 const FormItemController = ({
   item,
   deleteItem,
   editItem,
   editPictureField,
-  editPictureList
+  editPictureList,
+  deletePictureOption
 }) => {
   const [modal, setModal] = useState(false);
   const [isHovered, setHover] = useState({
@@ -56,6 +58,12 @@ const FormItemController = ({
     const newList = [...sliced, newOption];
 
     setPictureData({ ...pictureData, items: newList });
+
+    setPictureData(state => {
+      editPictureField(item.id, state.label, state.items);
+
+      return state;
+    });
   };
 
   const onPictureOptionLabelChange = (e, itemId) => {
@@ -116,6 +124,11 @@ const FormItemController = ({
       id: option.id
     });
   };
+
+  const onOptionDelete = (fieldId, optionId) => {
+    deletePictureOption(fieldId, optionId);
+  };
+
   return (
     <Fragment>
       {item.content === 'Picture Choice' ? pictureData.label : formData.label}
@@ -192,6 +205,9 @@ const FormItemController = ({
                                         right: '30px'
                                       }}
                                       color='danger'
+                                      onClick={e =>
+                                        onOptionDelete(item.id, option.id)
+                                      }
                                     >
                                       Delete Option
                                     </Button>
@@ -260,7 +276,7 @@ const FormItemController = ({
                     className='btn-icon btn-3 mgn-top-10'
                     color='primary'
                     type='button'
-                    onClick={e => onPictureAddOption()}
+                    onClick={e => onPictureAddOption(item.id)}
                     block
                   >
                     <span className='btn-inner--icon'>

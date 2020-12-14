@@ -18,9 +18,22 @@ import 'bootstrap/dist/js/bootstrap.min.js';
 import './argon.css';
 import './App.css';
 
+// Redux
+import { Provider } from 'react-redux';
+import store from './store';
+import { loadUser } from './actions/auth';
+import setAuthToken from './utils/setAuthToken';
+
+if (localStorage.token) {
+  setAuthToken(localStorage.token);
+}
+
 function App() {
+  useEffect(() => {
+    store.dispatch(loadUser());
+  }, []);
   return (
-    <div className='App'>
+    <Provider store={store}>
       <Router>
         <Fragment>
           <Switch>
@@ -33,7 +46,7 @@ function App() {
           </Switch>
         </Fragment>
       </Router>
-    </div>
+    </Provider>
   );
 }
 

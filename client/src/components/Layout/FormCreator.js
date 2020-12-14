@@ -198,14 +198,18 @@ export default class FormCreator extends Component {
     form: []
   };
 
-  editPictureList(itemData) {}
-
   editPictureField(itemId, label, itemData) {
     const formState = this.state.form;
     let foundIndex = formState.findIndex(e => e.id == itemId);
 
     formState[foundIndex].label = label;
     formState[foundIndex].items = itemData;
+
+    //console.log(formState);
+
+    this.setState({ form: formState });
+
+    console.log(this.state.form);
   }
 
   editItem(itemId, label, placeholder) {
@@ -215,6 +219,28 @@ export default class FormCreator extends Component {
 
     formState[foundIndex].label = label;
     formState[foundIndex].placeholder = placeholder;
+
+    // Never saved to state?
+  }
+
+  deletePictureOption(itemId, optionId) {
+    let formState = this.state.form.slice();
+
+    let foundIndex = formState.findIndex(e => e.id == itemId);
+
+    let updatedOptions = formState[foundIndex].items.filter(obj => {
+      return obj.id !== `${optionId}`;
+    });
+
+    //console.log(updatedOptions);
+
+    formState[foundIndex].items = updatedOptions;
+
+    this.setState({ form: formState });
+
+    console.log(this.state.form);
+
+    // console.log(formState);
   }
 
   deleteItem(item) {
@@ -372,7 +398,7 @@ export default class FormCreator extends Component {
                                   editPictureField={this.editPictureField.bind(
                                     this
                                   )}
-                                  editPictureList={this.editPictureList.bind(
+                                  deletePictureOption={this.deletePictureOption.bind(
                                     this
                                   )}
                                 />

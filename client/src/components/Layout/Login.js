@@ -1,12 +1,42 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
+import { Link, Redirect } from 'react-router-dom';
+
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+
+import { login } from '../../actions/auth';
 
 import Navbar from '../Layout/Navbar';
 import Footer from '../Layout/Footer';
+import Alert from '../Layout/Alert';
 
-const Login = () => {
+const Login = ({ login, isAuthenticated }) => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+
+  const { email, password } = formData;
+
+  const onChange = e => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const onSubmit = async e => {
+    console.log('FIRED');
+    e.preventDefault();
+    login(email, password);
+  };
+
+  // Redirect if logged in
+  if (isAuthenticated) {
+    return <Redirect to='/dashboard' />;
+  }
+
   return (
     <Fragment>
       <Navbar />
+      <Alert />
 
       <div className='main-content' style={{ background: '#172b4d' }}>
         <div className='header bg-gradient-primary py-7 py-lg-8 pt-lg-9'>
@@ -47,7 +77,7 @@ const Login = () => {
                   <div className='text-center text-muted mb-4'>
                     <small>Sign in with credentials:</small>
                   </div>
-                  <form role='form'>
+                  <form role='form' onSubmit={onSubmit}>
                     <div className='form-group mb-3'>
                       <div className='input-group input-group-merge input-group-alternative'>
                         <div className='input-group-prepend'>
@@ -59,6 +89,9 @@ const Login = () => {
                           className='form-control'
                           placeholder='Email'
                           type='email'
+                          onChange={e => onChange(e)}
+                          name='email'
+                          value={email}
                         />
                       </div>
                     </div>
@@ -73,6 +106,9 @@ const Login = () => {
                           className='form-control'
                           placeholder='Password'
                           type='password'
+                          onChange={e => onChange(e)}
+                          name='password'
+                          value={password}
                         />
                       </div>
                     </div>
@@ -90,7 +126,11 @@ const Login = () => {
                       </label>
                     </div>
                     <div className='text-center'>
-                      <button type='button' className='btn btn-primary my-4'>
+                      <button
+                        type='button'
+                        type='submit'
+                        className='btn btn-primary my-4'
+                      >
                         Sign in
                       </button>
                     </div>
@@ -119,4 +159,13 @@ const Login = () => {
   );
 };
 
-export default Login;
+Login.propTypes = {
+  login: PropTypes.func.isRequired,
+  isAuthenticated: PropTypes.bool
+};
+
+const mapStateToProps = state => ({
+  isAuthenticated: state.auth.isAuthenticated
+});
+
+export default connect(mapStateToProps, { login })(Login);
