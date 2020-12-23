@@ -46,6 +46,28 @@
   overflow: hidden;
 }
 
+.color-red{
+  color: red;
+}
+
+.color-yellow{
+  color: #F2C94C
+}
+
+.color-purple{
+  color: #9B51E0
+}
+
+.color-orange{
+  color: #F2994A
+}
+
+.color-green{
+  color: #6FCF97
+}
+
+
+
 .react-bootstrap-table table {
   table-layout: auto;
 }

@@ -1,6 +1,5 @@
 import React, { Fragment, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import { Container } from 'react-bootstrap';
 
 import Dashboard from './components/dashboard/Dashboard';
 import Landing from './components/landing/Landing';
@@ -11,6 +10,8 @@ import BookingForms from './components/Layout/BookingForms';
 import FormCreator from './components/Layout/FormCreator';
 
 import Customers from './components/Layout/Customers';
+import AddCustomers from './components/Layout/AddCustomers';
+import ViewCustomer from './components/Layout/ViewCustomer';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -46,6 +47,17 @@ function App() {
             <Route exact path='/login' component={Login} />
             <PrivateRoute exact path='/dashboard' component={Dashboard} />
             <PrivateRoute exact path='/customers' component={Customers} />
+
+            <PrivateRoute
+              exact
+              path='/customers/add'
+              component={AddCustomers}
+            />
+            <PrivateRoute
+              exact
+              path='/customers/:id'
+              component={ViewCustomer}
+            />
             <PrivateRoute
               exact
               path='/booking-forms'

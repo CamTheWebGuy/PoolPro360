@@ -1,35 +1,49 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const CustomerSchema = new mongoose.Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
   firstName: {
     type: String,
     required: true
   },
   lastName: {
-    type: String
+    type: String,
+    required: true
   },
   email: {
     type: String,
     required: true,
     unique: true
   },
-  phone: {
+  mobilePhone: {
+    type: String
+  },
+  serviceAddress: {
     type: String,
     required: true
   },
-  address: {
-    type: String
+  serviceState: {
+    type: String,
+    required: true
   },
-  state: {
-    type: String
-  },
-  zip: {
-    type: String
+  serviceZip: {
+    type: String,
+    required: true
   },
   gateCode: {
     type: String
   },
-  date: {
+  canText: {
+    type: String
+  },
+  poolType: {
+    type: String
+  },
+  dateAdded: {
     type: Date,
     default: Date.now()
   }
