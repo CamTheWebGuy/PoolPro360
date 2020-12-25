@@ -16,8 +16,7 @@ const CustomerSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   mobilePhone: {
     type: String
@@ -25,6 +24,9 @@ const CustomerSchema = new mongoose.Schema({
   serviceAddress: {
     type: String,
     required: true
+  },
+  serviceCity: {
+    type: String
   },
   serviceState: {
     type: String,
@@ -41,6 +43,29 @@ const CustomerSchema = new mongoose.Schema({
     type: String
   },
   poolType: {
+    type: String,
+    default: 'NA'
+  },
+  technician: {
+    type: String
+  },
+  servicePackage: {
+    type: String
+  },
+  billingSame: {
+    type: Boolean,
+    default: false
+  },
+  billingAddress: {
+    type: String
+  },
+  billingCity: {
+    type: String
+  },
+  billingState: {
+    type: String
+  },
+  billingZip: {
     type: String
   },
   dateAdded: {
