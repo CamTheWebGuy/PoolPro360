@@ -12,6 +12,8 @@ import FormCreator from './components/Layout/FormCreator';
 import Customers from './components/Layout/Customers';
 import AddCustomers from './components/Layout/AddCustomers';
 import ViewCustomer from './components/Layout/ViewCustomer';
+import Users from './components/Layout/Users';
+import AddUser from './components/Layout/AddUser';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -47,6 +49,8 @@ function App() {
             <Route exact path='/login' component={Login} />
             <PrivateRoute exact path='/dashboard' component={Dashboard} />
             <PrivateRoute exact path='/customers' component={Customers} />
+            <PrivateRoute exact path='/users' component={Users} />
+            <PrivateRoute exact path='/users/add' component={AddUser} />
 
             <PrivateRoute
               exact

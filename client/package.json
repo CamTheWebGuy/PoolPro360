@@ -14,6 +14,7 @@
     "classnames": "^2.2.6",
     "echarts-for-react": "^2.0.16",
     "formik": "^2.2.5",
+    "generate-password": "^1.5.1",
     "jquery": "^3.5.1",
     "list.js": "^2.3.0",
     "moment": "^2.29.1",

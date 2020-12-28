@@ -1,12 +1,13 @@
 const mongoose = require('mongoose');
 
 const EmployeeSchema = new mongoose.Schema({
-  firstName: {
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'employee'
+  },
+  name: {
     type: String,
     required: true
-  },
-  lastName: {
-    type: String
   },
   email: {
     type: String,
@@ -21,19 +22,11 @@ const EmployeeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  level: {
+  role: {
     type: String,
-    default: 'technician',
+    default: 'Technician',
     required: true
   },
-  customers: [
-    {
-      customer: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'customer'
-      }
-    }
-  ],
   date: {
     type: Date,
     default: Date.now()

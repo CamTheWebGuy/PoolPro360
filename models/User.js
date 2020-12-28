@@ -30,14 +30,6 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  employees: [
-    {
-      employee: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'employee'
-      }
-    }
-  ],
   date: {
     type: Date,
     default: Date.now()

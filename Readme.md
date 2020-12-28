@@ -10,8 +10,10 @@ Features/functions listed below are subject to change as time goes on, this is b
 
 ## Backend:
 - [x] Login/Register Routes & Verification
+- [x] Add Customers
+- [x] Get Specific Users Customers
+- [ ] Update Customers
 - [ ] User Authorization & Admin Check
-- [ ] Add/Update Customers
 - [ ] Add/Update Users
 - [ ] Add/Update Work orders
 - [ ] Timeslot Generation
