@@ -52,6 +52,12 @@ const CustomerSchema = new mongoose.Schema({
   servicePackage: {
     type: String
   },
+  serviceRate: {
+    type: String
+  },
+  servicePackageAndRate: {
+    type: String
+  },
   billingSame: {
     type: Boolean,
     default: false
@@ -68,6 +74,34 @@ const CustomerSchema = new mongoose.Schema({
   billingZip: {
     type: String
   },
+  poolEquipment: {
+    poolType: {
+      type: String
+    },
+    bodiesOfWater: {
+      type: String
+    },
+    pump: {
+      type: String
+    },
+    filter: {
+      type: String
+    },
+    heater: {
+      type: String
+    },
+    other: [
+      {
+        itemName: { type: String },
+        itemContent: { type: String }
+      }
+    ]
+  },
+  images: [
+    {
+      url: { type: String }
+    }
+  ],
   dateAdded: {
     type: Date,
     default: Date.now()

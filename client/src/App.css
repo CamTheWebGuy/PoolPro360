@@ -112,6 +112,10 @@
   text-align: center;
 }
 
+.modal-image-thumb{
+  max-height: 200px!important;
+}
+
 
 
 /* .builder__dropzone{
