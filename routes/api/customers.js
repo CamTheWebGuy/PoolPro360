@@ -43,6 +43,24 @@ const uploadToS3 = (req, res) => {
   });
 };
 
+const deleteImageS3 = s3Object => {
+  s3.deleteObject(
+    {
+      bucket: 'poolpro360',
+      key: `${s3Object}`
+    },
+    (err, data) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).send(err);
+      } else {
+        console.log(data);
+        return res.status(200).send('File deleted');
+      }
+    }
+  );
+};
+
 const Customer = require('../../models/Customer');
 
 // @route    POST api/customers
@@ -216,6 +234,53 @@ router.post('/:customerId/uploadImage', auth, async (req, res) => {
     await customer.save();
 
     res.json(customer.images);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/:customerId/deleteImage
+// @desc     Delete Image from Customer
+// @access   Private/User
+router.post('/:customerId/deleteImage', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findOne({
+      user: req.user.id,
+      _id: req.params.customerId
+    });
+
+    if (!customer) {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+
+    const { objectId, s3Object } = req.body;
+
+    await s3.deleteObject(
+      {
+        Bucket: 'poolpro360',
+        Key: `${s3Object}`
+      },
+      async (err, data) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).send(err);
+        } else {
+          try {
+            await Customer.updateOne(
+              { _id: req.params.customerId },
+              { $pull: { images: { _id: objectId } } }
+            );
+          } catch (err) {
+            console.log(err);
+          }
+          return res.status(200).send('File deleted');
+        }
+      }
+    );
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {

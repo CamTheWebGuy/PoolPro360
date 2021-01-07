@@ -14,6 +14,7 @@ import AddCustomers from './components/Layout/AddCustomers';
 import ViewCustomer from './components/Layout/ViewCustomer';
 import Users from './components/Layout/Users';
 import AddUser from './components/Layout/AddUser';
+import DeleteCustomerImage from './components/Layout/DeleteCustomerImage';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -61,6 +62,11 @@ function App() {
               exact
               path='/customers/:id'
               component={ViewCustomer}
+            />
+            <PrivateRoute
+              exact
+              path='/customers/:id/deleteImage'
+              component={DeleteCustomerImage}
             />
             <PrivateRoute
               exact

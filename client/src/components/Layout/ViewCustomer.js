@@ -13,6 +13,7 @@ import { getSingleCustomer } from '../../actions/customer';
 
 import { SpinnerCircular } from 'spinners-react';
 import ImageUploader from 'react-images-upload';
+import { useHistory } from 'react-router-dom';
 
 import {
   Container,
@@ -53,6 +54,8 @@ const ViewCustomer = ({
   useEffect(async () => {
     getSingleCustomer(match.params.id);
   }, [getSingleCustomer, match.params.id]);
+
+  const history = useHistory();
 
   const [serviceNoteModal, setServiceNoteModal] = useState(false);
   const toggleServiceNoteModal = () => setServiceNoteModal(!serviceNoteModal);
@@ -316,11 +319,15 @@ const ViewCustomer = ({
                           <p>{customer[0].technician}</p>
                         </Col>
                         <Col sm='3'>
-                          <div className='form-control-label'>Rate</div>
+                          <div className='form-control-label'>Rate/Package</div>
                           {customer[0].serviceRate ? (
-                            <p>{customer[0].serviceRate}</p>
+                            <p>{customer[0].servicePackageAndRate}</p>
                           ) : (
-                            <p>N/A</p>
+                            <p className='color-red'>
+                              <strong>
+                                <em>None Assigned</em>
+                              </strong>
+                            </p>
                           )}
                         </Col>
                         <Col>
@@ -368,31 +375,40 @@ const ViewCustomer = ({
                     </Fragment>
                   ) : (
                     <Fragment>
+                      {Object.entries(customer[0].poolEquipment).length !=
+                        1 && (
+                        <Row>
+                          <Col sm='3'>
+                            <div className='form-control-label'>Pool Type</div>
+                            <p>{customer[0].poolEquipment.poolType}</p>
+                          </Col>
+                          <Col sm='3'>
+                            <div className='form-control-label'>
+                              Bodies of Water
+                            </div>
+                            <p>{customer[0].poolEquipment.bodiesOfWater}</p>
+                          </Col>
+                          <Col sm='3'>
+                            <div className='form-control-label'>Pump</div>
+                            <p>{customer[0].poolEquipment.pump}</p>
+                          </Col>
+                          <Col sm='3'>
+                            <div className='form-control-label'>Filter</div>
+                            <p>{customer[0].poolEquipment.filter}</p>
+                          </Col>
+                        </Row>
+                      )}
                       <Row>
-                        <Col sm='3'>
-                          <div className='form-control-label'>Pool Type</div>
-                          <p>{customer[0].poolEquipment.poolType}</p>
-                        </Col>
-                        <Col sm='3'>
-                          <div className='form-control-label'>
-                            Bodies of Water
-                          </div>
-                          <p>{customer[0].poolEquipment.bodiesOfWater}</p>
-                        </Col>
-                        <Col sm='3'>
-                          <div className='form-control-label'>Pump</div>
-                          <p>{customer[0].poolEquipment.pump}</p>
-                        </Col>
-                        <Col sm='3'>
-                          <div className='form-control-label'>Filter</div>
-                          <p>{customer[0].poolEquipment.filter}</p>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col sm='3'>
-                          <div className='form-control-label'>Pool Heater</div>
-                          <p>{customer[0].poolEquipment.heater}</p>
-                        </Col>
+                        {Object.entries(customer[0].poolEquipment).length !=
+                          1 && (
+                          <Col sm='3'>
+                            <div className='form-control-label'>
+                              Pool Heater
+                            </div>
+                            <p>{customer[0].poolEquipment.heater}</p>
+                          </Col>
+                        )}
+
                         {customer[0].poolEquipment.other && (
                           <Fragment>
                             {customer[0].poolEquipment.other.map(item => (
@@ -406,6 +422,15 @@ const ViewCustomer = ({
                           </Fragment>
                         )}
                       </Row>
+
+                      {Object.entries(customer[0].poolEquipment).length <=
+                        1 && (
+                        <div className='text-center'>
+                          <i className='fas fa-exclamation-circle'></i>
+                          <h4>No Equipment Information Found</h4>
+                        </div>
+                      )}
+
                       <hr className='my-4' />
                       <h6 className='heading-small text-muted mb-4'>
                         Equipment Images
@@ -479,7 +504,18 @@ const ViewCustomer = ({
                               color='primary'
                               onClick={toggleAddImageModal}
                             >
-                              Add/Delete Images
+                              Add Image(s)
+                            </Button>
+                            <Button
+                              size='sm'
+                              color='danger'
+                              onClick={() => {
+                                history.push(
+                                  `/customers/${match.params.id}/deleteImage`
+                                );
+                              }}
+                            >
+                              Delete Image(s)
                             </Button>
                           </div>
                         </Fragment>
@@ -618,7 +654,7 @@ const ViewCustomer = ({
                   </ModalBody>
                   <ModalFooter>
                     <Button
-                      color='primary'
+                      color='success'
                       type='submit'
                       onClick={handleSubmit}
                     >
@@ -632,7 +668,7 @@ const ViewCustomer = ({
           </Modal>
 
           <Row>
-            <Col xs='6'>
+            <Col lg='6'>
               <Card>
                 <CardHeader>
                   <div className='row align-items-center'>
@@ -792,7 +828,7 @@ const ViewCustomer = ({
                     </ModalBody>
                     <ModalFooter>
                       <Button
-                        color='primary'
+                        color='success'
                         type='submit'
                         onClick={handleSubmit}
                       >
@@ -809,7 +845,7 @@ const ViewCustomer = ({
                 )}
               />
             </Modal>
-            <Col xs='6'>
+            <Col lg='6'>
               <Card>
                 <CardHeader>
                   <div className='row align-items-center'>
