@@ -19,7 +19,7 @@ if (window.innerWidth < 1200) {
   });
 }
 
-const Dashnav = ({ logout }) => {
+const Dashnav = ({ logout, auth: { user, isAuthenticated, loading } }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navHandler = e => {
@@ -334,7 +334,13 @@ const Dashnav = ({ logout }) => {
                     </span>
                     <div className='media-body  ml-2  d-none d-lg-block'>
                       <span className='mb-0 text-sm  font-weight-bold'>
-                        John Snow
+                        {!loading && isAuthenticated && user ? (
+                          <Fragment>
+                            {user.firstName} {user.lastName}
+                          </Fragment>
+                        ) : (
+                          <span>Account</span>
+                        )}
                       </span>
                     </div>
                   </div>

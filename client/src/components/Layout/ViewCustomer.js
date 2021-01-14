@@ -2,14 +2,24 @@ import React, { Fragment, useState, useEffect } from 'react';
 
 import { Link } from 'react-router-dom';
 
+import Alert from '../Layout/Alert';
+
 // import Carousel from 'react-multi-carousel';
 import Carousel from 'react-elastic-carousel';
 import ModalImage from 'react-modal-image';
 
+import Moment from 'react-moment';
+
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { getSingleCustomer } from '../../actions/customer';
+import {
+  getSingleCustomer,
+  addServiceNote,
+  getCustomerServiceNotes,
+  deleteServiceNote,
+  updateServiceNote
+} from '../../actions/customer';
 
 import { SpinnerCircular } from 'spinners-react';
 import ImageUploader from 'react-images-upload';
@@ -42,18 +52,26 @@ import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
 import Footer from '../Layout/Footer';
 
+import EditServiceNoteModal from '../Layout/EditServiceNoteModal';
+
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 
 const ViewCustomer = ({
   getSingleCustomer,
+  addServiceNote,
+  getCustomerServiceNotes,
+  deleteServiceNote,
+  updateServiceNote,
   customer: { customer, singleLoading },
+  serviceNotes,
   match
 }) => {
-  useEffect(async () => {
+  useEffect(() => {
     getSingleCustomer(match.params.id);
-  }, [getSingleCustomer, match.params.id]);
+    getCustomerServiceNotes(match.params.id);
+  }, [getSingleCustomer, getCustomerServiceNotes, match.params.id]);
 
   const history = useHistory();
 
@@ -69,6 +87,13 @@ const ViewCustomer = ({
   const [loadingNewImages, setLoadingNewImages] = useState(false);
 
   const toggleAddImageModal = () => setAddImageModal(!addImageModal);
+
+  const [loadingAddServiceNote, setLoadingAddServiceNote] = useState(false);
+
+  const [editNoteModal, setEditNoteModal] = useState({
+    activeNote: '',
+    isOpen: false
+  });
 
   const onDrop = picture => {
     setPictureState({
@@ -100,30 +125,49 @@ const ViewCustomer = ({
     }
   };
 
-  const responsive = {
-    superLargeDesktop: {
-      // the naming can be any, depends on you.
-      breakpoint: { max: 4000, min: 3000 },
-      items: 5
-    },
-    desktop: {
-      breakpoint: { max: 3000, min: 1024 },
-      items: 3
-    },
-    tablet: {
-      breakpoint: { max: 1024, min: 464 },
-      items: 2
-    },
-    mobile: {
-      breakpoint: { max: 464, min: 0 },
-      items: 1
-    }
+  const [deleteSure, setDeleteSure] = useState({
+    activeNote: null,
+    isOpen: false
+  });
+
+  const [deleteNoteLoading, setDeleteNoteLoading] = useState(false);
+
+  const deleteNoteModalToggle = noteId => {
+    setDeleteSure({
+      activeNote: noteId,
+      isOpen: true
+    });
   };
+
+  const deleteNoteHandler = async noteId => {
+    setDeleteNoteLoading(true);
+    await deleteServiceNote(match.params.id, noteId);
+    setDeleteSure({
+      activeNote: noteId,
+      isOpen: false
+    });
+    getCustomerServiceNotes(match.params.id);
+    setDeleteNoteLoading(false);
+  };
+
+  const toggleNoteEditModal = noteId => {
+    setEditNoteModal({
+      activeNote: noteId,
+      isOpen: !editNoteModal.isOpen
+    });
+  };
+
+  const editNoteHandler = async (noteId, data) => {
+    await updateServiceNote(match.params.id, noteId, data);
+    getCustomerServiceNotes(match.params.id);
+  };
+
   return (
     <Fragment>
       <Sidebar active='customers' />
       <div className='main-content' id='panel'>
         <Dashnav />
+        <Alert />
         <div
           className='header pb-6 d-flex align-items-center'
           style={{
@@ -203,13 +247,13 @@ const ViewCustomer = ({
                       <h3 className='mb-0'>Customer Information </h3>
                     </div>
                     <div className='col-8 text-right d-none d-lg-inline'>
-                      <a href='#!' className='btn btn-success'>
+                      {/* <a href='#!' className='btn btn-success'>
                         Start Service
-                      </a>
+                      </a> */}
                       <a href='#!' className='btn btn-primary'>
                         Add Expense
                       </a>
-                      <a href='#!' className='btn btn-default'>
+                      <a href='#!' className='btn btn-success'>
                         Add Work Order
                       </a>
                     </div>
@@ -224,9 +268,9 @@ const ViewCustomer = ({
                           <i className='fas fa-ellipsis-v' /> Actions
                         </DropdownToggle>
                         <DropdownMenu className='dropdown-menu-arrow' right>
-                          <DropdownItem tag={Link} to='/'>
+                          {/* <DropdownItem tag={Link} to='/'>
                             Start Service
-                          </DropdownItem>
+                          </DropdownItem> */}
                           <DropdownItem tag={Link} to='/'>
                             Add Expense
                           </DropdownItem>
@@ -375,7 +419,7 @@ const ViewCustomer = ({
                     </Fragment>
                   ) : (
                     <Fragment>
-                      {Object.entries(customer[0].poolEquipment).length !=
+                      {Object.entries(customer[0].poolEquipment).length !==
                         1 && (
                         <Row>
                           <Col sm='3'>
@@ -399,7 +443,7 @@ const ViewCustomer = ({
                         </Row>
                       )}
                       <Row>
-                        {Object.entries(customer[0].poolEquipment).length !=
+                        {Object.entries(customer[0].poolEquipment).length !==
                           1 && (
                           <Col sm='3'>
                             <div className='form-control-label'>
@@ -747,11 +791,17 @@ const ViewCustomer = ({
 
               <Formik
                 initialValues={{
+                  customerId: match.params.id,
                   content: '',
-                  showNextService: false,
-                  showAllService: false
+                  showDuringVisit: false
                 }}
-                onSubmit={data => console.log(data)}
+                onSubmit={async data => {
+                  setLoadingAddServiceNote(true);
+                  await addServiceNote(data);
+                  await getCustomerServiceNotes(match.params.id);
+                  toggleServiceNoteModal();
+                  setLoadingAddServiceNote(false);
+                }}
                 render={({
                   handleSubmit,
                   handleChange,
@@ -787,33 +837,22 @@ const ViewCustomer = ({
                           </Col>
                         </Row>
                         <Row>
-                          <Col lg='6'>
+                          <Col lg='12'>
                             <FormGroup>
-                              <p>Show on next service visit?</p>
+                              <span>Show to Technician During Visit?</span>
+                              <br />
+                              <small>
+                                This will make note display to technician during
+                                each service visit.
+                              </small>
+                              <br />
+                              <br />
                               <Label className='custom-toggle'>
                                 <Input
                                   type='checkbox'
-                                  name='showNextService'
+                                  name='showDuringVisit'
                                   onChange={handleChange}
-                                  value={values.showNextService}
-                                />
-                                <span
-                                  className='custom-toggle-slider rounded-circle'
-                                  data-label-off='No'
-                                  data-label-on='Yes'
-                                ></span>
-                              </Label>
-                            </FormGroup>
-                          </Col>
-                          <Col lg='6'>
-                            <FormGroup>
-                              <p>Show on all service visits?</p>
-                              <Label className='custom-toggle'>
-                                <Input
-                                  type='checkbox'
-                                  name='showAllService'
-                                  onChange={handleChange}
-                                  value={values.showAllService}
+                                  value={values.showDuringVisit}
                                 />
                                 <span
                                   className='custom-toggle-slider rounded-circle'
@@ -828,18 +867,33 @@ const ViewCustomer = ({
                     </ModalBody>
                     <ModalFooter>
                       <Button
-                        color='success'
-                        type='submit'
-                        onClick={handleSubmit}
-                      >
-                        Save Note
-                      </Button>{' '}
-                      <Button
                         color='secondary'
                         onClick={toggleServiceNoteModal}
                       >
                         Cancel
                       </Button>
+                      <Button
+                        color='success'
+                        type='submit'
+                        onClick={handleSubmit}
+                      >
+                        {loadingAddServiceNote ? (
+                          <span>
+                            <span>
+                              <SpinnerCircular
+                                size={24}
+                                thickness={180}
+                                speed={100}
+                                color='rgba(57, 125, 172, 1)'
+                                secondaryColor='rgba(0, 0, 0, 0.44)'
+                              />{' '}
+                              Processing...
+                            </span>
+                          </span>
+                        ) : (
+                          <span>Save Note</span>
+                        )}
+                      </Button>{' '}
                     </ModalFooter>
                   </Fragment>
                 )}
@@ -879,29 +933,116 @@ const ViewCustomer = ({
                     </Fragment>
                   ) : (
                     <Fragment>
-                      <h6 className='heading-small text-muted mb-4'>
-                        July 2020
-                      </h6>
-                      <Row className='mb-4'>
-                        <Col xs={{ size: '1' }}>
-                          <i className='fas fa-clipboard fa-2x color-orange'></i>
-                        </Col>
-                        <Col xs={{ size: '11' }}>
-                          <h3>You created a Service Note</h3>{' '}
-                          <p>
-                            Jane’s pool needs a new filter for the pump. Bring
-                            replacement on next service visit. Also needs some
-                            more chlorine.
-                          </p>
-                          <small>Thursday, 3rd at 1:32PM</small>{' '}
-                          <Button size='sm' color='primary'>
-                            Edit
-                          </Button>
-                          <Button size='sm' color='warning'>
-                            Delete
-                          </Button>
-                        </Col>
-                      </Row>
+                      {!serviceNotes || serviceNotes.length < 1 ? (
+                        <span>No Notes Found...</span>
+                      ) : (
+                        <Fragment>
+                          {serviceNotes.map(note => (
+                            <Row key={note._id} className='mb-4'>
+                              <Col xs={{ size: '1' }}>
+                                <i className='fas fa-clipboard fa-2x color-orange'></i>
+                              </Col>
+                              <Col xs={{ size: '11' }}>
+                                <h3>You created a Service Note</h3>{' '}
+                                {note.showDuringVisit === true && (
+                                  <Badge color='success'>
+                                    Show Note During Visits
+                                  </Badge>
+                                )}
+                                <p>{note.content}</p>
+                                <small>
+                                  {note.lastUpdated ? (
+                                    <Fragment>
+                                      <span>Updated: </span>
+                                      <Moment format='ddd, MMM DD, YYYY | LT'>
+                                        {note.lastUpdated}
+                                      </Moment>
+                                    </Fragment>
+                                  ) : (
+                                    <Moment format='ddd, MMM DD, YYYY | LT'>
+                                      {note.dateAdded}
+                                    </Moment>
+                                  )}
+                                  {/* <Moment format='ddd, MMM DD, YYYY | LT'>
+                                    {note.dateAdded}
+                                  </Moment> */}
+                                </small>{' '}
+                                <Button
+                                  size='sm'
+                                  color='primary'
+                                  onClick={() => toggleNoteEditModal(note._id)}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  size='sm'
+                                  color='warning'
+                                  onClick={() =>
+                                    deleteNoteModalToggle(note._id)
+                                  }
+                                >
+                                  Delete
+                                </Button>
+                              </Col>
+                              <Modal
+                                isOpen={deleteSure.isOpen}
+                                toggle={() => setDeleteSure({ isOpen: false })}
+                              >
+                                <ModalHeader
+                                  toggle={() =>
+                                    setDeleteSure({ isOpen: false })
+                                  }
+                                >
+                                  Delete Service Note?
+                                </ModalHeader>
+                                <ModalBody>
+                                  Are you sure you want to delete this service
+                                  note? This action cannot be undone.
+                                </ModalBody>
+                                <ModalFooter>
+                                  <Button
+                                    onClick={() =>
+                                      setDeleteSure({ isOpen: false })
+                                    }
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    color='danger'
+                                    onClick={() =>
+                                      deleteNoteHandler(deleteSure.activeNote)
+                                    }
+                                  >
+                                    {deleteNoteLoading ? (
+                                      <span>
+                                        <SpinnerCircular
+                                          size={24}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />{' '}
+                                        Processing...
+                                      </span>
+                                    ) : (
+                                      <span>Delete Note</span>
+                                    )}
+                                  </Button>
+                                </ModalFooter>
+                              </Modal>
+                              <EditServiceNoteModal
+                                isOpen={editNoteModal.isOpen}
+                                toggle={toggleNoteEditModal}
+                                activeNote={editNoteModal.activeNote}
+                                noteId={note._id}
+                                noteContent={note.content}
+                                showDuringVisit={note.showDuringVisit}
+                                editFunction={editNoteHandler}
+                              />
+                            </Row>
+                          ))}
+                        </Fragment>
+                      )}
                     </Fragment>
                   )}
                 </CardBody>
@@ -946,11 +1087,11 @@ const ViewCustomer = ({
                 <CardHeader>
                   <div className='row align-items-center'>
                     <div className='col-8'>
-                      <h3 className='mb-0'>Service Tasks </h3>
+                      <h3 className='mb-0'>Service Checklist </h3>
                     </div>
                     <div className='col-4 text-right'>
                       <a href='#!' className='btn btn-sm btn-primary'>
-                        Edit Tasks
+                        Edit Checklist
                       </a>
                     </div>
                   </div>
@@ -1010,13 +1151,23 @@ const ViewCustomer = ({
 
 ViewCustomer.propTypes = {
   getSingleCustomer: PropTypes.func.isRequired,
-  customer: PropTypes.object.isRequired
+  getCustomerServiceNotes: PropTypes.func.isRequired,
+  addServiceNote: PropTypes.func.isRequired,
+  deleteServiceNote: PropTypes.func.isRequired,
+  updateServiceNote: PropTypes.func.isRequired,
+  customer: PropTypes.object.isRequired,
+  serviceNotes: PropTypes.array.isRequired
 };
 
 const mapStateToProps = state => ({
-  customer: state.customer.singleCustomer
+  customer: state.customer.singleCustomer,
+  serviceNotes: state.customer.serviceNotes
 });
 
 export default connect(mapStateToProps, {
-  getSingleCustomer
+  getSingleCustomer,
+  addServiceNote,
+  getCustomerServiceNotes,
+  deleteServiceNote,
+  updateServiceNote
 })(ViewCustomer);

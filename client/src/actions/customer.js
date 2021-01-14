@@ -3,7 +3,8 @@ import { setAlert } from './alert';
 import {
   GET_CUSTOMERS,
   GET_SINGLE_CUSTOMER,
-  RESET_CUSTOMER_LOADING
+  RESET_CUSTOMER_LOADING,
+  GET_CUSTOMER_SERVICE_NOTES
 } from './types';
 
 // Add Customer
@@ -59,6 +60,7 @@ export const addCustomer = ({
     dispatch(setAlert('Customer Added', 'success'));
   } catch (err) {
     console.log(err);
+
     const errors = err.response.data.errors;
 
     if (errors) {
@@ -78,11 +80,11 @@ export const getCustomers = () => async dispatch => {
     });
   } catch (err) {
     console.log(err);
-    // const errors = err.response.data.errors;
+    const errors = err.response.data.errors;
 
-    // if (errors) {
-    //   errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
-    // }
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
   }
 };
 
@@ -111,6 +113,109 @@ export const resetCustomerLoading = () => async dispatch => {
     dispatch({
       type: RESET_CUSTOMER_LOADING
     });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Add Service Note
+export const addServiceNote = data => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const { content, customerId, showDuringVisit } = data;
+
+  const body = JSON.stringify({
+    showDuringVisit,
+    content
+  });
+
+  try {
+    await axios.post(
+      `/api/customers/${customerId}/serviceNote/add`,
+      body,
+      config
+    );
+    dispatch(setAlert('New Service Note Created', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get a Customers Service Notes
+export const getCustomerServiceNotes = customerId => async dispatch => {
+  try {
+    const notes = await axios.get(`/api/customers/${customerId}/serviceNotes`);
+
+    dispatch({
+      type: GET_CUSTOMER_SERVICE_NOTES,
+      payload: notes.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get a Customers Service Notes
+export const deleteServiceNote = (customerId, noteId) => async dispatch => {
+  try {
+    await axios.delete(`/api/customers/${customerId}/serviceNotes/${noteId}`);
+
+    dispatch(setAlert('Service Note Deleted', 'danger'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update a Service Note
+export const updateServiceNote = (
+  customerId,
+  noteId,
+  data
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const { content, showDuringVisit } = data;
+
+  const body = JSON.stringify({
+    showDuringVisit,
+    content
+  });
+
+  try {
+    await axios.patch(
+      `/api/customers/${customerId}/serviceNotes/${noteId}`,
+      body,
+      config
+    );
+    dispatch(setAlert('Service Note Updated', 'success'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

@@ -14,17 +14,16 @@ const ServiceNotesSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  showAtNextVisit: {
-    type: String,
-    default: false
-  },
-  showAtAllVisits: {
-    type: String,
+  showDuringVisit: {
+    type: Boolean,
     default: false
   },
   dateAdded: {
     type: Date,
     default: Date.now()
+  },
+  lastUpdated: {
+    type: Date
   }
 });
 
