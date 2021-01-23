@@ -15,6 +15,8 @@ import ViewCustomer from './components/Layout/ViewCustomer';
 import Users from './components/Layout/Users';
 import AddUser from './components/Layout/AddUser';
 import DeleteCustomerImage from './components/Layout/DeleteCustomerImage';
+import ManageChecklist from './components/Layout/ManageChecklist';
+import ManageEquipment from './components/Layout/ManageEquipment';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -52,7 +54,16 @@ function App() {
             <PrivateRoute exact path='/customers' component={Customers} />
             <PrivateRoute exact path='/users' component={Users} />
             <PrivateRoute exact path='/users/add' component={AddUser} />
-
+            <PrivateRoute
+              exact
+              path='/customers/:id/manage/equipment'
+              component={ManageEquipment}
+            />
+            <PrivateRoute
+              exact
+              path='/customers/:id/manage/serviceChecklist'
+              component={ManageChecklist}
+            />
             <PrivateRoute
               exact
               path='/customers/add'

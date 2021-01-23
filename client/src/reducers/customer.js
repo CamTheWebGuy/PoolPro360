@@ -2,7 +2,9 @@ import {
   GET_CUSTOMERS,
   GET_SINGLE_CUSTOMER,
   RESET_CUSTOMER_LOADING,
-  GET_CUSTOMER_SERVICE_NOTES
+  GET_CUSTOMER_SERVICE_NOTES,
+  GET_CUSTOMER_RECENT_ACTIVITY,
+  GET_CUSTOMER_CHECKLIST
 } from '../actions/types';
 
 const initialState = {
@@ -10,7 +12,9 @@ const initialState = {
   loading: true,
   singleCustomer: {},
   singleLoading: true,
-  serviceNotes: []
+  serviceNotes: [],
+  recentActivity: [],
+  checklist: []
 };
 
 export default function(state = initialState, action) {
@@ -37,6 +41,16 @@ export default function(state = initialState, action) {
       return {
         ...state,
         serviceNotes: payload
+      };
+    case GET_CUSTOMER_RECENT_ACTIVITY:
+      return {
+        ...state,
+        recentActivity: payload
+      };
+    case GET_CUSTOMER_CHECKLIST:
+      return {
+        ...state,
+        checklist: payload
       };
     default:
       return state;

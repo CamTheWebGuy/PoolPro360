@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react';
+import React, { Fragment, useState, useEffect, useRef } from 'react';
 
 import { Link } from 'react-router-dom';
 
@@ -18,7 +18,12 @@ import {
   addServiceNote,
   getCustomerServiceNotes,
   deleteServiceNote,
-  updateServiceNote
+  updateServiceNote,
+  addRecentActivity,
+  getRecentActivity,
+  deleteRecentActivity,
+  getChecklist,
+  updateBilling
 } from '../../actions/customer';
 
 import { SpinnerCircular } from 'spinners-react';
@@ -64,16 +69,38 @@ const ViewCustomer = ({
   getCustomerServiceNotes,
   deleteServiceNote,
   updateServiceNote,
+  addRecentActivity,
+  getRecentActivity,
+  deleteRecentActivity,
+  getChecklist,
+  updateBilling,
   customer: { customer, singleLoading },
   serviceNotes,
+  recentActivity,
+  serviceChecklist,
   match
 }) => {
   useEffect(() => {
     getSingleCustomer(match.params.id);
     getCustomerServiceNotes(match.params.id);
-  }, [getSingleCustomer, getCustomerServiceNotes, match.params.id]);
+    getRecentActivity(match.params.id);
+    getChecklist(match.params.id);
+  }, [
+    getSingleCustomer,
+    getCustomerServiceNotes,
+    getRecentActivity,
+    getChecklist,
+    match.params.id
+  ]);
 
   const history = useHistory();
+  const billingRef = useRef();
+
+  const saveBilling = () => {
+    if (billingRef.current) {
+      billingRef.current.handleSubmit();
+    }
+  };
 
   const [serviceNoteModal, setServiceNoteModal] = useState(false);
   const toggleServiceNoteModal = () => setServiceNoteModal(!serviceNoteModal);
@@ -90,10 +117,18 @@ const ViewCustomer = ({
 
   const [loadingAddServiceNote, setLoadingAddServiceNote] = useState(false);
 
+  const [addActivityLoading, setAddActivityLoading] = useState(false);
+
   const [editNoteModal, setEditNoteModal] = useState({
     activeNote: '',
     isOpen: false
   });
+
+  const [editBillingModal, setEditBillingModal] = useState(false);
+  const [editBillingLoading, setEditBillingLoading] = useState(false);
+  const toggleBillingModal = () => {
+    setEditBillingModal(!editBillingModal);
+  };
 
   const onDrop = picture => {
     setPictureState({
@@ -162,6 +197,27 @@ const ViewCustomer = ({
     getCustomerServiceNotes(match.params.id);
   };
 
+  const [deleteActivity, setDeleteActivity] = useState({
+    active: null,
+    isOpen: false,
+    isLoading: false
+  });
+
+  const toggleActivityDeleteModal = noteId => {
+    setDeleteActivity({
+      active: noteId,
+      isOpen: !deleteActivity.isOpen,
+      isLoading: false
+    });
+  };
+
+  const recentActivityDeleteHandler = async noteId => {
+    setDeleteActivity({ ...deleteActivity, isLoading: true });
+    await deleteRecentActivity(match.params.id, noteId);
+    await getRecentActivity(match.params.id);
+    setDeleteActivity({ active: null, isLoading: false, isOpen: false });
+  };
+
   return (
     <Fragment>
       <Sidebar active='customers' />
@@ -224,7 +280,7 @@ const ViewCustomer = ({
                 )}
 
                 <a href='#!' className='btn btn-neutral mb-4'>
-                  Edit Customer Details
+                  Edit Customer Information
                 </a>
                 <a href='#!' className='btn btn-primary mb-4'>
                   Email Customer
@@ -397,9 +453,12 @@ const ViewCustomer = ({
                       <h3 className='mb-0'>Pool & Equipment Information </h3>
                     </div>
                     <div className='col-4 text-right'>
-                      <a href='#!' className='btn btn-sm btn-primary'>
+                      <Link
+                        to={`/customers/${match.params.id}/manage/equipment`}
+                        className='btn btn-primary btn-sm'
+                      >
                         Edit Equipment
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </CardHeader>
@@ -631,11 +690,17 @@ const ViewCustomer = ({
 
             <Formik
               initialValues={{
-                type: 'Phone Call',
-                options: '',
+                log: 'Phone Call',
+                type: '',
                 comments: ''
               }}
-              onSubmit={data => console.log(data)}
+              onSubmit={async data => {
+                setAddActivityLoading(true);
+                await addRecentActivity(match.params.id, data);
+                await getRecentActivity(match.params.id);
+                setAddActivityLoading(false);
+                toggleActivityModal();
+              }}
               render={({
                 handleSubmit,
                 handleChange,
@@ -648,32 +713,32 @@ const ViewCustomer = ({
                   <ModalBody>
                     <Form onSubmit={handleSubmit}>
                       <FormGroup>
-                        <Label for='type'>What do you want to log?</Label>
+                        <Label for='log'>What do you want to log?</Label>
                         <Input
                           type='select'
-                          name='type'
+                          name='log'
                           onChange={handleChange}
-                          value={values.type}
+                          value={values.log}
                         >
                           <option>Phone Call</option>
                           <option>Email</option>
                           <option>Other</option>
                         </Input>
                       </FormGroup>
-                      {(values.type === 'Phone Call' ||
-                        values.type === 'Email') && (
+                      {(values.log === 'Phone Call' ||
+                        values.log === 'Email') && (
                         <Fragment>
                           <FormGroup>
-                            {values.type === 'Phone Call' ? (
+                            {values.log === 'Phone Call' ? (
                               <Label>Type Of Call?</Label>
                             ) : (
                               <Label>Type Of Email?</Label>
                             )}
                             <Input
                               type='select'
-                              name='options'
+                              name='type'
                               onChange={handleChange}
-                              value={values.options}
+                              value={values.type}
                             >
                               <option value='' disabled>
                                 Choose One
@@ -702,7 +767,20 @@ const ViewCustomer = ({
                       type='submit'
                       onClick={handleSubmit}
                     >
-                      Log Activity
+                      {addActivityLoading ? (
+                        <span>
+                          <SpinnerCircular
+                            size={24}
+                            thickness={180}
+                            speed={100}
+                            color='rgba(57, 125, 172, 1)'
+                            secondaryColor='rgba(0, 0, 0, 0.44)'
+                          />{' '}
+                          Processing...
+                        </span>
+                      ) : (
+                        <span>Log Activity</span>
+                      )}
                     </Button>{' '}
                     <Button color='secondary'>Cancel</Button>
                   </ModalFooter>
@@ -717,7 +795,10 @@ const ViewCustomer = ({
                 <CardHeader>
                   <div className='row align-items-center'>
                     <div className='col-8'>
-                      <h3 className='mb-0'>Recent Activity </h3>
+                      <h3 className='mb-0 float-left'>Recent Activity </h3>
+                      <Badge className='float-left mgn-left-8' color='primary'>
+                        {recentActivity.length} Item(s)
+                      </Badge>
                     </div>
                     <div className='col-4 text-right'>
                       <Button
@@ -746,39 +827,114 @@ const ViewCustomer = ({
                     </Fragment>
                   ) : (
                     <Fragment>
-                      <h6 className='heading-small text-muted mb-4'>
-                        Aug 2020
-                      </h6>
-                      <Row className='mb-4'>
-                        <Col xs={{ size: 'auto' }}>
-                          <i className='fas fa-envelope fa-2x color-yellow'></i>
-                        </Col>
-                        <Col xs={{ size: 'auto' }}>
-                          <h3>You sent an Email to Jane Prescott</h3>
-                          <small>Monday, 3rd at 2:30PM</small>{' '}
-                          <Button size='sm' color='primary'>
-                            Edit
-                          </Button>
-                          <Button size='sm' color='warning'>
-                            Delete
-                          </Button>
-                        </Col>
-                      </Row>
-                      <Row className='mb-4'>
-                        <Col xs={{ size: 'auto' }}>
-                          <i className='fas fa-check-circle fa-2x color-purple'></i>
-                        </Col>
-                        <Col xs={{ size: 'auto' }}>
-                          <h3>Service Logged</h3>
-                          <small>Saturday, 1st at 11:04AM</small>{' '}
-                          <Button size='sm' color='primary'>
-                            Edit
-                          </Button>
-                          <Button size='sm' color='warning'>
-                            Delete
-                          </Button>
-                        </Col>
-                      </Row>
+                      {recentActivity.length < 1 ? (
+                        <div className='text-center'>No Activity Found...</div>
+                      ) : (
+                        <Fragment>
+                          {recentActivity.map(item => (
+                            <Fragment key={item._id}>
+                              <Row className='mb-4'>
+                                <Col xs={{ size: 'auto' }}>
+                                  <i
+                                    className={`fas fa-${
+                                      item.icon
+                                    } fa-2x color-${
+                                      item.log === 'Phone Call'
+                                        ? 'green'
+                                        : item.log === 'Email'
+                                        ? 'yellow'
+                                        : item.log === 'Service'
+                                        ? 'purple'
+                                        : 'primary'
+                                    }`}
+                                  ></i>
+                                </Col>
+                                <Col xs={{ size: 'auto' }}>
+                                  <h3>
+                                    {item.type} {item.log}{' '}
+                                    {item.type === 'Incoming' ? (
+                                      <span>from</span>
+                                    ) : (
+                                      <span>to</span>
+                                    )}{' '}
+                                    {customer[0].firstName}{' '}
+                                    {customer[0].lastName}
+                                  </h3>
+                                  <p>{item.comments}</p>
+                                  <small>
+                                    <Moment format='ddd, MMM DD, YYYY | LT'>
+                                      {item.dateAdded}
+                                    </Moment>
+                                  </small>{' '}
+                                  <Button size='sm' color='primary'>
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    size='sm'
+                                    color='warning'
+                                    onClick={() =>
+                                      toggleActivityDeleteModal(item._id)
+                                    }
+                                  >
+                                    Delete
+                                  </Button>
+                                </Col>
+                              </Row>
+
+                              <Modal
+                                isOpen={deleteActivity.isOpen}
+                                toggle={() =>
+                                  setDeleteActivity({ isOpen: false })
+                                }
+                              >
+                                <ModalHeader
+                                  toggle={() =>
+                                    setDeleteActivity({ isOpen: false })
+                                  }
+                                >
+                                  Delete Service Note?
+                                </ModalHeader>
+                                <ModalBody>
+                                  Are you sure you want to delete this activity?
+                                  This action cannot be undone.
+                                </ModalBody>
+                                <ModalFooter>
+                                  <Button
+                                    onClick={() =>
+                                      setDeleteActivity({ isOpen: false })
+                                    }
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    color='danger'
+                                    onClick={() =>
+                                      recentActivityDeleteHandler(
+                                        deleteActivity.active
+                                      )
+                                    }
+                                  >
+                                    {deleteActivity.isLoading ? (
+                                      <span>
+                                        <SpinnerCircular
+                                          size={24}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />{' '}
+                                        Processing...
+                                      </span>
+                                    ) : (
+                                      <span>Delete Activity</span>
+                                    )}
+                                  </Button>
+                                </ModalFooter>
+                              </Modal>
+                            </Fragment>
+                          ))}
+                        </Fragment>
+                      )}
                     </Fragment>
                   )}
                 </CardBody>
@@ -904,7 +1060,10 @@ const ViewCustomer = ({
                 <CardHeader>
                   <div className='row align-items-center'>
                     <div className='col-8'>
-                      <h3 className='mb-0'>Service Notes </h3>
+                      <h3 className='mb-0 float-left'>Service Notes </h3>
+                      <Badge className='float-left mgn-left-8' color='primary'>
+                        {serviceNotes.length} Item(s)
+                      </Badge>
                     </div>
                     <div className='col-4 text-right'>
                       <Button
@@ -934,7 +1093,9 @@ const ViewCustomer = ({
                   ) : (
                     <Fragment>
                       {!serviceNotes || serviceNotes.length < 1 ? (
-                        <span>No Notes Found...</span>
+                        <div className='text-center'>
+                          <span>No Notes Found...</span>
+                        </div>
                       ) : (
                         <Fragment>
                           {serviceNotes.map(note => (
@@ -963,9 +1124,6 @@ const ViewCustomer = ({
                                       {note.dateAdded}
                                     </Moment>
                                   )}
-                                  {/* <Moment format='ddd, MMM DD, YYYY | LT'>
-                                    {note.dateAdded}
-                                  </Moment> */}
                                 </small>{' '}
                                 <Button
                                   size='sm'
@@ -1058,29 +1216,258 @@ const ViewCustomer = ({
                       <h3 className='mb-0'>Billing Details </h3>
                     </div>
                     <div className='col-4 text-right'>
-                      <a href='#!' className='btn btn-sm btn-primary'>
+                      <Button
+                        onClick={toggleBillingModal}
+                        color='primary'
+                        size='sm'
+                      >
                         Edit Billing Details
-                      </a>
+                      </Button>
                     </div>
                   </div>
                 </CardHeader>
                 <CardBody>
-                  <Row className='mb-4'>
-                    <Col sm='4'>
-                      <div className='form-control-label'>Billing Type</div>
-                      <p>Autobilling</p>
-                    </Col>
-                    <Col sm='4'>
-                      <div className='form-control-label'>Billing Address</div>
-                      <p>Same as Service Address</p>
-                    </Col>
-                    <Col sm='4'>
-                      <div className='form-control-label'>Payment Method</div>
-                      <p>Paypal</p>
-                    </Col>
-                  </Row>
+                  {!customer || singleLoading ? (
+                    <Fragment>
+                      <div className='text-center'>
+                        <h4>Loading Data...</h4>
+                        <SpinnerCircular
+                          size={54}
+                          thickness={180}
+                          speed={100}
+                          color='rgba(57, 125, 172, 1)'
+                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                        />
+                      </div>
+                    </Fragment>
+                  ) : (
+                    <Row className='mb-4'>
+                      <Col sm='4'>
+                        <div className='form-control-label'>Billing Type</div>
+                        <p>{customer[0].billingType}</p>
+                      </Col>
+                      <Col sm='4'>
+                        <div className='form-control-label'>
+                          Billing Address
+                        </div>
+                        <p>
+                          {customer[0].billingSame ? (
+                            <span>Same as Service Address</span>
+                          ) : (
+                            <span>
+                              {customer[0].billingAddress},{' '}
+                              {customer[0].billingCity}{' '}
+                              {customer[0].billingState},{' '}
+                              {customer[0].billingZip}
+                            </span>
+                          )}
+                        </p>
+                      </Col>
+                      <Col sm='4'>
+                        <div className='form-control-label'>Payment Method</div>
+                        <p>{customer[0].paymentMethod}</p>
+                      </Col>
+                    </Row>
+                  )}
                 </CardBody>
               </Card>
+              <Modal isOpen={editBillingModal} toggle={toggleBillingModal}>
+                <ModalHeader toggle={toggleBillingModal}>
+                  Edit Billing Details:
+                </ModalHeader>
+                {customer && !singleLoading && (
+                  <ModalBody>
+                    <Formik
+                      initialValues={{
+                        billingSame: customer[0].billingSame,
+                        billingType: customer[0].billingType,
+                        paymentMethod: customer[0].paymentMethod,
+                        billingAddress: customer[0].billingAddress,
+                        billingCity: customer[0].billingCity,
+                        billingState: customer[0].billingState,
+                        billingZip: customer[0].billingZip
+                      }}
+                      onSubmit={async data => {
+                        setEditBillingLoading(true);
+                        await updateBilling(match.params.id, data);
+                        await getSingleCustomer(match.params.id);
+                        setEditBillingLoading(false);
+                        toggleBillingModal();
+                      }}
+                      innerRef={billingRef}
+                      render={({
+                        handleSubmit,
+                        handleChange,
+                        handleBlur,
+                        values,
+                        errors,
+                        touched
+                      }) => (
+                        <Container>
+                          <Form onSubmit={handleSubmit}>
+                            <FormGroup>
+                              <Input
+                                name='billingSame'
+                                type='checkbox'
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                value={values.billingSame}
+                                checked={values.billingSame}
+                              />
+
+                              <Label
+                                for='billingSame'
+                                className='form-control-label'
+                              >
+                                Billing Address Same As Service Address?
+                              </Label>
+                            </FormGroup>
+                            {!values.billingSame && (
+                              <Fragment>
+                                <Row>
+                                  <Col lg='12'>
+                                    <FormGroup>
+                                      <Label
+                                        for='billingAddress'
+                                        className='form-control-label'
+                                      >
+                                        Billing Address
+                                      </Label>
+                                      <Input
+                                        name='billingAddress'
+                                        value={values.billingAddress}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type='text'
+                                        placeholder='2070 Mercer Avenue'
+                                      />
+                                    </FormGroup>
+                                  </Col>
+                                </Row>
+                                <Row>
+                                  <Col lg='4'>
+                                    <FormGroup>
+                                      <Label
+                                        for='billingCity'
+                                        className='form-control-label'
+                                      >
+                                        Billing City
+                                      </Label>
+                                      <Input
+                                        name='billingCity'
+                                        value={values.billingCity}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type='text'
+                                        placeholder='Beverly Hills'
+                                      />
+                                    </FormGroup>
+                                  </Col>
+                                  <Col lg='4'>
+                                    <FormGroup>
+                                      <Label
+                                        for='billingState'
+                                        className='form-control-label'
+                                      >
+                                        Billing State
+                                      </Label>
+                                      <Input
+                                        name='billingState'
+                                        value={values.billingState}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type='text'
+                                        placeholder='CA'
+                                      />
+                                    </FormGroup>
+                                  </Col>
+                                  <Col lg='4'>
+                                    <FormGroup>
+                                      <Label
+                                        for='billingZip'
+                                        className='form-control-label'
+                                      >
+                                        Billing Zip
+                                      </Label>
+                                      <Input
+                                        name='billingZip'
+                                        value={values.billingZip}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        type='text'
+                                        placeholder='90210'
+                                      />
+                                    </FormGroup>
+                                  </Col>
+                                </Row>
+                              </Fragment>
+                            )}
+                            <FormGroup>
+                              <Label
+                                for='billingType'
+                                className='form-control-label'
+                              >
+                                Billing Type
+                              </Label>
+                              <Input
+                                type='select'
+                                name='billingType'
+                                value={values.billingType}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              >
+                                <option>N/A</option>
+                                <option>Autobilling</option>
+                                <option>Manual Billing</option>
+                              </Input>
+                            </FormGroup>
+                            <FormGroup>
+                              <Label
+                                for='billingType'
+                                className='form-control-label'
+                              >
+                                Payment Method
+                              </Label>
+                              <Input
+                                type='select'
+                                name='paymentMethod'
+                                value={values.paymentMethod}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              >
+                                <option>PayPal</option>
+                                <option>Stripe</option>
+                                <option>Check</option>
+                                <option>Other</option>
+                              </Input>
+                            </FormGroup>
+                          </Form>
+                        </Container>
+                      )}
+                    />
+                  </ModalBody>
+                )}
+                <ModalFooter>
+                  <Button onClick={toggleBillingModal}>Cancel</Button>
+                  <Button onClick={saveBilling} color='success'>
+                    {editBillingLoading ? (
+                      <span>
+                        {' '}
+                        <SpinnerCircular
+                          size={24}
+                          thickness={180}
+                          speed={100}
+                          color='rgba(57, 125, 172, 1)'
+                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                        />{' '}
+                        Processing...
+                      </span>
+                    ) : (
+                      <span>Save Changes</span>
+                    )}
+                  </Button>
+                </ModalFooter>
+              </Modal>
             </Col>
             <Col xs='5'>
               <Card>
@@ -1090,9 +1477,12 @@ const ViewCustomer = ({
                       <h3 className='mb-0'>Service Checklist </h3>
                     </div>
                     <div className='col-4 text-right'>
-                      <a href='#!' className='btn btn-sm btn-primary'>
+                      <Link
+                        to={`/customers/${match.params.id}/manage/serviceChecklist`}
+                        className='btn btn-sm btn-primary'
+                      >
                         Edit Checklist
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </CardHeader>
@@ -1112,30 +1502,22 @@ const ViewCustomer = ({
                     </Fragment>
                   ) : (
                     <Fragment>
-                      <Row>
-                        <Col xs={{ size: '1' }}>
-                          <i className='fas fa-chevron-right fa-1x color-green'></i>
-                        </Col>
-                        <Col xs={{ size: '11' }}>
-                          <h3>Check Filter</h3>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col xs={{ size: '1' }}>
-                          <i className='fas fa-chevron-right fa-1x color-green'></i>
-                        </Col>
-                        <Col xs={{ size: '11' }}>
-                          <h3>Skim Pool</h3>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col xs={{ size: '1' }}>
-                          <i className='fas fa-chevron-right fa-1x color-green'></i>
-                        </Col>
-                        <Col xs={{ size: '11' }}>
-                          <h3>Balance Chemicals</h3>
-                        </Col>
-                      </Row>
+                      {serviceChecklist.length < 1 ? (
+                        <div className='text-center'>No Items Found...</div>
+                      ) : (
+                        <Fragment>
+                          {serviceChecklist.map(item => (
+                            <Row key={item._id}>
+                              <Col xs={{ size: '1' }}>
+                                <i className='fas fa-chevron-right fa-1x color-green'></i>
+                              </Col>
+                              <Col xs={{ size: '11' }}>
+                                <h3>{item.item}</h3>
+                              </Col>
+                            </Row>
+                          ))}
+                        </Fragment>
+                      )}
                     </Fragment>
                   )}
                 </CardBody>
@@ -1155,13 +1537,22 @@ ViewCustomer.propTypes = {
   addServiceNote: PropTypes.func.isRequired,
   deleteServiceNote: PropTypes.func.isRequired,
   updateServiceNote: PropTypes.func.isRequired,
+  addRecentActivity: PropTypes.func.isRequired,
+  getRecentActivity: PropTypes.func.isRequired,
+  deleteRecentActivity: PropTypes.func.isRequired,
+  getChecklist: PropTypes.func.isRequired,
+  updateBilling: PropTypes.func.isRequired,
   customer: PropTypes.object.isRequired,
-  serviceNotes: PropTypes.array.isRequired
+  serviceNotes: PropTypes.array.isRequired,
+  recentActivity: PropTypes.array.isRequired,
+  serviceChecklist: PropTypes.array.isRequired
 };
 
 const mapStateToProps = state => ({
   customer: state.customer.singleCustomer,
-  serviceNotes: state.customer.serviceNotes
+  serviceNotes: state.customer.serviceNotes,
+  recentActivity: state.customer.recentActivity,
+  serviceChecklist: state.customer.checklist
 });
 
 export default connect(mapStateToProps, {
@@ -1169,5 +1560,10 @@ export default connect(mapStateToProps, {
   addServiceNote,
   getCustomerServiceNotes,
   deleteServiceNote,
-  updateServiceNote
+  updateServiceNote,
+  addRecentActivity,
+  getRecentActivity,
+  deleteRecentActivity,
+  getChecklist,
+  updateBilling
 })(ViewCustomer);

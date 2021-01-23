@@ -74,32 +74,62 @@ const CustomerSchema = new mongoose.Schema({
   billingZip: {
     type: String
   },
+  billingType: {
+    type: String
+  },
+  paymentMethod: {
+    type: String
+  },
   poolEquipment: {
     poolType: {
+      type: String
+    },
+    poolGallons: {
       type: String
     },
     bodiesOfWater: {
       type: String
     },
-    pump: {
+    pumpMake: {
       type: String
     },
-    filter: {
+    pumpModel: {
       type: String
     },
-    heater: {
+    filterMake: {
+      type: String
+    },
+    filterModel: {
+      type: String
+    },
+    heaterMake: {
+      type: String
+    },
+    heaterModel: {
+      type: String
+    },
+    cleanerMake: {
+      type: String
+    },
+    cleanerModel: {
       type: String
     },
     other: [
       {
-        itemName: { type: String },
-        itemContent: { type: String }
+        itemCategory: { type: String },
+        itemMake: { type: String },
+        itemModel: { type: String }
       }
     ]
   },
   images: [
     {
       url: { type: String }
+    }
+  ],
+  serviceChecklist: [
+    {
+      item: { type: String, required: true }
     }
   ],
   dateAdded: {

@@ -131,6 +131,8 @@ const AddCustomers = ({ addCustomer }) => {
                   servicePackageAndRate:
                     'Inactive (Customer Will Not Be Serviced)',
                   billingSame: false,
+                  billingType: 'Manual Billing',
+                  paymentMethod: 'N/A',
                   billingAddress: '',
                   billingCity: '',
                   billingState: '',

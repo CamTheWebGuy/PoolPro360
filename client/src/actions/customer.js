@@ -4,7 +4,9 @@ import {
   GET_CUSTOMERS,
   GET_SINGLE_CUSTOMER,
   RESET_CUSTOMER_LOADING,
-  GET_CUSTOMER_SERVICE_NOTES
+  GET_CUSTOMER_SERVICE_NOTES,
+  GET_CUSTOMER_RECENT_ACTIVITY,
+  GET_CUSTOMER_CHECKLIST
 } from './types';
 
 // Add Customer
@@ -23,6 +25,8 @@ export const addCustomer = ({
   technician,
   servicePackageAndRate,
   billingSame,
+  billingType,
+  paymentMethod,
   billingAddress,
   billingCity,
   billingState,
@@ -49,6 +53,8 @@ export const addCustomer = ({
     technician,
     servicePackageAndRate,
     billingSame,
+    billingType,
+    paymentMethod,
     billingAddress,
     billingCity,
     billingState,
@@ -174,7 +180,7 @@ export const getCustomerServiceNotes = customerId => async dispatch => {
   }
 };
 
-// Get a Customers Service Notes
+// Delete a Service Note by ID
 export const deleteServiceNote = (customerId, noteId) => async dispatch => {
   try {
     await axios.delete(`/api/customers/${customerId}/serviceNotes/${noteId}`);
@@ -216,6 +222,210 @@ export const updateServiceNote = (
       config
     );
     dispatch(setAlert('Service Note Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Add a Log to Recent Activity
+export const addRecentActivity = (customerId, data) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const { log, type, comments } = data;
+
+  let icon = '';
+  if (log === 'Phone Call') {
+    icon = 'phone';
+  } else if (log === 'Email') {
+    icon = 'envelope';
+  } else if (log === 'Service') {
+    icon = 'check-circle';
+  } else {
+    icon = 'exclamation-circle';
+  }
+
+  const body = JSON.stringify({
+    log,
+    type,
+    icon,
+    comments
+  });
+
+  try {
+    await axios.post(
+      `/api/customers/${customerId}/recentActivity/add`,
+      body,
+      config
+    );
+    dispatch(setAlert('Activity Logged', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get a Customers Recent Activity
+export const getRecentActivity = customerId => async dispatch => {
+  try {
+    const activities = await axios.get(
+      `/api/customers/${customerId}/recentActivity`
+    );
+
+    dispatch({
+      type: GET_CUSTOMER_RECENT_ACTIVITY,
+      payload: activities.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Delete a Activity Log by ID
+export const deleteRecentActivity = (customerId, noteId) => async dispatch => {
+  try {
+    await axios.delete(`/api/customers/${customerId}/recentActivity/${noteId}`);
+
+    dispatch(setAlert('Activity Log Deleted', 'danger'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Add Checklist Item
+export const addItemChecklist = (customerId, data) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    item: data.item
+  });
+  try {
+    await axios.post(
+      `/api/customers/${customerId}/checklist/add`,
+      body,
+      config
+    );
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Checklist Items
+export const getChecklist = customerId => async dispatch => {
+  try {
+    const checklist = await axios.get(
+      `/api/customers/${customerId}/checklist/`
+    );
+
+    dispatch({
+      type: GET_CUSTOMER_CHECKLIST,
+      payload: checklist.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Checklist Items
+export const updateChecklist = (customerId, list) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    list
+  });
+
+  try {
+    const checklist = await axios.patch(
+      `/api/customers/${customerId}/checklist/`,
+      body,
+      config
+    );
+
+    dispatch({
+      type: GET_CUSTOMER_CHECKLIST,
+      payload: checklist.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Billing Info
+export const updateBilling = (
+  customerId,
+  {
+    billingSame,
+    billingType,
+    paymentMethod,
+    billingAddress,
+    billingState,
+    billingCity,
+    billingZip
+  }
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    billingSame,
+    billingType,
+    paymentMethod,
+    billingAddress,
+    billingState,
+    billingCity,
+    billingZip
+  });
+
+  try {
+    await axios.patch(`/api/customers/${customerId}/billing/`, body, config);
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

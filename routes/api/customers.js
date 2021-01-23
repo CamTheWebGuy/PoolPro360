@@ -6,6 +6,7 @@ const { check, validationResult } = require('express-validator');
 
 const Customer = require('../../models/Customer');
 const ServiceNotes = require('../../models/ServiceNotes');
+const Activity = require('../../models/Activity');
 
 const aws = require('aws-sdk');
 const multer = require('multer');
@@ -132,6 +133,8 @@ router.post(
       servicePackageAndRate,
       technician,
       billingSame,
+      billingType,
+      paymentMethod,
       billingAddress,
       billingCity,
       billingState,
@@ -166,6 +169,8 @@ router.post(
         technician,
         servicePackageAndRate,
         billingSame,
+        billingType,
+        paymentMethod,
         billingAddress,
         billingCity,
         billingState,
@@ -416,7 +421,7 @@ router.delete('/:customerId/serviceNotes/:noteId', auth, async (req, res) => {
 });
 
 // @route    PATCH api/customers/:customerId/serviceNotes/:noteId
-// @desc     Delete Service Note by ID
+// @desc     Update Service Note by ID
 // @access   Private/User
 router.patch('/:customerId/serviceNotes/:noteId', auth, async (req, res) => {
   const { content, showDuringVisit } = req.body;
@@ -444,6 +449,246 @@ router.patch('/:customerId/serviceNotes/:noteId', auth, async (req, res) => {
     await note.save();
 
     res.status(200).json({ msg: 'Note Updated' });
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/:customerId/recentActivity/add
+// @desc     Log Recent Activity to a Customer
+// @access   Private/User
+router.post(
+  '/:customerId/recentActivity/add',
+  [
+    auth,
+    [
+      check('comments')
+        .trim()
+        .escape(),
+      check('log')
+        .trim()
+        .escape(),
+      check('type')
+        .trim()
+        .escape()
+    ]
+  ],
+  async (req, res) => {
+    try {
+      const customer = await Customer.findOne({
+        user: req.user.id,
+        _id: req.params.customerId
+      });
+
+      if (!customer) {
+        return res
+          .status(404)
+          .json({ errors: [{ msg: 'Customer not found' }] });
+      }
+
+      const { comments, log, type, icon } = req.body;
+
+      let activity = new Activity({
+        comments,
+        log,
+        type,
+        icon,
+        customer: req.params.customerId,
+        user: req.user.id,
+        dateAdded: Date.now()
+      });
+
+      await activity.save();
+
+      res.status(200).json(activity);
+    } catch (err) {
+      console.log(err.message);
+      if (err.kind === 'ObjectId') {
+        return res
+          .status(404)
+          .json({ errors: [{ msg: 'Customer not found' }] });
+      }
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    GET api/customers/:customerId/recentActivity/
+// @desc     Get All a Customers Recent Activity
+// @access   Private/User
+router.get('/:customerId/recentActivity', auth, async (req, res) => {
+  try {
+    const activities = await Activity.find({
+      customer: req.params.customerId,
+      user: req.user.id
+    }).sort({ dateAdded: -1 });
+
+    res.status(200).json(activities);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    DELETE api/customers/:customerId/recentActivity/:id
+// @desc     Delete Activity by ID
+// @access   Private/User
+router.delete('/:customerId/recentActivity/:id', auth, async (req, res) => {
+  try {
+    const activity = await Activity.findById(req.params.id);
+
+    if (!activity) {
+      return res.status(404).json({ msg: 'Note not found' });
+    }
+
+    if (activity.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (activity.customer.toString() !== req.params.customerId) {
+      return res
+        .status(401)
+        .json({ msg: 'A log with this ID does not belong to this customer' });
+    }
+
+    await activity.remove();
+
+    res.status(200).json({ msg: 'Activity Log Removed' });
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/:customerId/checklist/add
+// @desc     Add Item to Service Checklist
+// @access   Private/User
+router.post('/:customerId/checklist/add', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findOne({
+      user: req.user.id,
+      _id: req.params.customerId
+    });
+
+    if (!customer) {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+
+    const { item } = req.body;
+
+    const newItem = {
+      item
+    };
+
+    await customer.serviceChecklist.push(newItem);
+
+    await customer.save();
+
+    res.json(customer.serviceChecklist);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    GET api/customers/:customerId/checklist/
+// @desc     Get a Customers Service Checklist
+// @access   Private/User
+router.get('/:customerId/checklist', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findOne({
+      _id: req.params.customerId,
+      user: req.user.id
+    });
+
+    res.status(200).json(customer.serviceChecklist);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/checklist
+// @desc     Update Customer Checklist
+// @access   Private/User
+router.patch('/:customerId/checklist', auth, async (req, res) => {
+  const { list } = req.body;
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (customer.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    customer.serviceChecklist = list;
+
+    await customer.save();
+
+    res.status(200).json(customer.serviceChecklist);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/billing
+// @desc     Update Customer Billing Information
+// @access   Private/User
+router.patch('/:customerId/billing', auth, async (req, res) => {
+  const {
+    billingSame,
+    billingType,
+    paymentMethod,
+    billingAddress,
+    billingCity,
+    billingState,
+    billingZip
+  } = req.body;
+
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (customer.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    (customer.billingSame = billingSame), (customer.billingType = billingType);
+    customer.billingAddress = billingAddress;
+    (customer.billingCity = billingCity),
+      (customer.billingState = billingState),
+      (customer.billingZip = billingZip);
+    customer.paymentMethod = paymentMethod;
+
+    await customer.save();
+
+    res.status(200).json(customer);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {
