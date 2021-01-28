@@ -21,6 +21,9 @@ const CustomerSchema = new mongoose.Schema({
   mobilePhone: {
     type: String
   },
+  altPhone: {
+    type: String
+  },
   serviceAddress: {
     type: String,
     required: true
@@ -116,9 +119,9 @@ const CustomerSchema = new mongoose.Schema({
     },
     other: [
       {
-        itemCategory: { type: String },
-        itemMake: { type: String },
-        itemModel: { type: String }
+        category: { type: String },
+        make: { type: String },
+        model: { type: String }
       }
     ]
   },

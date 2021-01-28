@@ -279,9 +279,13 @@ const ViewCustomer = ({
                   </Fragment>
                 )}
 
-                <a href='#!' className='btn btn-neutral mb-4'>
+                <Link
+                  to={`/customers/${match.params.id}/manage/info`}
+                  className='btn btn-neutral mb-4'
+                >
                   Edit Customer Information
-                </a>
+                </Link>
+
                 <a href='#!' className='btn btn-primary mb-4'>
                   Email Customer
                 </a>
@@ -493,33 +497,58 @@ const ViewCustomer = ({
                           </Col>
                           <Col sm='3'>
                             <div className='form-control-label'>Pump</div>
-                            <p>{customer[0].poolEquipment.pump}</p>
+                            <p>
+                              {customer[0].poolEquipment.pumpMake}{' '}
+                              {customer[0].poolEquipment.pumpModel}
+                            </p>
                           </Col>
                           <Col sm='3'>
                             <div className='form-control-label'>Filter</div>
-                            <p>{customer[0].poolEquipment.filter}</p>
+                            <p>
+                              {' '}
+                              {customer[0].poolEquipment.filterMake}{' '}
+                              {customer[0].poolEquipment.filterModel}
+                            </p>
                           </Col>
                         </Row>
                       )}
                       <Row>
                         {Object.entries(customer[0].poolEquipment).length !==
                           1 && (
-                          <Col sm='3'>
-                            <div className='form-control-label'>
-                              Pool Heater
-                            </div>
-                            <p>{customer[0].poolEquipment.heater}</p>
-                          </Col>
+                          <Fragment>
+                            <Col sm='3'>
+                              <div className='form-control-label'>
+                                Pool Cleaner
+                              </div>
+                              <p>
+                                {' '}
+                                {customer[0].poolEquipment.cleanerMake}{' '}
+                                {customer[0].poolEquipment.cleanerModel}
+                              </p>
+                            </Col>
+                            <Col sm='3'>
+                              <div className='form-control-label'>
+                                Pool Heater
+                              </div>
+                              <p>
+                                {' '}
+                                {customer[0].poolEquipment.heaterMake}{' '}
+                                {customer[0].poolEquipment.heaterModel}
+                              </p>
+                            </Col>
+                          </Fragment>
                         )}
 
                         {customer[0].poolEquipment.other && (
                           <Fragment>
                             {customer[0].poolEquipment.other.map(item => (
-                              <Col sm='3' key={item.itemName}>
+                              <Col sm='3' key={item.category}>
                                 <div className='form-control-label'>
-                                  {item.itemName}
+                                  {item.category.replace('s', '')}
                                 </div>
-                                <p>{item.itemContent}</p>
+                                <p>
+                                  {item.make} {item.model}
+                                </p>
                               </Col>
                             ))}
                           </Fragment>
@@ -1208,7 +1237,7 @@ const ViewCustomer = ({
             </Col>
           </Row>
           <Row>
-            <Col xs='7'>
+            <Col md='7'>
               <Card>
                 <CardHeader>
                   <div className='row align-items-center'>
@@ -1469,7 +1498,7 @@ const ViewCustomer = ({
                 </ModalFooter>
               </Modal>
             </Col>
-            <Col xs='5'>
+            <Col md='5'>
               <Card>
                 <CardHeader>
                   <div className='row align-items-center'>
@@ -1508,11 +1537,11 @@ const ViewCustomer = ({
                         <Fragment>
                           {serviceChecklist.map(item => (
                             <Row key={item._id}>
-                              <Col xs={{ size: '1' }}>
-                                <i className='fas fa-chevron-right fa-1x color-green'></i>
-                              </Col>
-                              <Col xs={{ size: '11' }}>
-                                <h3>{item.item}</h3>
+                              <Col xs={{ size: '12' }}>
+                                <h3>
+                                  <i className='fas fa-chevron-right fa-1x color-green'></i>{' '}
+                                  {item.item}
+                                </h3>
                               </Col>
                             </Row>
                           ))}

@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom';
 
 import { addEmployee } from '../../actions/employee';
+import { registerSubuser } from '../../actions/auth';
 
 import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
@@ -34,7 +35,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import generator from 'generate-password';
 
-const AddUser = ({ addEmployee }) => {
+const AddUser = ({ addEmployee, registerSubuser }) => {
   const [generatedPassword, setGeneratedPassword] = useState(null);
 
   const phoneRegExp = /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
@@ -43,7 +44,8 @@ const AddUser = ({ addEmployee }) => {
   const numericRegex = /(?=.*[0-9])/;
 
   const formSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
+    firstName: Yup.string().required('First name is required'),
+    lastName: Yup.string().required('Last name is required'),
     email: Yup.string()
       .email('Please provide a valid email')
       .required('Email is required'),
@@ -142,7 +144,8 @@ const AddUser = ({ addEmployee }) => {
             <CardBody>
               <Formik
                 initialValues={{
-                  name: '',
+                  firstName: '',
+                  lastName: '',
                   email: '',
                   phone: '',
                   role: 'Technician',
@@ -151,7 +154,7 @@ const AddUser = ({ addEmployee }) => {
                 }}
                 innerRef={formRef}
                 onSubmit={async data => {
-                  await addEmployee(data);
+                  await registerSubuser(data);
                   history.push('/users');
                 }}
                 validationSchema={formSchema}
@@ -170,24 +173,45 @@ const AddUser = ({ addEmployee }) => {
                       </h6>
                       <div className='pl-lg-4'>
                         <Row>
-                          <Col lg='12'>
+                          <Col lg='6'>
                             <FormGroup>
                               <Label
                                 for='firstName'
                                 className='form-control-label'
                               >
-                                Name
+                                First Name
                               </Label>
                               <Input
                                 type='text'
-                                name='name'
-                                placeholder='John Doe'
-                                value={values.name}
+                                name='firstName'
+                                placeholder='John'
+                                value={values.firstName}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                               />
-                              {errors.name && touched.name && (
-                                <p className='color-red'>{errors.name}</p>
+                              {errors.firstName && touched.firstName && (
+                                <p className='color-red'>{errors.firstName}</p>
+                              )}
+                            </FormGroup>
+                          </Col>
+                          <Col lg='6'>
+                            <FormGroup>
+                              <Label
+                                for='lastName'
+                                className='form-control-label'
+                              >
+                                Last Name
+                              </Label>
+                              <Input
+                                type='text'
+                                name='lastName'
+                                placeholder='Doe'
+                                value={values.lastName}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              />
+                              {errors.lastName && touched.lastName && (
+                                <p className='color-red'>{errors.lastName}</p>
                               )}
                             </FormGroup>
                           </Col>
@@ -246,6 +270,7 @@ const AddUser = ({ addEmployee }) => {
                               >
                                 <option>Technician</option>
                                 <option>Logistics</option>
+                                <option>Admin</option>
                               </Input>
                               {errors.role && touched.role && (
                                 <p className='color-red'>{errors.role}</p>
@@ -340,4 +365,9 @@ const AddUser = ({ addEmployee }) => {
   );
 };
 
-export default connect(null, { addEmployee })(AddUser);
+AddUser.propTypes = {
+  addEmployee: PropTypes.func.isRequired,
+  registerSubuser: PropTypes.func.isRequired
+};
+
+export default connect(null, { addEmployee, registerSubuser })(AddUser);

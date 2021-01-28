@@ -32,16 +32,17 @@ export const loadUser = () => async dispatch => {
 };
 
 // Register User
-export const register = (
-  fName,
-  lName,
+export const register = ({
+  firstName,
+  lastName,
   businessName,
   country,
   state,
   zip,
   email,
-  password
-) => async dispatch => {
+  password,
+  role
+}) => async dispatch => {
   const config = {
     headers: {
       'Content-Type': 'application/json'
@@ -49,17 +50,19 @@ export const register = (
   };
 
   const body = JSON.stringify({
-    firstName: fName,
-    lastName: lName,
+    firstName,
+    lastName,
     businessName,
     country,
     state,
     zip,
     email,
-    password
+    password,
+    role
   });
 
   try {
+    console.log(body);
     const res = await axios.post('/api/users', body, config);
 
     dispatch({
@@ -76,6 +79,50 @@ export const register = (
     dispatch({
       type: REGISTER_FAIL
     });
+  }
+};
+
+// Register Sub User
+export const registerSubuser = ({
+  firstName,
+  lastName,
+  phone,
+  businessName,
+  country,
+  state,
+  zip,
+  email,
+  password,
+  role
+}) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    firstName,
+    lastName,
+    phone,
+    businessName,
+    country,
+    state,
+    zip,
+    email,
+    password,
+    role
+  });
+
+  try {
+    await axios.post('/api/users/subuser', body, config);
+    dispatch(setAlert('User has been created', 'success'));
+  } catch (err) {
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
   }
 };
 

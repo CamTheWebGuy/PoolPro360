@@ -6,6 +6,8 @@ import { SpinnerCircular } from 'spinners-react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
+import { Formik } from 'formik';
+
 import { getEmployees } from '../../actions/employee';
 
 import Sidebar from '../dashboard/Sidebar';
@@ -21,7 +23,15 @@ import {
   UncontrolledDropdown,
   DropdownToggle,
   DropdownItem,
-  DropdownMenu
+  DropdownMenu,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Form,
+  FormGroup,
+  Input,
+  Label
 } from 'reactstrap';
 
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -69,14 +79,14 @@ const actionFormatter = cell => {
         <i className='fas fa-ellipsis-v' />
       </DropdownToggle>
       <DropdownMenu className='dropdown-menu-arrow' right>
-        <DropdownItem tag={Link} to={`/customers/${cell}`}>
-          View
+        <DropdownItem tag={Link} to={`/users/${cell}/view`}>
+          View User
         </DropdownItem>
-        <DropdownItem tag={Link} to={`/customers/${cell}/edit`}>
-          Edit
+        <DropdownItem tag={Link} to={`/users/${cell}/edit`}>
+          Edit User
         </DropdownItem>
         <DropdownItem tag={Link} to={`/customers/${cell}/inactive`}>
-          Mark Inactive
+          Delete User
         </DropdownItem>
       </DropdownMenu>
     </UncontrolledDropdown>
@@ -90,16 +100,20 @@ const Users = ({ getEmployees, employees: { employees, loading } }) => {
 
   const columns = [
     {
-      dataField: 'name',
-      text: 'Name'
+      dataField: 'firstName',
+      text: 'First Name'
+    },
+    {
+      dataField: 'lastName',
+      text: 'Last Name'
+    },
+    {
+      dataField: 'email',
+      text: 'Email/Username'
     },
     {
       dataField: 'role',
       text: 'Role'
-    },
-    {
-      dataField: 'email',
-      text: 'Email'
     },
     {
       dataField: 'phone',
@@ -144,14 +158,6 @@ const Users = ({ getEmployees, employees: { employees, loading } }) => {
                       </li>
                     </ol>
                   </nav>
-                </div>
-                <div className='col-lg-6 col-5 text-right'>
-                  <a href='#' className='btn btn-sm btn-neutral'>
-                    New
-                  </a>
-                  <a href='#' className='btn btn-sm btn-neutral'>
-                    Filters
-                  </a>
                 </div>
               </div>
             </div>

@@ -12,7 +12,10 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
         <Input
           type='select'
           name='cleanerMake'
-          onChange={handleChange}
+          onChange={e => {
+            handleChange('cleanerMake')(e);
+            handleChange('cleanerModel')('');
+          }}
           onBlur={handleBlur}
           value={values.cleanerMake}
         >
@@ -42,6 +45,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
         >
           {values.cleanerMake === 'Aqua Products' && (
             <Fragment>
+              <option>Choose One</option>
               <option>AquaBot AB</option>
               <option>AquaBot Apex Revive</option>
               <option>AquaBot Bravo</option>
@@ -101,6 +105,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Hayward' && (
             <Fragment>
+              <option>Choose One</option>
               <option>AquaBug</option>
               <option>AquaDroid</option>
               <option>AquaNaut 200</option>
@@ -144,6 +149,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Jandy' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Baracuda G2</option>
               <option>Baracuda G3</option>
               <option>Baracuda Pacer</option>
@@ -201,6 +207,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Maytronics' && (
             <Fragment>
+              <option>Choose One</option>
               <option>2X2</option>
               <option>3001</option>
               <option>Active 3</option>
@@ -280,6 +287,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Paramount' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Infloor 6 Port Gear Box</option>
               <option>Other</option>
             </Fragment>
@@ -287,6 +295,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Pentair' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Great White</option>
               <option>Jet Vac JV105</option>
               <option>Kreepy Kadet</option>
@@ -326,6 +335,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Polaris' && (
             <Fragment>
+              <option>Choose One</option>
               <option>165</option>
               <option>180</option>
               <option>280 Black Max</option>
@@ -352,6 +362,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'SmartPool' && (
             <Fragment>
+              <option>Choose One</option>
               <option>11i</option>
               <option>4i</option>
               <option>7i</option>
@@ -372,6 +383,7 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
 
           {values.cleanerMake === 'Water Tech' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Blue Diamond</option>
               <option>Blue Diamond Pro</option>
               <option>Blue Diamond RC</option>

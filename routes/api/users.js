@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const { check, validationResult } = require('express-validator');
+const auth = require('../../middleware/auth');
 
 const User = require('../../models/User');
 
@@ -57,7 +58,8 @@ router.post(
       state,
       zip,
       email,
-      password
+      password,
+      role
     } = req.body;
 
     try {
@@ -77,7 +79,8 @@ router.post(
         state,
         zip,
         email,
-        password
+        password,
+        role
       });
 
       const salt = await bcrypt.genSalt(10);
@@ -101,6 +104,111 @@ router.post(
           res.json({ token });
         }
       );
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    POST api/users
+// @desc     Register Sub User
+// @access   Public
+router.post(
+  '/subuser',
+  [
+    auth,
+    [
+      check('firstName', 'a First Name is required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('lastName', 'a Last Name is Required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('businessName')
+        .trim()
+        .escape(),
+      check('country')
+        .trim()
+        .escape(),
+      check('zip')
+        .trim()
+        .escape(),
+      check('email', 'Please include a valid email')
+        .isEmail()
+        .normalizeEmail()
+        .trim()
+        .escape(),
+      check(
+        'password',
+        'Please enter a password with 6 characters or more'
+      ).isLength({ min: 6 })
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      firstName,
+      lastName,
+      phone,
+      businessName,
+      country,
+      state,
+      zip,
+      email,
+      password,
+      role
+    } = req.body;
+
+    try {
+      let user = await User.findOne({ email });
+      let creator = await User.findById(req.user.id);
+      console.log(creator.role);
+
+      if (!creator.role === 'Admin' && !creator.role === 'Owner') {
+        return res.status(401).json({
+          errors: [{ msg: 'You do not have permission to perform this action' }]
+        });
+      }
+
+      if (user) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: 'User already exists' }] });
+      }
+
+      user = new User({
+        firstName,
+        lastName,
+        phone,
+        businessName,
+        country,
+        state,
+        zip,
+        email,
+        password,
+        role,
+        isOwner: false,
+        isSubUser: true,
+        owner: req.user.id
+      });
+
+      const salt = await bcrypt.genSalt(10);
+
+      user.password = await bcrypt.hash(password, salt);
+
+      await user.save();
+
+      res.status(200).json({ msg: 'User Added' });
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');

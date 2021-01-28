@@ -107,7 +107,7 @@ const AddCustomers = ({ addCustomer }) => {
                   <h3 className='mb-0'>Add Customer </h3>
                 </div>
                 <div className='col-4 text-right'>
-                  <Button type='submit' color='primary' onClick={handleSubmit}>
+                  <Button type='submit' color='success' onClick={handleSubmit}>
                     Save Customer
                   </Button>
                 </div>

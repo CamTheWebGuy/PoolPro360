@@ -698,4 +698,156 @@ router.patch('/:customerId/billing', auth, async (req, res) => {
   }
 });
 
+// @route    PATCH api/customers/:customerId/equipment
+// @desc     Update Customer Equipment
+// @access   Private/User
+router.patch('/:customerId/equipment', auth, async (req, res) => {
+  const {
+    poolType,
+    poolGallons,
+    bodiesOfWater,
+    pumpMake,
+    pumpModel,
+    filterMake,
+    filterModel,
+    heaterMake,
+    heaterModel,
+    cleanerMake,
+    cleanerModel,
+    itemList
+  } = req.body;
+
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (customer.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    customer.poolEquipment.poolType = poolType;
+    customer.poolEquipment.poolGallons = poolGallons;
+    customer.poolEquipment.bodiesOfWater = bodiesOfWater;
+    customer.poolEquipment.pumpModel = pumpModel;
+    customer.poolEquipment.pumpMake = pumpMake;
+    customer.poolEquipment.filterMake = filterMake;
+    customer.poolEquipment.filterModel = filterModel;
+    customer.poolEquipment.heaterMake = heaterMake;
+    customer.poolEquipment.heaterModel = heaterModel;
+    customer.poolEquipment.cleanerMake = cleanerMake;
+    customer.poolEquipment.cleanerModel = cleanerModel;
+
+    // customer.poolEquipment.other = itemList;
+
+    customer.poolEquipment.other.push(...itemList);
+
+    await customer.save();
+
+    res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    DELETE api/customers/:customerId/equipment/:id
+// @desc     Delete Activity by ID
+// @access   Private/User
+router.delete('/:customerId/equipment/:id', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (customer.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    const itemIndex = customer.poolEquipment.other.findIndex(
+      item => item._id == `${req.params.id}`
+    );
+    const newData = [
+      ...customer.poolEquipment.other.slice(0, itemIndex),
+      ...customer.poolEquipment.other.slice(itemIndex + 1)
+    ];
+
+    customer.poolEquipment.other = newData;
+
+    await customer.save();
+
+    res.status(200).json({ msg: 'Item Removed' });
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/information
+// @desc     Update Customer Information
+// @access   Private/User
+router.patch('/:customerId/information', auth, async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    mobilePhone,
+    email,
+    canText,
+    altPhone,
+    serviceAddress,
+    serviceCity,
+    serviceState,
+    serviceZip,
+    gateCode,
+    servicePackageAndRate,
+    technician
+  } = req.body;
+
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (customer.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    (customer.firstName = firstName),
+      (customer.lastName = lastName),
+      (customer.mobilePhone = mobilePhone),
+      (customer.mobilePhone = mobilePhone),
+      (customer.canText = canText),
+      (customer.altPhone = altPhone),
+      (customer.serviceAddress = serviceAddress),
+      (customer.serviceCity = serviceCity),
+      (customer.serviceState = serviceState),
+      (customer.serviceZip = serviceZip),
+      (customer.email = email),
+      (customer.gateCode = gateCode),
+      (customer.servicePackageAndRate = servicePackageAndRate),
+      (customer.technician = technician),
+      await customer.save();
+
+    res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;

@@ -12,7 +12,10 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
         <Input
           type='select'
           name='heaterMake'
-          onChange={handleChange}
+          onChange={e => {
+            handleChange('heaterMake')(e);
+            handleChange('heaterModel')('');
+          }}
           onBlur={handleBlur}
           value={values.heaterMake}
         >
@@ -40,6 +43,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
         >
           {values.heaterMake === 'AquaCal' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Great Big Bopper BB500BRDSBNA Heat Pump</option>
               <option>Great Big Bopper BB500DRDSBNA Heat Pump</option>
               <option>Great Big Bopper BB500GRDSBNA Heat Pump</option>
@@ -81,6 +85,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.heaterMake === 'Built Right' && (
             <Fragment>
+              <option>Choose One</option>
               <option>115XW</option>
               <option>135XW</option>
               <option>Other</option>
@@ -89,6 +94,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.heaterMake === 'Gulfstream' && (
             <Fragment>
+              <option>Choose One</option>
               <option>HE110-R-A</option>
               <option>HE125-R-A</option>
               <option>HE125-R-B</option>
@@ -106,6 +112,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.heaterMake === 'Hayward' && (
             <Fragment>
+              <option>Choose One</option>
               <option>CPS1120 LP</option>
               <option>CPS1120 NG</option>
               <option>CPS1320 LP</option>
@@ -239,6 +246,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.heaterMake === 'Jandy' && (
             <Fragment>
+              <option>Choose One</option>
               <option>AE-Ti 2000 Heat Pump</option>
               <option>AE-Ti 2500 Heat Pump</option>
               <option>AE-Ti 3000 Heat Pump</option>
@@ -433,6 +441,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.heaterMake === 'Pentair' && (
             <Fragment>
+              <option>Choose One</option>
               <option>ETi 400</option>
               <option>Mastertemp 175 LP</option>
               <option>Mastertemp 175 NG</option>
@@ -555,6 +564,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.heaterMake === 'Rheem / Raypak' && (
             <Fragment>
+              <option>Choose One</option>
               <option>E3T Digital Heater - 0005</option>
               <option>E3T Digital Heater - 0011</option>
               <option>E3T Digital Heater - 0018</option>

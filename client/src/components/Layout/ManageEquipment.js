@@ -34,7 +34,11 @@ import {
 } from 'reactstrap';
 
 import { Formik } from 'formik';
-import { getSingleCustomer } from '../../actions/customer';
+import {
+  getSingleCustomer,
+  updateEquipment,
+  deleteEquipment
+} from '../../actions/customer';
 
 import Alert from '../Layout/Alert';
 import Sidebar from '../dashboard/Sidebar';
@@ -50,6 +54,8 @@ import CustomManager from '../EquipmentManagers/CustomManager';
 const ManageEquipment = ({
   match,
   getSingleCustomer,
+  updateEquipment,
+  deleteEquipment,
   customer: { customer, singleLoading }
 }) => {
   useEffect(() => {
@@ -57,10 +63,16 @@ const ManageEquipment = ({
   }, [getSingleCustomer]);
 
   const [itemsList, setItemsList] = useState([]);
+  const formRef = useRef();
+  const handleSubmit = () => {
+    if (formRef.current) {
+      formRef.current.handleSubmit();
+    }
+  };
 
   const onAddItem = () => {
     const object = {};
-    object._id = uuidv4();
+    object.itentifier = uuidv4();
     object.category = 'Cleaners';
     object.make = 'Aqua Products';
     object.model = 'AquaBot AB';
@@ -69,7 +81,7 @@ const ManageEquipment = ({
   };
 
   const handleCategoryChange = (id, data) => {
-    const itemIndex = itemsList.findIndex(item => item._id == `${id}`);
+    const itemIndex = itemsList.findIndex(item => item.itentifier === `${id}`);
 
     const list = [...itemsList];
     const itemToEdit = { ...list[itemIndex] };
@@ -82,7 +94,7 @@ const ManageEquipment = ({
   };
 
   const handleMakeChange = (id, data) => {
-    const itemIndex = itemsList.findIndex(item => item._id == `${id}`);
+    const itemIndex = itemsList.findIndex(item => item.itentifier === `${id}`);
 
     const list = [...itemsList];
     const itemToEdit = { ...list[itemIndex] };
@@ -92,6 +104,38 @@ const ManageEquipment = ({
     list[itemIndex] = itemToEdit;
 
     setItemsList(list);
+  };
+
+  const handleModelChange = (id, data) => {
+    const itemIndex = itemsList.findIndex(item => item.itentifier === `${id}`);
+
+    const list = [...itemsList];
+    const itemToEdit = { ...list[itemIndex] };
+
+    itemToEdit.model = data.target.value;
+
+    list[itemIndex] = itemToEdit;
+
+    setItemsList(list);
+  };
+
+  const [itemDeleteModal, setItemDeleteModal] = useState({
+    isOpen: false,
+    active: null,
+    isLoading: false
+  });
+
+  const toggleDeleteModal = itemId => {
+    setItemDeleteModal({
+      isOpen: !itemDeleteModal.open,
+      active: itemId,
+      isLoading: false
+    });
+  };
+
+  const handleItemDelete = async itemId => {
+    await deleteEquipment(match.params.id, itemId);
+    getSingleCustomer(match.params.id);
   };
 
   return (
@@ -173,17 +217,42 @@ const ManageEquipment = ({
               <CardHeader>
                 {' '}
                 <div className='row align-items-center'>
-                  <div className='col-8'>
+                  <Col sm={{ size: 8 }}>
                     <h3 className='mb-0'>Manage Equipment:</h3>
-                  </div>
+                  </Col>
+                  <Col sm={{ size: 4 }} className='d-none d-lg-block'>
+                    <div className='text-right'>
+                      <Button
+                        type='submit'
+                        color='success'
+                        onClick={handleSubmit}
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </Col>
+                  <Col
+                    sm={{ size: 4 }}
+                    className='d-block d-sm-block d-md-block d-lg-none'
+                  >
+                    <br />
+                    <Button
+                      type='submit'
+                      color='success'
+                      onClick={handleSubmit}
+                    >
+                      Save Changes
+                    </Button>
+                  </Col>
                 </div>
               </CardHeader>
               <CardBody>
                 <Fragment>
                   <Formik
                     initialValues={{
-                      poolType: '',
-                      bodiesOfWater: '',
+                      poolType: customer[0].poolEquipment.poolType,
+                      bodiesOfWater: customer[0].poolEquipment.bodiesOfWater,
+                      poolGallons: customer[0].poolEquipment.poolGallons,
                       pumpMake: customer[0].poolEquipment.pumpMake,
                       pumpModel: customer[0].poolEquipment.pumpModel,
                       heaterMake: customer[0].poolEquipment.heaterMake,
@@ -193,7 +262,12 @@ const ManageEquipment = ({
                       cleanerMake: customer[0].poolEquipment.cleanerMake,
                       cleanerModel: customer[0].poolEquipment.cleanerModel
                     }}
-                    onSubmit={data => console.log(data, itemsList)}
+                    innerRef={formRef}
+                    onSubmit={async data => {
+                      await updateEquipment(match.params.id, itemsList, data);
+                      getSingleCustomer(match.params.id);
+                      setItemsList([]);
+                    }}
                     render={({
                       handleSubmit,
                       handleChange,
@@ -211,7 +285,12 @@ const ManageEquipment = ({
                                 >
                                   Pool Type:
                                 </Label>
-                                <Input type='select' name='poolType'>
+                                <Input
+                                  type='select'
+                                  name='poolType'
+                                  onChange={handleChange}
+                                  value={values.poolType}
+                                >
                                   <option>N/A</option>
                                   <option>Inground Pool</option>
                                   <option>Above Ground Pool</option>
@@ -223,7 +302,13 @@ const ManageEquipment = ({
                                   How Many Gallons Is The Pool?:
                                 </Label>
                                 <InputGroup>
-                                  <Input type='number' placeholder='28000' />
+                                  <Input
+                                    type='number'
+                                    placeholder='28000'
+                                    onChange={handleChange}
+                                    name='poolGallons'
+                                    value={values.poolGallons}
+                                  />
                                   <InputGroupAddon addonType='append'>
                                     <InputGroupText>Gallons</InputGroupText>
                                   </InputGroupAddon>
@@ -238,7 +323,12 @@ const ManageEquipment = ({
                                 >
                                   Bodies Of Water:
                                 </Label>
-                                <Input type='select' name='bodiesOfWater'>
+                                <Input
+                                  type='select'
+                                  name='bodiesOfWater'
+                                  onChange={handleChange}
+                                  value={values.bodiesOfWater}
+                                >
                                   <option>N/A</option>
                                   <option>Pool</option>
                                   <option>Spa</option>
@@ -280,13 +370,115 @@ const ManageEquipment = ({
                             </Col>
                           </Row>
                           <hr />
+                          {customer[0].poolEquipment.other.map(item => (
+                            <Fragment key={item._id}>
+                              <Row>
+                                <Col md='3'>
+                                  <h4>Category:</h4>
+                                  {item.category}
+                                </Col>
+                                <Col md='3'>
+                                  <h4>Make:</h4>
+                                  {item.make}
+                                </Col>
+                                <Col md='3'>
+                                  <h4>Model:</h4>
+                                  {item.model}
+                                </Col>
+                                <Col md='3'>
+                                  <h4>Actions:</h4>
+                                  <Button
+                                    color='danger'
+                                    size='sm'
+                                    onClick={() => {
+                                      toggleDeleteModal(item._id);
+                                    }}
+                                  >
+                                    Delete Item
+                                  </Button>
+                                </Col>
+                              </Row>
+                              <br />
+                            </Fragment>
+                          ))}
+                          <Modal
+                            isOpen={itemDeleteModal.isOpen}
+                            toggle={e =>
+                              setItemDeleteModal({
+                                ...itemDeleteModal,
+                                isOpen: false
+                              })
+                            }
+                          >
+                            <ModalHeader
+                              toggle={e =>
+                                setItemDeleteModal({
+                                  ...itemDeleteModal,
+                                  isOpen: false
+                                })
+                              }
+                            >
+                              Are you sure?
+                            </ModalHeader>
+                            <ModalBody>
+                              Are you sure you want to delete this item? This
+                              action cannot be undone.
+                            </ModalBody>
+                            <ModalFooter>
+                              <Button
+                                onClick={e =>
+                                  setItemDeleteModal({
+                                    ...itemDeleteModal,
+                                    isOpen: false
+                                  })
+                                }
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                color='danger'
+                                onClick={async e => {
+                                  setItemDeleteModal({
+                                    ...itemDeleteModal,
+                                    isLoading: true
+                                  });
+                                  await handleItemDelete(
+                                    itemDeleteModal.active
+                                  );
+                                  setItemDeleteModal({
+                                    isLoading: false,
+                                    isOpen: false,
+                                    active: null
+                                  });
+                                }}
+                              >
+                                {itemDeleteModal.isLoading ? (
+                                  <span>
+                                    <SpinnerCircular
+                                      size={24}
+                                      thickness={180}
+                                      speed={100}
+                                      color='rgba(57, 125, 172, 1)'
+                                      secondaryColor='rgba(0, 0, 0, 0.44)'
+                                    />{' '}
+                                    Processing...
+                                  </span>
+                                ) : (
+                                  <span>Delete Item</span>
+                                )}
+                              </Button>
+                            </ModalFooter>
+                          </Modal>
+                          <br />
                           <CustomManager
                             itemsList={itemsList}
                             handleCategoryChange={handleCategoryChange}
                             handleBlur={handleBlur}
                             handleChange={handleChange}
+                            handleModelChange={handleModelChange}
                             handleMakeChange={handleMakeChange}
                           />
+
                           <Row>
                             <Col lg='12'>
                               <div className='text-center'>
@@ -307,7 +499,6 @@ const ManageEquipment = ({
                             </Col>
                           </Row>
                           <br />
-                          <Button type='submit'>Submit Data</Button>
                         </Form>
                       </Fragment>
                     )}
@@ -316,6 +507,7 @@ const ManageEquipment = ({
               </CardBody>
             </Card>
           )}
+          <Footer />
         </Container>
       </div>
     </Fragment>
@@ -324,6 +516,8 @@ const ManageEquipment = ({
 
 ManageEquipment.propTypes = {
   getSingleCustomer: PropTypes.func.isRequired,
+  updateEquipment: PropTypes.func.isRequired,
+  deleteEquipment: PropTypes.func.isRequired,
   customer: PropTypes.object.isRequired
 };
 
@@ -331,4 +525,8 @@ const mapStateToProps = state => ({
   customer: state.customer.singleCustomer
 });
 
-export default connect(mapStateToProps, { getSingleCustomer })(ManageEquipment);
+export default connect(mapStateToProps, {
+  getSingleCustomer,
+  updateEquipment,
+  deleteEquipment
+})(ManageEquipment);

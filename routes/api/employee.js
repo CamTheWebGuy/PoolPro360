@@ -7,10 +7,11 @@ const config = require('config');
 const { check, validationResult } = require('express-validator');
 
 const Employee = require('../../models/Employee');
+const User = require('../../models/User');
 
 // @route    POST api/employees
 // @desc     Register Employee
-// @access   Private
+// @access   Private/User
 router.post(
   '/',
   [
@@ -78,15 +79,135 @@ router.post(
   }
 );
 
-// @route    POST api/employees
+// @route    GET api/employees
 // @desc     Get All My Employees
-// @access   Private
+// @access   Private/User
 router.get('/', auth, async (req, res) => {
   try {
-    const employees = await Employee.find({ admin: req.user.id });
+    const employees = await User.find({
+      owner: req.user.id,
+      isSubUser: true,
+      isOwner: false
+    });
+
+    if (!employees)
+      return res
+        .status(500)
+        .json({ msg: 'Not Authorized or Employees not Found' });
+
     res.json(employees);
   } catch (err) {
     console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    GET api/employees/:id
+// @desc     Get Employee by ID
+// @access   Private/User
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const employee = await User.find({
+      owner: req.user.id,
+      isSubUser: true,
+      isOwner: false,
+      _id: req.params.id
+    });
+
+    if (!employee)
+      return res
+        .status(500)
+        .json({ msg: 'Not Authorized or Employee not Found' });
+
+    res.json(employee);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/employees/:employeeId/information
+// @desc     Update User Information
+// @access   Private/User
+router.patch('/:employeeId/information', auth, async (req, res) => {
+  const { firstName, lastName, email, role, phone } = req.body;
+
+  try {
+    const employee = await User.findById(req.params.employeeId);
+
+    if (!employee) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (
+      employee.role === 'Owner' ||
+      employee.isSubUser === false ||
+      employee.isOwner === true
+    ) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (employee.owner.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    employee.firstName = firstName;
+    employee.lastName = lastName;
+    employee.email = email;
+    employee.role = role;
+    employee.phone = phone;
+
+    await employee.save();
+
+    res.status(200).json(employee);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/employees/:employeeId/password
+// @desc     Update User Password
+// @access   Private/User
+router.patch('/:employeeId/password', auth, async (req, res) => {
+  const { password } = req.body;
+
+  try {
+    const employee = await User.findById(req.params.employeeId);
+    const user = await User.findById(req.user.id);
+
+    if (!employee) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (
+      employee.owner.toString() !== req.user.id &&
+      employee._id.toString() !== req.user.id &&
+      user.role !== 'Admin'
+    ) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+
+    employee.password = await bcrypt.hash(password, salt);
+    employee.passwordUpdated = Date.now();
+
+    await employee.save();
+
+    res.status(200).json(employee);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
     res.status(500).send('Server Error');
   }
 });

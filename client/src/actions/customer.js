@@ -435,3 +435,128 @@ export const updateBilling = (
     }
   }
 };
+
+// Update Equipment Info
+export const updateEquipment = (
+  customerId,
+  itemList,
+  {
+    poolType,
+    poolGallons,
+    bodiesOfWater,
+    pumpMake,
+    pumpModel,
+    filterMake,
+    filterModel,
+    heaterMake,
+    heaterModel,
+    cleanerMake,
+    cleanerModel
+  }
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    poolType,
+    poolGallons,
+    bodiesOfWater,
+    pumpMake,
+    pumpModel,
+    filterMake,
+    filterModel,
+    heaterMake,
+    heaterModel,
+    cleanerMake,
+    cleanerModel,
+    itemList
+  });
+
+  try {
+    await axios.patch(`/api/customers/${customerId}/equipment/`, body, config);
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Delete Custom Equipment
+export const deleteEquipment = (customerId, equipmentId) => async dispatch => {
+  try {
+    await axios.delete(`/api/customers/${customerId}/equipment/${equipmentId}`);
+
+    dispatch(setAlert('Item Deleted', 'danger'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Equipment Info
+export const updateCustomer = (
+  customerId,
+  {
+    firstName,
+    lastName,
+    mobilePhone,
+    email,
+    canText,
+    altPhone,
+    serviceAddress,
+    serviceCity,
+    serviceState,
+    serviceZip,
+    gateCode,
+    servicePackageAndRate,
+    technician
+  }
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    firstName,
+    lastName,
+    mobilePhone,
+    email,
+    canText,
+    altPhone,
+    serviceAddress,
+    serviceCity,
+    serviceState,
+    serviceZip,
+    gateCode,
+    servicePackageAndRate,
+    technician
+  });
+
+  try {
+    await axios.patch(
+      `/api/customers/${customerId}/information/`,
+      body,
+      config
+    );
+    dispatch(setAlert('Changes Saved', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

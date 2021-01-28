@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { setAlert } from './alert';
-import { GET_EMPLOYEES } from './types';
+import { GET_EMPLOYEES, GET_SINGLE_EMPLOYEE } from './types';
 
 // Add Employee
 export const addEmployee = ({
@@ -45,6 +45,84 @@ export const getEmployees = () => async dispatch => {
       type: GET_EMPLOYEES,
       payload: employees.data
     });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Single Employee
+export const getSingleEmployee = id => async dispatch => {
+  try {
+    const employee = await axios.get(`/api/employees/${id}`);
+    dispatch({
+      type: GET_SINGLE_EMPLOYEE,
+      payload: employee.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Employee
+export const updateEmployee = (
+  employeeId,
+  { firstName, lastName, email, phone, role }
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    firstName,
+    lastName,
+    email,
+    phone,
+    role
+  });
+
+  try {
+    await axios.patch(`/api/employees/${employeeId}/information`, body, config);
+    dispatch(setAlert('User Updated Successfully', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Employee Password
+export const updateEmployeePassword = (
+  employeeId,
+  { password }
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    password
+  });
+
+  try {
+    await axios.patch(`/api/employees/${employeeId}/password`, body, config);
+    dispatch(setAlert('Password Updated Successfully', 'success'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

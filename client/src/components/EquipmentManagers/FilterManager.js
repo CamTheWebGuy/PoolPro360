@@ -12,7 +12,10 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
         <Input
           type='select'
           name='filterMake'
-          onChange={handleChange}
+          onChange={e => {
+            handleChange('filterMake')(e);
+            handleChange('filterModel')('');
+          }}
           onBlur={handleBlur}
           value={values.filterMake}
         >
@@ -43,6 +46,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
         >
           {values.filterMake === 'Anthony' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Apollo VA-26 DE</option>
               <option>Apollo VA-38 DE</option>
               <option>Apollo VA-52 1.5" DE</option>
@@ -54,6 +58,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Baker Hydro' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Baker II 3.14sq Sand</option>
               <option>Baker II 4.91sq Sand</option>
               <option>Hydro Mite 100 Cart</option>
@@ -71,6 +76,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Harmsco' && (
             <Fragment>
+              <option>Choose One</option>
               <option>BF 105 Single Cart</option>
               <option>BF 1200FL</option>
               <option>BF 126 Cluster Style</option>
@@ -96,6 +102,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Hayward' && (
             <Fragment>
+              <option>Choose One</option>
               <option>ASL C1250 Cartridge</option>
               <option>ASL C850 Cartridge</option>
               <option>Easy Clear C400 Cartridge</option>
@@ -187,6 +194,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Jacuzzi' && (
             <Fragment>
+              <option>Choose One</option>
               <option>CFR 100 Cartridge</option>
               <option>CFR 150 Cartridge</option>
               <option>CFR 50 Cartridge</option>
@@ -209,6 +217,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Jandy' && (
             <Fragment>
+              <option>Choose One</option>
               <option>2888 Energy Filter with Gauge</option>
               <option>C 200 Cartridge</option>
               <option>C 300 Cartridge</option>
@@ -242,6 +251,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Pac-Fab' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Mitra MA160 Cartridge</option>
               <option>Other</option>
             </Fragment>
@@ -249,6 +259,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Pentair' && (
             <Fragment>
+              <option>Choose One</option>
               <option>CFW 120 Cartridge</option>
               <option>CFW 180 Cartridge</option>
               <option>CFW 315 Cartridge</option>
@@ -453,6 +464,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Unicel' && (
             <Fragment>
+              <option>Choose One</option>
               <option>7699</option>
               <option>8409</option>
               <option>8412</option>
@@ -470,6 +482,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
 
           {values.filterMake === 'Waterway' && (
             <Fragment>
+              <option>Choose One</option>
               <option>ClearWater 16" Sand</option>
               <option>ClearWater 19" Sand</option>
               <option>ClearWater 22" Sand</option>

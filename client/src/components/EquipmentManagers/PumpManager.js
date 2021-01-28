@@ -12,7 +12,10 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
         <Input
           type='select'
           name='pumpMake'
-          onChange={handleChange}
+          onChange={e => {
+            handleChange('pumpMake')(e);
+            handleChange('pumpModel')('');
+          }}
           onBlur={handleBlur}
           value={values.pumpMake}
         >
@@ -45,6 +48,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
         >
           {values.pumpMake === 'Anthony' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Bronze 1 1/2 HP</option>
               <option>Bronze 1 HP</option>
               <option>Bronze 2 HP</option>
@@ -55,6 +59,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Aqua-Flo' && (
             <Fragment>
+              <option>Choose One</option>
               <option>A Series Bronze 1 1/2 HP</option>
               <option>A Series Bronze 1 HP</option>
               <option>A Series Bronze 1/2 HP</option>
@@ -87,6 +92,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Everbilt' && (
             <Fragment>
+              <option>Choose One</option>
               <option>
                 1.5-HP 230/115-Volt In-Ground Pool Pump with Protector
                 Technology
@@ -97,6 +103,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Harris' && (
             <Fragment>
+              <option>Choose One</option>
               <option>ProForce 1.5HP</option>
               <option>ProForce 1HP</option>
               <option>Other</option>
@@ -105,6 +112,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Hayward' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Booster Model 6060 3/4 HP</option>
               <option>EcoStar SVRS SP3400</option>
               <option>EcoStar VS SP3400</option>
@@ -230,6 +238,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Jacuzzi' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Cygnet 1 1/2 HP</option>
               <option>Cygnet 1 HP</option>
               <option>Cygnet 2 HP</option>
@@ -302,6 +311,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Jandy' && (
             <Fragment>
+              <option>Choose One</option>
               <option>FHPM Flo-Pro 1 1/2 HP</option>
               <option>FHPM Flo-Pro 1 HP</option>
               <option>FHPM Flo-Pro 2 1/2 HP</option>
@@ -395,6 +405,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Pentair' && (
             <Fragment>
+              <option>Choose One</option>
               <option>ABG 1 1/2 HP</option>
               <option>ABG 1 HP</option>
               <option>ABG 1/2 HP</option>
@@ -612,6 +623,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Polaris' && (
             <Fragment>
+              <option>Choose One</option>
               <option>PB4-60 3/4 HP Booster Pump</option>
               <option>PB4SQ Booster Pump</option>
               <option>Other</option>
@@ -620,6 +632,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Premier' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Model 555N</option>
               <option>Model 556N</option>
               <option>Model 575N</option>
@@ -629,6 +642,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Sta-Rite' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Max-E-Pro</option>
               <option>Other</option>
             </Fragment>
@@ -636,6 +650,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Water Wizard' && (
             <Fragment>
+              <option>Choose One</option>
               <option>5-MSP 1200GPH 115V with 25' Cord</option>
               <option>Other</option>
             </Fragment>
@@ -643,6 +658,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'Waterway' && (
             <Fragment>
+              <option>Choose One</option>
               <option>Iron Might 1/15HP 3410030-1E</option>
               <option>SMF-110 1HP</option>
               <option>SMF-115 1.5HP</option>
@@ -652,6 +668,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
 
           {values.pumpMake === 'XtremepowerUS' && (
             <Fragment>
+              <option>Choose One</option>
               <option>2 Speed 1.5HP</option>
               <option>2 Speed 2HP</option>
               <option>2 Speed High-flo 2HP</option>

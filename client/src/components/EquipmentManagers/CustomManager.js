@@ -7,14 +7,15 @@ const CustomManager = ({
   handleCategoryChange,
   handleBlur,
   handleChange,
-  handleMakeChange
+  handleMakeChange,
+  handleModelChange
 }) => {
   return (
     <Fragment>
       {itemsList.length >= 1 && (
         <Fragment>
           {itemsList.map(item => (
-            <Row key={item._id}>
+            <Row key={item.itentifier}>
               <Col lg='4'>
                 <FormGroup>
                   <Label for='category' className='form-control-label'>
@@ -23,7 +24,9 @@ const CustomManager = ({
                   <Input
                     type='select'
                     name='category'
-                    onChange={data => handleCategoryChange(item._id, data)}
+                    onChange={data =>
+                      handleCategoryChange(item.itentifier, data)
+                    }
                     onBlur={handleBlur}
                   >
                     <option>Cleaners</option>
@@ -50,11 +53,13 @@ const CustomManager = ({
                   <Input
                     type='select'
                     name='make'
-                    onChange={data => handleMakeChange(item._id, data)}
+                    onChange={data => handleMakeChange(item.itentifier, data)}
                     onBlur={handleBlur}
                   >
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Cleaners' && (
                       <Fragment>
                         <option disabled selected>
@@ -74,7 +79,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Control Systems' && (
                       <Fragment>
                         <option disabled selected>
@@ -89,7 +96,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Filters' && (
                       <Fragment>
                         <option disabled selected>
@@ -110,7 +119,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Heaters' && (
                       <Fragment>
                         <option disabled selected>
@@ -128,7 +139,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Infloor' && (
                       <Fragment>
                         <option disabled selected>
@@ -143,7 +156,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Lights' && (
                       <Fragment>
                         <option disabled selected>
@@ -159,7 +174,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Pumps' && (
                       <Fragment>
                         <option disabled selected>
@@ -184,7 +201,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Reels' && (
                       <Fragment>
                         <option disabled selected>
@@ -197,7 +216,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Sanitizers' && (
                       <Fragment>
                         <option disabled selected>
@@ -235,7 +256,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Valves' && (
                       <Fragment>
                         <option disabled selected>
@@ -252,7 +275,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'Water Features' && (
                       <Fragment>
                         <option disabled selected>
@@ -267,7 +292,9 @@ const CustomManager = ({
                     )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].category === 'White Goods' && (
                       <Fragment>
                         <option disabled selected>
@@ -297,14 +324,18 @@ const CustomManager = ({
                   <Input
                     type='select'
                     name='model'
-                    onChange={handleChange}
+                    onChange={data => handleModelChange(item.itentifier, data)}
                     onBlur={handleBlur}
                   >
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Aqua Products' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -368,10 +399,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -419,10 +454,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -484,10 +523,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Maytronics' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -571,10 +614,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Paramount' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -586,10 +633,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -633,10 +684,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Polaris' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -667,10 +722,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'SmartPool' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -695,10 +754,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Water Tech' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Cleaners' && (
                         <Fragment>
                           <option disabled selected>
@@ -719,10 +782,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Control Systems' && (
                         <Fragment>
                           <option disabled selected>
@@ -753,10 +820,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Intermatic' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Control Systems' && (
                         <Fragment>
                           <option disabled selected>
@@ -1080,10 +1151,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Control Systems' && (
                         <Fragment>
                           <option disabled selected>
@@ -1125,10 +1200,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Control Systems' && (
                         <Fragment>
                           <option disabled selected>
@@ -1178,10 +1257,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Anthony' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1196,10 +1279,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Anthony' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Aqua-Flo' && (
                         <Fragment>
                           <option disabled selected>
@@ -1236,10 +1323,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Everbilt' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1254,10 +1345,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Harris' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1270,10 +1365,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1403,10 +1502,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jacuzzi' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1483,10 +1586,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1584,10 +1691,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1833,10 +1944,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Polaris' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1849,10 +1964,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Premier' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1866,10 +1985,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Sta-Rite' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1881,10 +2004,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Water Wizard' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1896,10 +2023,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Waterway' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Filters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1913,10 +2044,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'AquaCal' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -1996,10 +2131,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Built Right' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -2012,10 +2151,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
-                    ].make === 'Gulfstream' &&
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
+                    ].make === 'GulfStream' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -2037,10 +2180,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -2178,10 +2325,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -2195,10 +2346,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -2586,10 +2741,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -2716,10 +2875,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Rheem / Raypak' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Heaters' && (
                         <Fragment>
                           <option disabled selected>
@@ -3072,10 +3235,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'A & A' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Infloor' && (
                         <Fragment>
                           <option disabled selected>
@@ -3107,10 +3274,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Blue Square' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Infloor' && (
                         <Fragment>
                           <option disabled selected>
@@ -3124,10 +3295,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Paramount' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Infloor' && (
                         <Fragment>
                           <option disabled selected>
@@ -3155,10 +3330,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Zodiac' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Infloor' && (
                         <Fragment>
                           <option disabled selected>
@@ -3176,10 +3355,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Fiberstars' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Lights' && (
                         <Fragment>
                           <option disabled selected>
@@ -3214,10 +3397,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Lights' && (
                         <Fragment>
                           <option disabled selected>
@@ -3283,10 +3470,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Lights' && (
                         <Fragment>
                           <option disabled selected>
@@ -3335,10 +3526,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'PAL' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Lights' && (
                         <Fragment>
                           <option disabled selected>
@@ -3351,10 +3546,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Lights' && (
                         <Fragment>
                           <option disabled selected>
@@ -3469,10 +3668,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Anthony' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3487,10 +3690,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Aqua-Flo' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3527,10 +3734,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Everbilt' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3545,10 +3756,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Harris' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3562,10 +3777,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3695,10 +3914,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jacuzzi' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3775,10 +3998,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -3876,10 +4103,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4125,10 +4356,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Polaris' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4141,10 +4376,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Premier' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4158,10 +4397,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Sta-Rite' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4173,10 +4416,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Water Wizard' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4188,10 +4435,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Waterway' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4205,10 +4456,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'XtremepowerUS' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Pumps' && (
                         <Fragment>
                           <option disabled selected>
@@ -4223,10 +4478,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Feherguard' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Reels' && (
                         <Fragment>
                           <option disabled selected>
@@ -4241,10 +4500,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'GLI Corp' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Reels' && (
                         <Fragment>
                           <option disabled selected>
@@ -4260,10 +4523,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'A & A' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4275,10 +4542,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Anthony' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4292,10 +4563,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'AirSep' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4307,10 +4582,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'AutoPilot' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4348,10 +4627,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Biolab / Guardex' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4366,10 +4649,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'ClearWater' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4386,10 +4673,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'CMP' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4461,10 +4752,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Compu Pool' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4501,10 +4796,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Del Ozone' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4528,10 +4827,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Delta UV' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4543,10 +4846,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Eco-Matic' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4577,10 +4884,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'EZ Clor' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4592,10 +4903,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4635,10 +4950,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'IPS' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4655,10 +4974,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jacuzzi' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4670,10 +4993,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4721,10 +5048,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'King Technology' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4736,10 +5067,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Nature2' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4751,10 +5086,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Paramount' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4769,10 +5108,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4802,10 +5145,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Rola-Chem' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4817,10 +5164,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'SGS' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4835,10 +5186,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'SmartPool' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4851,10 +5206,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'SpectraLight' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4868,10 +5227,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Super-pro' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4883,10 +5246,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Watermaid' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4914,10 +5281,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Waterway' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4935,10 +5306,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Zodiac' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Sanitizers' && (
                         <Fragment>
                           <option disabled selected>
@@ -4950,10 +5325,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Anthony' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Valves' && (
                         <Fragment>
                           <option disabled selected>
@@ -4965,10 +5344,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Baker Hydro' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Valves' && (
                         <Fragment>
                           <option disabled selected>
@@ -4980,10 +5363,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Valves' && (
                         <Fragment>
                           <option disabled selected>
@@ -5002,10 +5389,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jacuzzi' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Valves' && (
                         <Fragment>
                           <option disabled selected>
@@ -5019,10 +5410,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Valves' && (
                         <Fragment>
                           <option disabled selected>
@@ -5072,10 +5467,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Valves' && (
                         <Fragment>
                           <option disabled selected>
@@ -5156,10 +5555,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Air Supply' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Water Features' && (
                         <Fragment>
                           <option disabled selected>
@@ -5176,10 +5579,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Jandy' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Water Features' && (
                         <Fragment>
                           <option disabled selected>
@@ -5219,10 +5626,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Water Features' && (
                         <Fragment>
                           <option disabled selected>
@@ -5236,10 +5647,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Polaris' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'Water Features' && (
                         <Fragment>
                           <option disabled selected>
@@ -5253,10 +5668,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'A & A' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5268,10 +5687,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Aquastar' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5283,10 +5706,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Baker Hydro' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5302,10 +5729,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Hayward' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5340,10 +5771,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Paralevel' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5356,10 +5791,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Pentair' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5382,10 +5821,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Super-Pro' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>
@@ -5397,10 +5840,14 @@ const CustomManager = ({
                       )}
 
                     {itemsList[
-                      itemsList.findIndex(e => e._id === `${item._id}`)
+                      itemsList.findIndex(
+                        e => e.itentifier === `${item.itentifier}`
+                      )
                     ].make === 'Waterway' &&
                       itemsList[
-                        itemsList.findIndex(e => e._id === `${item._id}`)
+                        itemsList.findIndex(
+                          e => e.itentifier === `${item.itentifier}`
+                        )
                       ].category === 'White Goods' && (
                         <Fragment>
                           <option disabled selected>

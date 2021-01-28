@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 const UserSchema = new mongoose.Schema({
   firstName: {
@@ -26,13 +27,31 @@ const UserSchema = new mongoose.Schema({
   zip: {
     type: String
   },
-  isAdmin: {
+  role: {
+    type: String,
+    default: 'Logistics'
+  },
+  isOwner: {
     type: Boolean,
     default: false
+  },
+  isSubUser: {
+    type: Boolean,
+    default: true
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
+  phone: {
+    type: String
   },
   date: {
     type: Date,
     default: Date.now()
+  },
+  passwordUpdated: {
+    type: Date
   }
 });
 
