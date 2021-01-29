@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { setAlert } from './alert';
-import { GET_EMPLOYEES, GET_SINGLE_EMPLOYEE } from './types';
+import { GET_EMPLOYEES, GET_SINGLE_EMPLOYEE, GET_CUSTOMERS } from './types';
 
 // Add Employee
 export const addEmployee = ({
@@ -123,6 +123,40 @@ export const updateEmployeePassword = (
   try {
     await axios.patch(`/api/employees/${employeeId}/password`, body, config);
     dispatch(setAlert('Password Updated Successfully', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Employees Customers
+export const getEmployeeCustomers = id => async dispatch => {
+  try {
+    const customers = await axios.get(`/api/customers/employee/${id}`);
+    dispatch({
+      type: GET_CUSTOMERS,
+      payload: customers.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Mark Employee Inactive
+export const markEmployeeInactive = id => async dispatch => {
+  console.log('made it here');
+  try {
+    await axios.patch(`/api/employees/${id}/inactive`);
+    dispatch(setAlert('User Updated', 'success'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

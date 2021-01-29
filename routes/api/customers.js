@@ -7,12 +7,13 @@ const { check, validationResult } = require('express-validator');
 const Customer = require('../../models/Customer');
 const ServiceNotes = require('../../models/ServiceNotes');
 const Activity = require('../../models/Activity');
+const User = require('../../models/User');
 
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const { v4: uuidv4 } = require('uuid');
-const { findOneAndDelete } = require('../../models/Customer');
+// const { findOneAndDelete } = require('../../models/Customer');
 const { Service } = require('aws-sdk');
 
 aws.config.update({
@@ -815,6 +816,9 @@ router.patch('/:customerId/information', auth, async (req, res) => {
 
   try {
     const customer = await Customer.findById(req.params.customerId);
+    const tech = await User.findById(technician);
+
+    const technicianName = tech.firstName + ' ' + tech.lastName;
 
     if (!customer) {
       return res.status(404).json({ msg: 'Customer not found' });
@@ -838,9 +842,31 @@ router.patch('/:customerId/information', auth, async (req, res) => {
       (customer.gateCode = gateCode),
       (customer.servicePackageAndRate = servicePackageAndRate),
       (customer.technician = technician),
-      await customer.save();
+      (customer.technicianName = technicianName);
+    await customer.save();
 
     res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    GET api/customers/employee/:employeeId
+// @desc     Get a Employee's Customers
+// @access   Private/User
+router.get('/employee/:employeeId', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const customers = await Customer.find({
+      technician: req.params.employeeId,
+      $or: [{ user: req.user.id }, { user: user.owner }]
+    });
+
+    res.status(200).json(customers);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {

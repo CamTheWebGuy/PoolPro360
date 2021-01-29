@@ -420,7 +420,9 @@ const ViewCustomer = ({
                         </Col>
                         <Col sm='3'>
                           <div className='form-control-label'>Technician</div>
-                          <p>{customer[0].technician}</p>
+                          <Link to={`/users/${customer[0].technician}/view`}>
+                            {customer[0].technicianName}
+                          </Link>
                         </Col>
                         <Col sm='3'>
                           <div className='form-control-label'>Rate/Package</div>

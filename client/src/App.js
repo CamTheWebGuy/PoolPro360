@@ -19,6 +19,7 @@ import ManageChecklist from './components/Layout/ManageChecklist';
 import ManageEquipment from './components/Layout/ManageEquipment';
 import EditCustomerInformation from './components/Layout/EditCustomerInformation';
 import EditUser from './components/Layout/EditUser';
+import ViewUser from './components/Layout/ViewUser';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -56,6 +57,7 @@ function App() {
             <PrivateRoute exact path='/customers' component={Customers} />
             <PrivateRoute exact path='/users' component={Users} />
             <PrivateRoute exact path='/users/:id/edit' component={EditUser} />
+            <PrivateRoute exact path='/users/:id/view' component={ViewUser} />
             <PrivateRoute exact path='/users/add' component={AddUser} />
             <PrivateRoute
               exact

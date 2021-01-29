@@ -101,12 +101,13 @@ const actionFormatter = cell => {
 
 const columns = [
   {
-    dataField: 'serviceAddress',
-    text: 'Property'
+    dataField: 'firstName',
+    text: 'First Name'
   },
+
   {
-    dataField: 'servicePackageAndRate',
-    text: 'Package'
+    dataField: 'lastName',
+    text: 'Last Name'
   },
   {
     dataField: 'poolType',
@@ -114,12 +115,12 @@ const columns = [
     formatter: typeFormatter
   },
   {
-    dataField: 'technician',
-    text: 'Technician'
+    dataField: 'serviceAddress',
+    text: 'Property'
   },
   {
-    dataField: 'gateCode',
-    text: 'Gate/Lock Code'
+    dataField: 'email',
+    text: 'Email'
   },
   {
     dataField: '_id',

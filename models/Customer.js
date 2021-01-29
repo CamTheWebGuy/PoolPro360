@@ -50,6 +50,10 @@ const CustomerSchema = new mongoose.Schema({
     default: 'NA'
   },
   technician: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
+  technicianName: {
     type: String
   },
   servicePackage: {

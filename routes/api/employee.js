@@ -212,4 +212,36 @@ router.patch('/:employeeId/password', auth, async (req, res) => {
   }
 });
 
+// @route    PATCH api/employees/:employeeId/inactive
+// @desc     Toggle User Active
+// @access   Private/User
+router.patch('/:employeeId/inactive', auth, async (req, res) => {
+  try {
+    const employee = await User.findById(req.params.employeeId);
+
+    if (!employee) {
+      return res.status(404).json({ msg: 'Employee not found' });
+    }
+
+    if (
+      employee.owner.toString() !== req.user.id &&
+      employee.role !== 'Admin'
+    ) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    employee.isActive = !employee.isActive;
+
+    await employee.save();
+
+    res.status(200).json(employee);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;

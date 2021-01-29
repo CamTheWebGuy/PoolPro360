@@ -8,7 +8,7 @@ import PropTypes from 'prop-types';
 
 import { Formik } from 'formik';
 
-import { getEmployees } from '../../actions/employee';
+import { getEmployees, markEmployeeInactive } from '../../actions/employee';
 
 import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
@@ -17,6 +17,7 @@ import Alert from '../Layout/Alert';
 
 import {
   Button,
+  Badge,
   Col,
   Row,
   Container,
@@ -67,36 +68,55 @@ const pagination = paginationFactory({
   )
 });
 
-const actionFormatter = cell => {
-  return (
-    <UncontrolledDropdown>
-      <DropdownToggle
-        className='btn-icon-only text-light'
-        color=''
-        role='button'
-        size='sm'
-      >
-        <i className='fas fa-ellipsis-v' />
-      </DropdownToggle>
-      <DropdownMenu className='dropdown-menu-arrow' right>
-        <DropdownItem tag={Link} to={`/users/${cell}/view`}>
-          View User
-        </DropdownItem>
-        <DropdownItem tag={Link} to={`/users/${cell}/edit`}>
-          Edit User
-        </DropdownItem>
-        <DropdownItem tag={Link} to={`/customers/${cell}/inactive`}>
-          Delete User
-        </DropdownItem>
-      </DropdownMenu>
-    </UncontrolledDropdown>
-  );
+const statusFormatter = cell => {
+  if (cell === true) {
+    return <Badge color='success'>Active</Badge>;
+  } else if (cell === false) {
+    return <Badge color='secondary'>Inactive</Badge>;
+  } else {
+    return <Badge color='dark'>N/A</Badge>;
+  }
 };
 
-const Users = ({ getEmployees, employees: { employees, loading } }) => {
+const Users = ({
+  getEmployees,
+  markEmployeeInactive,
+  employees: { employees, loading }
+}) => {
   useEffect(() => {
     getEmployees();
   }, [getEmployees]);
+
+  const actionFormatter = cell => {
+    return (
+      <UncontrolledDropdown>
+        <DropdownToggle
+          className='btn-icon-only text-light'
+          color=''
+          role='button'
+          size='sm'
+        >
+          <i className='fas fa-ellipsis-v' />
+        </DropdownToggle>
+        <DropdownMenu className='dropdown-menu-arrow' right>
+          <DropdownItem tag={Link} to={`/users/${cell}/view`}>
+            View User
+          </DropdownItem>
+          <DropdownItem tag={Link} to={`/users/${cell}/edit`}>
+            Edit User
+          </DropdownItem>
+          <DropdownItem
+            onClick={async () => {
+              await markEmployeeInactive(cell);
+              getEmployees();
+            }}
+          >
+            Toggle User Active
+          </DropdownItem>
+        </DropdownMenu>
+      </UncontrolledDropdown>
+    );
+  };
 
   const columns = [
     {
@@ -116,8 +136,9 @@ const Users = ({ getEmployees, employees: { employees, loading } }) => {
       text: 'Role'
     },
     {
-      dataField: 'phone',
-      text: 'Phone'
+      dataField: 'isActive',
+      text: 'Status',
+      formatter: statusFormatter
     },
     {
       dataField: '_id',
@@ -248,11 +269,14 @@ const Users = ({ getEmployees, employees: { employees, loading } }) => {
 };
 
 Users.propTypes = {
-  getEmployees: PropTypes.func.isRequired
+  getEmployees: PropTypes.func.isRequired,
+  markEmployeeInactive: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
   employees: state.employee
 });
 
-export default connect(mapStateToProps, { getEmployees })(Users);
+export default connect(mapStateToProps, { getEmployees, markEmployeeInactive })(
+  Users
+);

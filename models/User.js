@@ -52,6 +52,10 @@ const UserSchema = new mongoose.Schema({
   },
   passwordUpdated: {
     type: Date
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   }
 });
 

@@ -3,6 +3,8 @@ import React, { Fragment, useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
+import { Link } from 'react-router-dom';
+
 import { SpinnerCircular } from 'spinners-react';
 import {
   updateEmployee,
@@ -80,18 +82,27 @@ const EditUser = ({
                   >
                     <ol className='breadcrumb breadcrumb-links breadcrumb-dark'>
                       <li className='breadcrumb-item'>
-                        <a href='/'>
+                        <Link to='/'>
                           <i className='fas fa-home' />
-                        </a>
+                        </Link>
                       </li>
                       <li className='breadcrumb-item'>
-                        <a href='/dashboard'>Dashboard</a>
+                        <Link to='/dashboard'>Dashboard</Link>
                       </li>
                       <li className='breadcrumb-item'>
-                        <a href='/users'>Users</a>
+                        <Link to='/users'>Users</Link>
                       </li>
+                      {employee.length >= 1 && (
+                        <li className='breadcrumb-item'>
+                          <Link to={`/users/${match.params.id}/view`}>
+                            {employee[0].firstName} {employee[0].lastName}
+                          </Link>
+                        </li>
+                      )}
                       <li className='breadcrumb-item active'>
-                        <a href={`/users/${match.params.id}/edit`}>Edit User</a>
+                        <Link to={`/users/${match.params.id}/edit`}>
+                          Edit User
+                        </Link>
                       </li>
                     </ol>
                   </nav>
@@ -377,7 +388,6 @@ EditUser.propTypes = {
 };
 
 const mapStateToProps = state => ({
-  customer: state.customer.singleCustomer,
   employee: state.employee.singleEmployee
 });
 

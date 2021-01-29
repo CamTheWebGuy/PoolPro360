@@ -1,5 +1,7 @@
 import React, { Fragment, useState, useRef, useEffect } from 'react';
 
+import { Link } from 'react-router-dom';
+
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
@@ -68,23 +70,25 @@ const EditCustomerInformation = ({
                   >
                     <ol className='breadcrumb breadcrumb-links breadcrumb-dark'>
                       <li className='breadcrumb-item'>
-                        <a href='/'>
+                        <Link to='/'>
                           <i className='fas fa-home' />
-                        </a>
+                        </Link>
                       </li>
                       <li className='breadcrumb-item'>
-                        <a href='/dashboard'>Dashboard</a>
+                        <Link to='/dashboard'>Dashboard</Link>
                       </li>
                       <li className='breadcrumb-item'>
-                        <a href='/customers'>Customers</a>
+                        <Link to='/customers'>Customers</Link>
                       </li>
-                      <li className='breadcrumb-item'>
-                        <a href={`/customers/${match.params.id}`}>
-                          {match.params.id}
-                        </a>
-                      </li>
+                      {customer && customer.length >= 1 && (
+                        <li className='breadcrumb-item'>
+                          <Link to={`/customers/${match.params.id}`}>
+                            {customer[0].firstName} {customer[0].lastName}
+                          </Link>
+                        </li>
+                      )}
                       <li className='breadcrumb-item active'>
-                        <a href='/customers/add'>Edit Customer Details</a>
+                        <Link to='/customers/add'>Edit Customer Details</Link>
                       </li>
                     </ol>
                   </nav>
@@ -169,6 +173,7 @@ const EditCustomerInformation = ({
                   }}
                   innerRef={formRef}
                   onSubmit={async data => {
+                    // console.log(data);
                     setLoadingSave(true);
                     await updateCustomer(match.params.id, data);
                     setLoadingSave(false);
@@ -445,7 +450,12 @@ const EditCustomerInformation = ({
                                   <option>N/A</option>
 
                                   {employees.map(employee => (
-                                    <option>{employee.name}</option>
+                                    <option
+                                      key={employee._id}
+                                      value={employee._id}
+                                    >
+                                      {employee.firstName} {employee.lastName}
+                                    </option>
                                   ))}
                                 </Input>
                               </Col>
