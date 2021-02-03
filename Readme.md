@@ -12,13 +12,13 @@ Features/functions listed below are subject to change as time goes on, this is b
 - [x] Login/Register Routes & Verification
 - [x] Add Customers
 - [x] Get Specific Users Customers
-- [ ] Update Customers
-- [ ] User Authorization & Admin Check
-- [ ] Add/Update Users
+- [x] Update Customers
+- [x] Add/Update Users
+- [x] User Authorization & Admin Check
 - [ ] Add/Update Work orders
 - [ ] Timeslot Generation
 - [ ] User Permissions System
-- [ ] Get All Customers (admins only)
+- [ ] Get All Customers (site admins only)
 - [ ] Add/Edit Availibility
 - [ ] Add/Edit Booking Forms
 
@@ -32,15 +32,15 @@ Features/functions listed below are subject to change as time goes on, this is b
 - [x] Login/Logout Functionality
 - [x] Route Protection
 - [x] Customer List Page
-- [ ] Form Builder System (Working On Now)
-- [ ] Customer Info Page
+- [ ] Form Builder System
+- [x] Customer Info Page - 98%
+- [x] Google Maps Routing System - 80%
+- [x] Add/Edit Customers
+- [x] Add/Edit Users
 - [ ] Profile/Settings Page
 - [ ] Work Orders Page
 - [ ] Payments/Billing Page
-- [ ] Add/Edit Customers
-- [ ] Add/Edit Users
 - [ ] User Permissions
-- [ ] Google Maps Routing System
 - [ ] Booking Availibility System
 - [ ] Customer Facing Booking System
 - [ ] Forgot Password System
