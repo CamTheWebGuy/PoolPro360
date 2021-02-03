@@ -20,6 +20,8 @@ import ManageEquipment from './components/Layout/ManageEquipment';
 import EditCustomerInformation from './components/Layout/EditCustomerInformation';
 import EditUser from './components/Layout/EditUser';
 import ViewUser from './components/Layout/ViewUser';
+import Routing from './components/Layout/Routing';
+import RouteBuilder from './components/Layout/RouteBuilder';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -88,6 +90,12 @@ function App() {
               exact
               path='/customers/:id/deleteImage'
               component={DeleteCustomerImage}
+            />
+            <PrivateRoute exact path='/routing' component={Routing} />
+            <PrivateRoute
+              exact
+              path='/routing/builder'
+              component={RouteBuilder}
             />
             <PrivateRoute
               exact

@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -12,14 +12,20 @@ import userImg3 from '../../img/theme/team-3.jpg';
 
 import $ from 'jquery';
 
-if (window.innerWidth < 1200) {
-  $('body').click(function() {
-    document.body.classList.remove('g-sidenav-pinned');
-    document.body.classList.remove('g-sidenav-show');
-  });
-}
-
 const Dashnav = ({ logout, auth: { user, isAuthenticated, loading } }) => {
+  useEffect(() => {
+    if (window.innerWidth < 1200) {
+      $('.main-content').click(function(event) {
+        document.body.classList.remove('g-sidenav-pinned');
+        document.body.classList.remove('g-sidenav-show');
+      });
+      $('.nav-ctrl').click(function(event) {
+        document.body.classList.remove('g-sidenav-pinned');
+        document.body.classList.remove('g-sidenav-show');
+      });
+    }
+  }, []);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navHandler = e => {

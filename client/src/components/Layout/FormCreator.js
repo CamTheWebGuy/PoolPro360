@@ -1,6 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
-import uuid from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import styled from 'styled-components';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
@@ -33,7 +33,7 @@ const copy = (source, destination, droppableSource, droppableDestination) => {
   const destClone = Array.from(destination);
   const item = sourceClone[droppableSource.index];
 
-  destClone.splice(droppableDestination.index, 0, { ...item, id: uuid() });
+  destClone.splice(droppableDestination.index, 0, { ...item, id: uuidv4() });
   return destClone;
 };
 
@@ -126,7 +126,7 @@ const Notice = styled.div`
 
 const ITEMS = [
   {
-    id: uuid(),
+    id: uuidv4(),
     content: 'Input',
     icon: 'fa-font',
     tag: 'input',
@@ -135,7 +135,7 @@ const ITEMS = [
     placeholder: ''
   },
   {
-    id: uuid(),
+    id: uuidv4(),
     content: 'Text Area',
     icon: 'fa-align-left',
     tag: 'textarea',
@@ -143,7 +143,7 @@ const ITEMS = [
     placeholder: ''
   },
   {
-    id: uuid(),
+    id: uuidv4(),
     content: 'Multiple Choice',
     icon: 'fa-check-square',
     label: 'Multiple Choice Field',
@@ -162,7 +162,7 @@ const ITEMS = [
     ]
   },
   {
-    id: uuid(),
+    id: uuidv4(),
     content: 'Email',
     icon: 'fa-envelope',
     tag: 'input',
@@ -171,20 +171,20 @@ const ITEMS = [
     placeholder: ''
   },
   {
-    id: uuid(),
+    id: uuidv4(),
     content: 'Picture Choice',
     icon: 'fa-image',
     label: 'Picture Choice Field',
     placeholder: '',
     items: [
       {
-        id: uuid(),
+        id: uuidv4(),
         label: 'Inground Pool',
         priceChange: 'increase',
         amount: '20'
       },
       {
-        id: uuid(),
+        id: uuidv4(),
         label: 'Above Ground Pool',
         priceChange: 'decrease',
         amount: '5'

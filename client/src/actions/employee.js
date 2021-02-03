@@ -1,6 +1,11 @@
 import axios from 'axios';
 import { setAlert } from './alert';
-import { GET_EMPLOYEES, GET_SINGLE_EMPLOYEE, GET_CUSTOMERS } from './types';
+import {
+  GET_EMPLOYEES,
+  GET_SINGLE_EMPLOYEE,
+  GET_CUSTOMERS,
+  GET_ROUTE
+} from './types';
 
 // Add Employee
 export const addEmployee = ({
@@ -137,9 +142,31 @@ export const updateEmployeePassword = (
 export const getEmployeeCustomers = id => async dispatch => {
   try {
     const customers = await axios.get(`/api/customers/employee/${id}`);
+    // const test = await axios.get(`/api/customers/route/${id}/Monday`);
+
     dispatch({
       type: GET_CUSTOMERS,
       payload: customers.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Employees Route
+export const getEmployeeRoute = (id, day) => async dispatch => {
+  // console.log(day);
+  try {
+    const route = await axios.get(`/api/customers/route/${id}/${day}`);
+
+    dispatch({
+      type: GET_ROUTE,
+      payload: route.data
     });
   } catch (err) {
     console.log(err);

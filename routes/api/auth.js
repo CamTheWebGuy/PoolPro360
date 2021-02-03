@@ -5,6 +5,7 @@ const auth = require('../../middleware/auth');
 const jwt = require('jsonwebtoken');
 const config = require('config');
 const { check, validationResult } = require('express-validator');
+const axios = require('axios');
 
 const User = require('../../models/User');
 
@@ -15,6 +16,22 @@ router.get('/', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json(user);
+  } catch (err) {
+    console.log(error);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    GET api/auth/googleapi
+// @desc     Get Google API Key
+// @access   Private
+router.get('/googleapi', auth, async (req, res) => {
+  try {
+    const api = await axios.get(
+      'https://maps.googleapis.com/maps/api/js?key=AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag&callback=initMap'
+    );
+
+    res.send('requested');
   } catch (err) {
     console.log(error);
     res.status(500).send('Server Error');
@@ -57,7 +74,9 @@ router.post(
 
       const payload = {
         user: {
-          id: user.id
+          id: user.id,
+          role: user.role,
+          owner: user.owner
         }
       };
 

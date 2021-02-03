@@ -1,9 +1,10 @@
-import React, { Fragment, useState, useRef } from 'react';
+import React, { Fragment, useState, useRef, useEffect } from 'react';
 
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import { addCustomer } from '../../actions/customer';
+import { getEmployees } from '../../actions/employee';
 
 import { Link } from 'react-router-dom';
 import { useHistory } from 'react-router-dom';
@@ -26,7 +27,11 @@ import { Formik } from 'formik';
 
 import * as Yup from 'yup';
 
-const AddCustomers = ({ addCustomer }) => {
+const AddCustomers = ({
+  addCustomer,
+  getEmployees,
+  employees: { employees }
+}) => {
   const [showBilling, setShowBilling] = useState(false);
 
   const toggleBilling = () => setShowBilling(!showBilling);
@@ -49,6 +54,10 @@ const AddCustomers = ({ addCustomer }) => {
       formRef.current.handleSubmit();
     }
   };
+
+  useEffect(() => {
+    getEmployees();
+  }, [getEmployees]);
 
   return (
     <Fragment>
@@ -431,9 +440,11 @@ const AddCustomers = ({ addCustomer }) => {
                               onBlur={handleBlur}
                             >
                               <option>N/A</option>
-                              <option>Gavin Byrd</option>
-                              <option>Nicci Troiani</option>
-                              <option>George Fields</option>
+                              {employees.map(employee => (
+                                <option key={employee._id} value={employee._id}>
+                                  {employee.firstName} {employee.lastName}
+                                </option>
+                              ))}
                             </Input>
                           </Col>
                         </Row>
@@ -544,7 +555,14 @@ const AddCustomers = ({ addCustomer }) => {
 };
 
 AddCustomers.propTypes = {
-  addCustomer: PropTypes.func.isRequired
+  addCustomer: PropTypes.func.isRequired,
+  getEmployees: PropTypes.func.isRequired
 };
 
-export default connect(null, { addCustomer })(AddCustomers);
+const mapStateToProps = state => ({
+  employees: state.employee
+});
+
+export default connect(mapStateToProps, { addCustomer, getEmployees })(
+  AddCustomers
+);

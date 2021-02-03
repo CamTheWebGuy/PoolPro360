@@ -4,7 +4,8 @@ import {
   RESET_CUSTOMER_LOADING,
   GET_CUSTOMER_SERVICE_NOTES,
   GET_CUSTOMER_RECENT_ACTIVITY,
-  GET_CUSTOMER_CHECKLIST
+  GET_CUSTOMER_CHECKLIST,
+  GET_ROUTE
 } from '../actions/types';
 
 const initialState = {
@@ -14,7 +15,8 @@ const initialState = {
   singleLoading: true,
   serviceNotes: [],
   recentActivity: [],
-  checklist: []
+  checklist: [],
+  routeList: []
 };
 
 export default function(state = initialState, action) {
@@ -24,6 +26,12 @@ export default function(state = initialState, action) {
       return {
         ...state,
         customers: payload,
+        loading: false
+      };
+    case GET_ROUTE:
+      return {
+        ...state,
+        routeList: payload,
         loading: false
       };
     case GET_SINGLE_CUSTOMER:

@@ -1,10 +1,11 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 
 import { Link } from 'react-router-dom';
 
 import { Scrollbars } from 'react-custom-scrollbars';
 
 import logo from '../../img/brand/blue.png';
+import { Collapse, Button, CardBody, Card } from 'reactstrap';
 
 import $ from 'jquery';
 
@@ -18,6 +19,12 @@ $(document).ready(function() {
 const Sidebar = props => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggle = () => {
+    setIsOpen(!isOpen);
+  };
+
   if (sidebarOpen) {
     if (window.innerWidth > 1199) {
       document.body.classList.add('g-sidenav-pinned');
@@ -27,6 +34,13 @@ const Sidebar = props => {
     document.body.classList.remove('g-sidenav-pinned');
     document.body.classList.remove('g-sidenav-show');
   }
+
+  useEffect(() => {
+    if (props.active === 'routing') {
+      setIsOpen(true);
+    }
+  }, []);
+
   return (
     <Fragment>
       {/* Sidenav */}
@@ -78,7 +92,7 @@ const Sidebar = props => {
               >
                 {/* Nav items */}
                 <ul className='navbar-nav'>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'dashboard' ? 'active' : ''
@@ -90,7 +104,7 @@ const Sidebar = props => {
                       <span className='nav-link-text'>Dashboard</span>
                     </Link>
                   </li>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'workorders' ? 'active' : ''
@@ -101,7 +115,7 @@ const Sidebar = props => {
                       <span className='nav-link-text'>Work Orders</span>
                     </Link>
                   </li>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'customers' ? 'active' : ''
@@ -112,7 +126,7 @@ const Sidebar = props => {
                       <span className='nav-link-text'>Customers</span>
                     </Link>
                   </li>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'bookingforms' ? 'active' : ''
@@ -123,7 +137,7 @@ const Sidebar = props => {
                       <span className='nav-link-text'>Booking Forms</span>
                     </Link>{' '}
                   </li>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'users' ? 'active' : ''
@@ -135,7 +149,7 @@ const Sidebar = props => {
                     </Link>
                   </li>
 
-                  <li className='nav-item'>
+                  {/* <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'routing' ? 'active' : ''
@@ -145,9 +159,52 @@ const Sidebar = props => {
                       <i className='ni ni-square-pin text-primary' />
                       <span className='nav-link-text'>Routing</span>
                     </Link>
+                  </li> */}
+                  <li className='nav-item'>
+                    <div
+                      className={`nav-link ${
+                        props.active === 'routing' ? 'active' : ''
+                      }`}
+                      onClick={toggle}
+                    >
+                      <i className='ni ni-square-pin text-primary' />
+                      <span className='nav-link-text'>Routing</span>
+                      {isOpen ? (
+                        <div className='mgn-left-50p'>
+                          <i className='fas fa-chevron-up'></i>
+                        </div>
+                      ) : (
+                        <div className='mgn-left-50p'>
+                          <i className='fas fa-chevron-down'></i>
+                        </div>
+                      )}
+                    </div>
+                    <Collapse isOpen={isOpen}>
+                      <ul className='nav nav-sm flex-column'>
+                        <li className='nav-item nav-ctrl'>
+                          <Link to='/routing/builder' className='nav-link'>
+                            <span className='sidenav-normal'>
+                              {' '}
+                              <i className='fas fa-drafting-compass text-yellow mgn-right-5'></i>
+                              {'  '}
+                              Route Builder{' '}
+                            </span>
+                          </Link>
+                        </li>
+                        <li className='nav-item nav-ctrl'>
+                          <Link to='/routing' className='nav-link'>
+                            <span className='sidenav-normal'>
+                              {' '}
+                              <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
+                              View Route{' '}
+                            </span>
+                          </Link>
+                        </li>
+                      </ul>
+                    </Collapse>
                   </li>
 
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'payments' ? 'active' : ''
@@ -159,7 +216,7 @@ const Sidebar = props => {
                     </Link>
                   </li>
 
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
                         props.active === 'settings' ? 'active' : ''
@@ -180,7 +237,7 @@ const Sidebar = props => {
                 </h6>
                 {/* Navigation */}
                 <ul className='navbar-nav mb-md-3'>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className='nav-link'
                       to='https://demos.creative-tim.com/argon-dashboard-pro/docs/getting-started/overview.html'
@@ -190,7 +247,7 @@ const Sidebar = props => {
                       <span className='nav-link-text'>Video Guides</span>
                     </Link>
                   </li>
-                  <li className='nav-item'>
+                  <li className='nav-item nav-ctrl'>
                     <Link
                       className='nav-link'
                       to='https://demos.creative-tim.com/argon-dashboard-pro/docs/foundation/colors.html'

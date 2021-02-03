@@ -8,6 +8,9 @@ const Customer = require('../../models/Customer');
 const ServiceNotes = require('../../models/ServiceNotes');
 const Activity = require('../../models/Activity');
 const User = require('../../models/User');
+const Route = require('../../models/Routes');
+
+const axios = require('axios');
 
 const aws = require('aws-sdk');
 const multer = require('multer');
@@ -143,16 +146,46 @@ router.post(
     } = req.body;
 
     try {
-      const existingCustomer = Customer.find({
+      const existingCustomer = await Customer.find({
         user: req.user.id,
         email: email
       });
 
-      if (existingCustomer) {
+      if (existingCustomer.length >= 1) {
         return res.status(409).json({
           errors: [{ msg: 'Error: Customer with this email already exists' }]
         });
       }
+
+      let technicianId = technician;
+      let technicianName = null;
+      if (technician === 'N/A') {
+        technicianId = null;
+      } else {
+        const tech = await User.findById(technician);
+        technicianName = tech.firstName + ' ' + tech.lastName;
+      }
+
+      const serviceQuery =
+        serviceAddress.replace(/\s/g, '+') +
+        ',+' +
+        serviceCity.replace(/\s/g, '+') +
+        ',+' +
+        serviceState.replace(/\s/g, '+') +
+        ',+' +
+        serviceZip;
+
+      // console.log(serviceQuery);
+
+      const result = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${serviceQuery}&key=AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag`
+      );
+
+      // console.log(result.data);
+
+      // console.log(result.data.results[0].geometry.location);
+      const serviceLng = result.data.results[0].geometry.location.lng;
+      const serviceLat = result.data.results[0].geometry.location.lat;
 
       let customer = new Customer({
         user: req.user.id,
@@ -160,6 +193,8 @@ router.post(
         lastName,
         email,
         mobilePhone,
+        serviceLng,
+        serviceLat,
         serviceAddress,
         serviceCity,
         serviceState,
@@ -167,7 +202,8 @@ router.post(
         gateCode,
         canText,
         poolType,
-        technician,
+        technician: technicianId,
+        technicianName,
         servicePackageAndRate,
         billingSame,
         billingType,
@@ -867,6 +903,186 @@ router.get('/employee/:employeeId', auth, async (req, res) => {
     });
 
     res.status(200).json(customers);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/schedule
+// @desc     Set Customer Schedule
+// @access   Private/User
+router.patch('/:customerId/schedule/:techId', auth, async (req, res) => {
+  const { day } = req.body;
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+    const user = await User.findById(req.user.id);
+    const route = await Route.findOne({
+      technician: req.params.techId,
+      day: day
+    });
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (
+      customer.user.toString() !== req.user.id &&
+      user.role !== 'Admin' &&
+      user.owner !== customer.user
+    ) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    route.customers.push({ customer: req.params.customerId });
+
+    customer.isScheduled = true;
+    customer.scheduledDay = day;
+
+    await customer.save();
+    await route.save();
+
+    res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/unschedule
+// @desc     Unschedule Customer From Route
+// @access   Private/User
+router.patch('/:customerId/unschedule', auth, async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+    const user = await User.findById(req.user.id);
+    let route = await Route.findOne({
+      'customers.customer': req.params.customerId
+    });
+
+    if (!customer) {
+      return res.status(404).json({ msg: 'Customer not found' });
+    }
+
+    if (customer.user.toString() !== req.user.id && user.role !== 'Admin') {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (user.role === 'Admin' && user.owner !== customer.user.toString()) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    customer.isScheduled = false;
+    customer.scheduledDay = null;
+
+    const index = route.customers.findIndex(
+      e => e.customer == req.params.customerId
+    );
+
+    route.customers.splice(index, 1);
+
+    await route.save();
+    await customer.save();
+
+    res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/route/:techId
+// @desc     Update a Route
+// @access   Private/User
+router.patch('/route/:techId', auth, async (req, res) => {
+  const { day, routeList } = req.body;
+
+  try {
+    const user = await User.findById(req.params.techId);
+    let route = await Route.findOne({
+      technician: req.params.techId,
+      day: day
+    });
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (req.user.role !== 'Admin' && req.user.role !== 'Owner') {
+      console.log('fail here');
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (req.user.role === 'Admin' && req.user.owner !== user.owner) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (!route) {
+      return res
+        .status(500)
+        .send(
+          'Error: No Route Found. Please contact support or use /api/customers/route/:techId/:day to create a new route.'
+        );
+    }
+
+    for (var i = 0; i < routeList.length; i++) {
+      route.customers[i].customer = routeList[i]._id;
+    }
+
+    route.save();
+    return res.status(200).json(route);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    GET api/customers/route/:techId/:day
+// @desc     Get a Employee's Route by Day
+// @access   Private/User
+router.get('/route/:techId/:day', auth, async (req, res) => {
+  try {
+    let route = await Route.findOne({
+      technician: req.params.techId,
+      day: req.params.day
+    }).populate({ path: 'customers.customer' });
+
+    const user = await User.find({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    if (!route) {
+      route = new Route({
+        technician: req.params.techId,
+        day: req.params.day,
+        customers: []
+      });
+
+      await route.save();
+
+      return res.status(201).json(route.customers);
+    }
+
+    res.status(200).json(route.customers);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {

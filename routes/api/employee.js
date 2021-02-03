@@ -85,9 +85,7 @@ router.post(
 router.get('/', auth, async (req, res) => {
   try {
     const employees = await User.find({
-      owner: req.user.id,
-      isSubUser: true,
-      isOwner: false
+      $or: [{ owner: req.user.id }, { _id: req.user.id }]
     });
 
     if (!employees)
@@ -108,10 +106,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const employee = await User.find({
-      owner: req.user.id,
-      isSubUser: true,
-      isOwner: false,
-      _id: req.params.id
+      $or: [{ owner: req.user.id, _id: req.params.id }, { _id: req.user.id }]
     });
 
     if (!employee)

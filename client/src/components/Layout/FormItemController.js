@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react';
 
-import uuid from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   Button,
@@ -49,7 +49,7 @@ const FormItemController = ({
     const sliced = itemsList.slice();
 
     const newOption = {
-      id: uuid(),
+      id: uuidv4(),
       label: 'New Option',
       priceChange: 'increase',
       amount: '0'

@@ -560,3 +560,73 @@ export const updateCustomer = (
     }
   }
 };
+
+// Set Customer Service Schedule
+export const setSchedule = (customerId, techId, day) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    day
+  });
+
+  try {
+    await axios.patch(
+      `/api/customers/${customerId}/schedule/${techId}`,
+      body,
+      config
+    );
+    // dispatch(setAlert('Customer Scheduled', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Clear Customer From Service Schedule
+export const unschedule = customerId => async dispatch => {
+  try {
+    await axios.patch(`/api/customers/${customerId}/unschedule`);
+    // dispatch(setAlert('Customer Removed From Schedule', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Customer Route Order
+export const updateRouteOrder = (techId, day, routeList) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    day,
+    routeList
+  });
+
+  try {
+    await axios.patch(`/api/customers/route/${techId}`, body, config);
+    // dispatch(setAlert('Customer Scheduled', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

@@ -104,7 +104,6 @@ const columns = [
     dataField: 'firstName',
     text: 'First Name'
   },
-
   {
     dataField: 'lastName',
     text: 'Last Name'

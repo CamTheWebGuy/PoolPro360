@@ -24,6 +24,12 @@ const CustomerSchema = new mongoose.Schema({
   altPhone: {
     type: String
   },
+  serviceLng: {
+    type: String
+  },
+  serviceLat: {
+    type: String
+  },
   serviceAddress: {
     type: String,
     required: true
@@ -142,6 +148,13 @@ const CustomerSchema = new mongoose.Schema({
   dateAdded: {
     type: Date,
     default: Date.now()
+  },
+  isScheduled: {
+    type: Boolean,
+    default: false
+  },
+  scheduledDay: {
+    type: String
   }
 });
 
