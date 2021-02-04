@@ -33,7 +33,9 @@ import {
 import {
   setSchedule,
   unschedule,
-  updateRouteOrder
+  updateRouteOrder,
+  getCustomersRB,
+  optimizeRoute
 } from '../../actions/customer';
 
 import {
@@ -67,13 +69,16 @@ const RouteBuilder = ({
   unschedule,
   getEmployeeRoute,
   updateRouteOrder,
+  getCustomersRB,
+  optimizeRoute,
   mapRedux: { legs },
   employees: { employees },
-  customers: { customers, loading, routeList }
+  customers: { customers, loading, routeList, allCustomers }
 }) => {
   useEffect(() => {
     getEmployees();
-  }, [getEmployees]);
+    getCustomersRB();
+  }, [getEmployees, getCustomersRB]);
 
   const [selectedTech, setSelectedTech] = useState(null);
   const [dateSelected, setDateSelected] = useState('Monday');
@@ -245,7 +250,19 @@ const RouteBuilder = ({
                     <h5>Total Duration: {totalDuration} minutes</h5>
                   )}
                   <p>Routing Type: Manual</p>
-                  <Button color='primary'>Optimize Route</Button>
+                  <Button
+                    color='primary'
+                    onClick={() => {
+                      // console.log(routedCustomers);
+                      optimizeRoute(
+                        routedCustomers,
+                        selectedTech,
+                        dateSelected
+                      );
+                    }}
+                  >
+                    Optimize Route
+                  </Button>
                   {customers.length >= 1 &&
                     routedCustomers !== null &&
                     mapCenterPoint !== null && (
@@ -279,6 +296,67 @@ const RouteBuilder = ({
                               ))}
                             </Fragment>
                           )}
+
+                          {allCustomers.map(customer => (
+                            <Fragment>
+                              {customer.technician !== selectedTech && (
+                                <Marker
+                                  icon={'https://i.imgur.com/SErFNu4.png'}
+                                  position={{
+                                    lat: parseFloat(customer.serviceLat),
+                                    lng: parseFloat(customer.serviceLng)
+                                  }}
+                                  onClick={() => {
+                                    onToggleOpen(customer._id);
+                                  }}
+                                >
+                                  {infoIsOpen.isOpen &&
+                                    infoIsOpen.active === customer._id && (
+                                      <InfoWindow onCloseClick={onToggleOpen}>
+                                        <div>
+                                          <strong>
+                                            <h4 className='mb-0'>
+                                              {customer.firstName}{' '}
+                                              {customer.lastName}
+                                            </h4>
+                                          </strong>{' '}
+                                          {customer.serviceAddress}
+                                          <br />
+                                          {customer.isScheduled ? (
+                                            <Badge
+                                              className='mgn-btm-10'
+                                              color='success'
+                                            >
+                                              Scheduled
+                                            </Badge>
+                                          ) : (
+                                            <Badge
+                                              className='mgn-btm-10'
+                                              color='danger'
+                                            >
+                                              Not Scheduled
+                                            </Badge>
+                                          )}
+                                          <br />
+                                          {customer.technician === null ? (
+                                            <span>Not Assigned to Tech</span>
+                                          ) : (
+                                            <span>
+                                              Assigned to{' '}
+                                              {customer.technicianName}
+                                            </span>
+                                          )}
+                                          <br />
+                                          <Button size='sm' color='success'>
+                                            Assign to Selected Tech
+                                          </Button>
+                                        </div>
+                                      </InfoWindow>
+                                    )}
+                                </Marker>
+                              )}
+                            </Fragment>
+                          ))}
 
                           {customers.map(customer => (
                             <Fragment key={customer._id}>
@@ -511,6 +589,8 @@ RouteBuilder.propTypes = {
   setSchedule: PropTypes.func.isRequired,
   getEmployeeRoute: PropTypes.func.isRequired,
   updateRouteOrder: PropTypes.func.isRequired,
+  getCustomersRB: PropTypes.func.isRequired,
+  optimizeRoute: PropTypes.func.isRequired,
   employees: PropTypes.object.isRequired,
   mapRedux: PropTypes.object.isRequired
 };
@@ -527,5 +607,7 @@ export default connect(mapStateToProps, {
   setSchedule,
   unschedule,
   getEmployeeRoute,
-  updateRouteOrder
+  updateRouteOrder,
+  getCustomersRB,
+  optimizeRoute
 })(RouteBuilder);

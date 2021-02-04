@@ -6,7 +6,8 @@ import {
   RESET_CUSTOMER_LOADING,
   GET_CUSTOMER_SERVICE_NOTES,
   GET_CUSTOMER_RECENT_ACTIVITY,
-  GET_CUSTOMER_CHECKLIST
+  GET_CUSTOMER_CHECKLIST,
+  GET_ALL_CUSTOMERS
 } from './types';
 
 // Add Customer
@@ -82,6 +83,26 @@ export const getCustomers = () => async dispatch => {
 
     dispatch({
       type: GET_CUSTOMERS,
+      payload: customers.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get All My Customers (For Routing System)
+export const getCustomersRB = () => async dispatch => {
+  try {
+    const customers = await axios.get('/api/customers');
+
+    // Since the customers reducer is already being used on the route builder page, this action dispatches the information to another reducer.
+    dispatch({
+      type: GET_ALL_CUSTOMERS,
       payload: customers.data
     });
   } catch (err) {
@@ -623,6 +644,71 @@ export const updateRouteOrder = (techId, day, routeList) => async dispatch => {
     // dispatch(setAlert('Customer Scheduled', 'success'));
   } catch (err) {
     console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Optimize Route
+export const optimizeRoute = (routeList, techId, day) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  // console.log(routeList);
+
+  if (
+    routeList.length === 0 ||
+    routeList.length === 1 ||
+    routeList.length === 2
+  ) {
+    return dispatch(
+      setAlert('Cannot Optimize a Route With Less Than 3 Customers.', 'danger')
+    );
+  }
+
+  // const object = {
+  //   vehicles: [
+  //     {
+  //       vehicle_id: 'my_vehicle',
+  //       start_address: {
+  //         location_id: 'Elite Pool Service',
+  //         lon: -84.1105079,
+  //         lat: 34.2313319
+  //       }
+  //     }
+  //   ],
+  //   services: [
+  //     routeList.map(customer => ({
+  //       id: customer._id,
+  //       name: customer.firstName + ' ' + customer.lastName,
+  //       address: {
+  //         location_id: customer.firstName + ' ' + customer.lastName,
+  //         lon: customer.serviceLng,
+  //         lat: customer.serviceLat
+  //       },
+  //       duration: 900
+  //     }))
+  //   ]
+  // };
+
+  const body = JSON.stringify(routeList);
+
+  try {
+    await axios.post(
+      `/api/customers/route/optimize/${techId}/${day}`,
+      body,
+      config
+    );
+    // dispatch(setAlert('Customer Added', 'success'));
+  } catch (err) {
+    console.log(err);
+
     const errors = err.response.data.errors;
 
     if (errors) {

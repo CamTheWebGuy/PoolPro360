@@ -5,7 +5,8 @@ import {
   GET_CUSTOMER_SERVICE_NOTES,
   GET_CUSTOMER_RECENT_ACTIVITY,
   GET_CUSTOMER_CHECKLIST,
-  GET_ROUTE
+  GET_ROUTE,
+  GET_ALL_CUSTOMERS
 } from '../actions/types';
 
 const initialState = {
@@ -16,7 +17,8 @@ const initialState = {
   serviceNotes: [],
   recentActivity: [],
   checklist: [],
-  routeList: []
+  routeList: [],
+  allCustomers: []
 };
 
 export default function(state = initialState, action) {
@@ -27,6 +29,11 @@ export default function(state = initialState, action) {
         ...state,
         customers: payload,
         loading: false
+      };
+    case GET_ALL_CUSTOMERS:
+      return {
+        ...state,
+        allCustomers: payload
       };
     case GET_ROUTE:
       return {

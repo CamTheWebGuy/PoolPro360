@@ -229,8 +229,25 @@ router.post(
 // @access   Private/User
 router.get('/', auth, async (req, res) => {
   try {
-    const customer = await Customer.find({ user: req.user.id });
-    res.json(customer);
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (user.role !== 'Owner' && user.role !== 'Admin') {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (user.role === 'Owner') {
+      const customer = await Customer.find({ user: req.user.id });
+      return res.json(customer);
+    }
+
+    if (user.role === 'Admin') {
+      const customer = await Customer.find({ user: user.owner });
+      return res.json(customer);
+    }
   } catch (err) {
     console.log(err.message);
     res.status(500).send('Server Error');
@@ -1083,6 +1100,85 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
     }
 
     res.status(200).json(route.customers);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/route/optimize/:techId/:day
+// @desc     Optimize a technicians route
+// @access   Private/User
+router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
+  //console.log(req.body);
+
+  const routeList = req.body;
+
+  const body = {
+    vehicles: [
+      {
+        vehicle_id: 'my_vehicle',
+        start_address: {
+          location_id: 'Elite Pool Service',
+          lon: -84.1105079,
+          lat: 34.2313319
+        }
+      }
+    ],
+    services: routeList.map(customer => ({
+      id: customer._id,
+      name: customer.firstName + '_' + customer.lastName,
+      address: {
+        location_id: customer.firstName + ' ' + customer.lastName,
+        lon: parseFloat(customer.serviceLng),
+        lat: parseFloat(customer.serviceLat)
+      },
+      duration: 900
+    }))
+  };
+
+  const jsonBody = JSON.stringify(body);
+
+  console.log(jsonBody);
+  try {
+    let route = await Route.findOne({
+      technician: req.params.techId,
+      day: req.params.day
+    });
+    const user = await User.find({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+    const tech = await User.find({ _id: req.params.techId });
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+    if (user.role === 'Admin') {
+      if (tech.owner !== user.owner) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id !== tech.owner) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+    const result = await axios.post(
+      `https://graphhopper.com/api/1/vrp?key=${config.get(
+        'graphhopper_api_key'
+      )}`,
+      jsonBody,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log(result);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {

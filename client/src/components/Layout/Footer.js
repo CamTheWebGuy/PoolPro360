@@ -16,6 +16,7 @@ const Footer = ({ cssClass }) => {
                 >
                   PoolPro360
                 </a>
+                <small> - v1.0</small>
               </div>
             </div>
             <div className='col-xl-7'>
