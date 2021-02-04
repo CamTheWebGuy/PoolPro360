@@ -9,6 +9,10 @@ const RouteSchema = new mongoose.Schema({
   day: {
     type: String
   },
+  isOptimized: {
+    type: Boolean,
+    default: false
+  },
   customers: [
     {
       customer: {

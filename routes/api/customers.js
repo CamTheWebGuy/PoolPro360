@@ -1035,7 +1035,6 @@ router.patch('/route/:techId', auth, async (req, res) => {
     }
 
     if (req.user.role !== 'Admin' && req.user.role !== 'Owner') {
-      console.log('fail here');
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
@@ -1122,9 +1121,9 @@ router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
       {
         vehicle_id: 'my_vehicle',
         start_address: {
-          location_id: 'Elite Pool Service',
-          lon: -84.1105079,
-          lat: 34.2313319
+          location_id: 'Start Location',
+          lon: parseInt(routeList[0].serviceLng),
+          lat: parseInt(routeList[0].serviceLat)
         }
       }
     ],
@@ -1142,7 +1141,6 @@ router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
 
   const jsonBody = JSON.stringify(body);
 
-  console.log(jsonBody);
   try {
     let route = await Route.findOne({
       technician: req.params.techId,
@@ -1178,7 +1176,20 @@ router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
         }
       }
     );
-    console.log(result);
+
+    const resultRoute = result.data.solution.routes[0].activities;
+
+    for (var i = 0; i < route.customers.length; i++) {
+      route.customers[i].customer = resultRoute[i + 1].id;
+    }
+
+    route.isOptimized = true;
+
+    route.save();
+
+    // console.log(route.customers);
+
+    return res.status(200).json(route);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {

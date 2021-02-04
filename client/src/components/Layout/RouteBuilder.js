@@ -249,20 +249,53 @@ const RouteBuilder = ({
                   {totalDuration && (
                     <h5>Total Duration: {totalDuration} minutes</h5>
                   )}
-                  <p>Routing Type: Manual</p>
+                </Col>
+                <Col>
+                  {' '}
+                  <p>
+                    Routing Type:{' '}
+                    {routeList.isOptimized ? (
+                      <span>Optimized</span>
+                    ) : (
+                      <span>Manual</span>
+                    )}
+                  </p>
+                </Col>
+                <Col>
                   <Button
                     color='primary'
-                    onClick={() => {
+                    onClick={async () => {
                       // console.log(routedCustomers);
-                      optimizeRoute(
+                      setIsProcessing(true);
+                      await optimizeRoute(
                         routedCustomers,
                         selectedTech,
                         dateSelected
                       );
+                      await getEmployeeRoute(selectedTech, dateSelected);
+                      setIsProcessing(false);
                     }}
                   >
-                    Optimize Route
+                    {isProcessing ? (
+                      <span>
+                        {' '}
+                        <SpinnerCircular
+                          size={24}
+                          thickness={180}
+                          speed={100}
+                          color='rgba(57, 125, 172, 1)'
+                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                        />{' '}
+                        Processing...
+                      </span>
+                    ) : (
+                      <span>Optimize Route</span>
+                    )}
                   </Button>
+                </Col>
+              </Row>
+              <Row>
+                <Col>
                   {customers.length >= 1 &&
                     routedCustomers !== null &&
                     mapCenterPoint !== null && (
