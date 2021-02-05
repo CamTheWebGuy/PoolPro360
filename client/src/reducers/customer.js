@@ -6,7 +6,9 @@ import {
   GET_CUSTOMER_RECENT_ACTIVITY,
   GET_CUSTOMER_CHECKLIST,
   GET_ROUTE,
-  GET_ALL_CUSTOMERS
+  GET_ALL_CUSTOMERS,
+  CLEAR_CUSTOMERS,
+  ROUTE_OPTIMIZED
 } from '../actions/types';
 
 const initialState = {
@@ -18,6 +20,7 @@ const initialState = {
   recentActivity: [],
   checklist: [],
   routeList: [],
+  isRouteOptimized: false,
   allCustomers: []
 };
 
@@ -30,10 +33,27 @@ export default function(state = initialState, action) {
         customers: payload,
         loading: false
       };
+    case ROUTE_OPTIMIZED:
+      return {
+        ...state,
+        isRouteOptimized: payload
+      };
     case GET_ALL_CUSTOMERS:
       return {
         ...state,
         allCustomers: payload
+      };
+    case CLEAR_CUSTOMERS:
+      return {
+        customers: [],
+        loading: true,
+        singleCustomer: {},
+        singleLoading: true,
+        serviceNotes: [],
+        recentActivity: [],
+        checklist: [],
+        routeList: [],
+        allCustomers: []
       };
     case GET_ROUTE:
       return {

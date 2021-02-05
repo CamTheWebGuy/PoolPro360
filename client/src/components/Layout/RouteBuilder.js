@@ -35,7 +35,9 @@ import {
   unschedule,
   updateRouteOrder,
   getCustomersRB,
-  optimizeRoute
+  optimizeRoute,
+  clearCustomers,
+  updateFrequency
 } from '../../actions/customer';
 
 import {
@@ -63,6 +65,8 @@ const containerStyle = {
 };
 
 const RouteBuilder = ({
+  clearCustomers,
+  updateFrequency,
   getEmployees,
   getEmployeeCustomers,
   setSchedule,
@@ -76,9 +80,10 @@ const RouteBuilder = ({
   customers: { customers, loading, routeList, allCustomers }
 }) => {
   useEffect(() => {
+    clearCustomers();
     getEmployees();
     getCustomersRB();
-  }, [getEmployees, getCustomersRB]);
+  }, [clearCustomers, getEmployees, getCustomersRB]);
 
   const [selectedTech, setSelectedTech] = useState(null);
   const [dateSelected, setDateSelected] = useState('Monday');
@@ -120,7 +125,7 @@ const RouteBuilder = ({
   const [mapCenterPoint, setMapCenterPoint] = useState(null);
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && customers[0]) {
       getEmployeeRoute(selectedTech, dateSelected);
       setMapCenterPoint({
         lat: parseFloat(customers[0].serviceLat),
@@ -194,6 +199,19 @@ const RouteBuilder = ({
 
   calculateTotalDistance();
 
+  const [frequency, setFrequency] = useState({
+    customer: null,
+    freq: null
+  });
+
+  const onFreqChange = async (customerId, freq) => {
+    setFrequency({
+      customer: customerId,
+      freq: freq
+    });
+    updateFrequency(customerId, freq);
+  };
+
   return (
     <Fragment>
       <Sidebar active='routing' />
@@ -250,7 +268,7 @@ const RouteBuilder = ({
                     <h5>Total Duration: {totalDuration} minutes</h5>
                   )}
                 </Col>
-                <Col>
+                {/* <Col>
                   {' '}
                   <p>
                     Routing Type:{' '}
@@ -260,7 +278,7 @@ const RouteBuilder = ({
                       <span>Manual</span>
                     )}
                   </p>
-                </Col>
+                </Col> */}
                 <Col>
                   <Button
                     color='primary'
@@ -331,7 +349,7 @@ const RouteBuilder = ({
                           )}
 
                           {allCustomers.map(customer => (
-                            <Fragment>
+                            <Fragment key={customer._id}>
                               {customer.technician !== selectedTech && (
                                 <Marker
                                   icon={'https://i.imgur.com/SErFNu4.png'}
@@ -569,6 +587,42 @@ const RouteBuilder = ({
                                                   <em>{c.serviceAddress}</em>
                                                 </small>
                                                 <br />
+                                                <br />
+                                                <Row>
+                                                  <Col sm='3'>
+                                                    <Label className='form-control-label'>
+                                                      Frequency:
+                                                    </Label>
+                                                  </Col>
+                                                  <Col sm='9'>
+                                                    <Input
+                                                      type='select'
+                                                      defaultValue={c.frequency}
+                                                      name='frequency'
+                                                      onChange={e =>
+                                                        onFreqChange(
+                                                          c._id,
+                                                          e.target.value
+                                                        )
+                                                      }
+                                                    >
+                                                      <option>Weekly</option>
+                                                      <option>
+                                                        Bi-Weekly (Every 2
+                                                        Weeks)
+                                                      </option>
+                                                      <option>
+                                                        Tri-Weekly (Every 2
+                                                        Weeks)
+                                                      </option>
+                                                      <option>
+                                                        Monthly (Every 4 Weeks)
+                                                      </option>
+                                                    </Input>
+                                                  </Col>
+                                                </Row>
+
+                                                <br />
                                                 <Button
                                                   size='sm'
                                                   color='danger'
@@ -624,6 +678,8 @@ RouteBuilder.propTypes = {
   updateRouteOrder: PropTypes.func.isRequired,
   getCustomersRB: PropTypes.func.isRequired,
   optimizeRoute: PropTypes.func.isRequired,
+  clearCustomers: PropTypes.func.isRequired,
+  updateFrequency: PropTypes.func.isRequired,
   employees: PropTypes.object.isRequired,
   mapRedux: PropTypes.object.isRequired
 };
@@ -642,5 +698,7 @@ export default connect(mapStateToProps, {
   getEmployeeRoute,
   updateRouteOrder,
   getCustomersRB,
-  optimizeRoute
+  optimizeRoute,
+  clearCustomers,
+  updateFrequency
 })(RouteBuilder);

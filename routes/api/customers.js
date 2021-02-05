@@ -1199,4 +1199,45 @@ router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
   }
 });
 
+// @route    PATCH api/customers/frequency/:customerId/:freq
+// @desc     Set Customer Service Frequency
+// @access   Private/User
+router.patch('/frequency/:customerId/:freq', auth, async (req, res) => {
+  try {
+    const user = await User.find({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+    if (user.role === 'Admin') {
+      if (customer.owner !== user.owner) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id !== customer.owner) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    customer.frequency = req.params.freq;
+
+    customer.save();
+
+    return res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;

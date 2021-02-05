@@ -48,6 +48,10 @@ const CustomerSchema = new mongoose.Schema({
   gateCode: {
     type: String
   },
+  frequency: {
+    type: String,
+    default: 'Weekly'
+  },
   canText: {
     type: String
   },

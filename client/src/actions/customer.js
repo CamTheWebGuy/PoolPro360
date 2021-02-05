@@ -7,7 +7,8 @@ import {
   GET_CUSTOMER_SERVICE_NOTES,
   GET_CUSTOMER_RECENT_ACTIVITY,
   GET_CUSTOMER_CHECKLIST,
-  GET_ALL_CUSTOMERS
+  GET_ALL_CUSTOMERS,
+  CLEAR_CUSTOMERS
 } from './types';
 
 // Add Customer
@@ -672,31 +673,6 @@ export const optimizeRoute = (routeList, techId, day) => async dispatch => {
     );
   }
 
-  // const object = {
-  //   vehicles: [
-  //     {
-  //       vehicle_id: 'my_vehicle',
-  //       start_address: {
-  //         location_id: 'Elite Pool Service',
-  //         lon: -84.1105079,
-  //         lat: 34.2313319
-  //       }
-  //     }
-  //   ],
-  //   services: [
-  //     routeList.map(customer => ({
-  //       id: customer._id,
-  //       name: customer.firstName + ' ' + customer.lastName,
-  //       address: {
-  //         location_id: customer.firstName + ' ' + customer.lastName,
-  //         lon: customer.serviceLng,
-  //         lat: customer.serviceLat
-  //       },
-  //       duration: 900
-  //     }))
-  //   ]
-  // };
-
   const body = JSON.stringify(routeList);
 
   try {
@@ -709,6 +685,36 @@ export const optimizeRoute = (routeList, techId, day) => async dispatch => {
   } catch (err) {
     console.log(err);
 
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Clear Customers Reducer
+export const clearCustomers = () => async dispatch => {
+  try {
+    dispatch({
+      type: CLEAR_CUSTOMERS
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Customer Service Frequency
+export const updateFrequency = (customerId, frequency) => async dispatch => {
+  try {
+    await axios.patch(`/api/customers/frequency/${customerId}/${frequency}`);
+  } catch (err) {
+    console.log(err);
     const errors = err.response.data.errors;
 
     if (errors) {
