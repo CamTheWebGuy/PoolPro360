@@ -192,6 +192,15 @@ const ViewUser = ({
                                 {customer.serviceAddress},{' '}
                                 {customer.serviceCity}, {customer.serviceState}{' '}
                                 {customer.serviceZip}
+                                <br />
+                                {customer.isScheduled ? (
+                                  <Badge color='success'>
+                                    Scheduled {customer.frequency} for{' '}
+                                    {customer.scheduledDay}'s{' '}
+                                  </Badge>
+                                ) : (
+                                  <Badge color='danger'>Not Scheduled</Badge>
+                                )}
                               </small>
                             </Link>
                           </ListGroupItem>

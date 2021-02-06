@@ -257,11 +257,16 @@ const ViewCustomer = ({
                   <Fragment>
                     {!customer[0].serviceRate && !customer[0].servicePackage && (
                       <Fragment>
-                        <Badge color='danger'>No Service Assigned</Badge>{' '}
+                        <Badge color='danger'>No Service Plan Assigned</Badge>{' '}
+                      </Fragment>
+                    )}
+                    {!customer[0].technician && (
+                      <Fragment>
+                        <Badge color='danger'>No Tech Assigned</Badge>{' '}
                       </Fragment>
                     )}
                     <Badge color='success'>No Open Work Orders</Badge>{' '}
-                    <Badge color='secondary'>No Pending Expenses</Badge>
+                    <Badge color='secondary'>No Pending Expenses</Badge>{' '}
                     <h1 className='display-2 text-white'>
                       {customer[0].serviceAddress}
                     </h1>
@@ -398,19 +403,31 @@ const ViewCustomer = ({
                           <div className='form-control-label'>
                             Service Address
                           </div>
-                          <p>{customer[0].serviceAddress}</p>
+                          <p>
+                            {customer[0].serviceAddress},{' '}
+                            {customer[0].serviceCity},{' '}
+                            {customer[0].serviceState} {customer[0].serviceZip}
+                          </p>
                         </Col>
                         <Col sm='3'>
-                          <div className='form-control-label'>City</div>
-                          <p>{customer[0].serviceCity}</p>
+                          <div className='form-control-label'>
+                            Service Frequency
+                          </div>
+                          <p>{customer[0].frequency}</p>
                         </Col>
                         <Col sm='3'>
-                          <div className='form-control-label'>State</div>
-                          <p>{customer[0].serviceState}</p>
+                          <div className='form-control-label'>Service Day</div>
+                          <p>{customer[0].scheduledDay}</p>
                         </Col>
                         <Col sm='3'>
-                          <div className='form-control-label'>Zip</div>
-                          <p>{customer[0].serviceZip}</p>
+                          <div className='form-control-label'>Route Status</div>
+                          <p>
+                            {customer[0].isScheduled ? (
+                              <span>Routed</span>
+                            ) : (
+                              <span>Not Routed</span>
+                            )}
+                          </p>
                         </Col>
                       </Row>
                       <Row>

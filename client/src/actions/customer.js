@@ -722,3 +722,17 @@ export const updateFrequency = (customerId, frequency) => async dispatch => {
     }
   }
 };
+
+// Update Tech
+export const updateTech = (customerId, techId) => async dispatch => {
+  try {
+    await axios.patch(`/api/customers/${customerId}/tech/${techId}`);
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

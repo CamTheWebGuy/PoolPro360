@@ -37,7 +37,8 @@ import {
   getCustomersRB,
   optimizeRoute,
   clearCustomers,
-  updateFrequency
+  updateFrequency,
+  updateTech
 } from '../../actions/customer';
 
 import {
@@ -75,6 +76,7 @@ const RouteBuilder = ({
   updateRouteOrder,
   getCustomersRB,
   optimizeRoute,
+  updateTech,
   mapRedux: { legs },
   employees: { employees },
   customers: { customers, loading, routeList, allCustomers }
@@ -96,6 +98,7 @@ const RouteBuilder = ({
     setIsProcessing(true);
     setSelectedTech(e.target.value);
     await getEmployeeCustomers(e.target.value);
+    await getEmployeeRoute(e.target.value, dateSelected);
     setIsProcessing(false);
   };
 
@@ -136,6 +139,17 @@ const RouteBuilder = ({
       // console.log(list);
     }
   }, [customers]);
+
+  const [mapCenterPointNC, setMapCenterPointNC] = useState(null);
+
+  useEffect(() => {
+    if (allCustomers[0]) {
+      setMapCenterPointNC({
+        lat: parseFloat(allCustomers[0].serviceLat),
+        lng: parseFloat(allCustomers[0].serviceLng)
+      });
+    }
+  }, [allCustomers]);
 
   useEffect(() => {
     if (!loading) {
@@ -260,7 +274,7 @@ const RouteBuilder = ({
             </CardHeader>
             <CardBody>
               <Row>
-                <Col>
+                <Col md='4'>
                   {totalDistance && (
                     <h5>Total Distance: {totalDistance} miles</h5>
                   )}
@@ -279,7 +293,7 @@ const RouteBuilder = ({
                     )}
                   </p>
                 </Col> */}
-                <Col>
+                <Col md={{ size: 4, offset: 4 }}>
                   <Button
                     color='primary'
                     onClick={async () => {
@@ -314,10 +328,121 @@ const RouteBuilder = ({
               </Row>
               <Row>
                 <Col>
+                  {customers.length === 0 &&
+                    mapCenterPointNC !== null &&
+                    selectedTech && (
+                      <LoadScript googleMapsApiKey='AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag'>
+                        <GoogleMap
+                          mapContainerStyle={containerStyle}
+                          center={mapCenterPointNC}
+                          zoom={10}
+                          onLoad={onLoad}
+                          onUnmount={onUnmount}
+                        >
+                          {allCustomers.map(customer => (
+                            <Fragment key={customer._id}>
+                              {customer.technician !== selectedTech && (
+                                <Marker
+                                  icon={'https://i.imgur.com/SErFNu4.png'}
+                                  position={{
+                                    lat: parseFloat(customer.serviceLat),
+                                    lng: parseFloat(customer.serviceLng)
+                                  }}
+                                  onClick={() => {
+                                    onToggleOpen(customer._id);
+                                  }}
+                                >
+                                  {infoIsOpen.isOpen &&
+                                    infoIsOpen.active === customer._id && (
+                                      <InfoWindow onCloseClick={onToggleOpen}>
+                                        <div>
+                                          <strong>
+                                            <h4 className='mb-0'>
+                                              {customer.firstName}{' '}
+                                              {customer.lastName}
+                                            </h4>
+                                          </strong>{' '}
+                                          {customer.serviceAddress}
+                                          <br />
+                                          {customer.isScheduled ? (
+                                            <Badge
+                                              className='mgn-btm-10'
+                                              color='success'
+                                            >
+                                              Scheduled
+                                            </Badge>
+                                          ) : (
+                                            <Badge
+                                              className='mgn-btm-10'
+                                              color='danger'
+                                            >
+                                              Not Scheduled
+                                            </Badge>
+                                          )}
+                                          <br />
+                                          {customer.technician === null ? (
+                                            <span>
+                                              Not Assigned to Tech
+                                              <br />
+                                              <Button
+                                                size='sm'
+                                                color='success'
+                                                onClick={async () => {
+                                                  setIsProcessing(true);
+                                                  await updateTech(
+                                                    customer._id,
+                                                    selectedTech
+                                                  );
+                                                  await getEmployeeCustomers(
+                                                    selectedTech
+                                                  );
+                                                  await getCustomersRB();
+                                                  setIsProcessing(false);
+                                                }}
+                                              >
+                                                Assign to Selected Tech
+                                              </Button>
+                                            </span>
+                                          ) : (
+                                            <span>
+                                              Assigned to{' '}
+                                              {customer.technicianName}
+                                              <br />
+                                              <Button
+                                                size='sm'
+                                                color='success'
+                                                onClick={async () => {
+                                                  setIsProcessing(true);
+                                                  await updateTech(
+                                                    customer._id,
+                                                    selectedTech
+                                                  );
+                                                  await getEmployeeCustomers(
+                                                    selectedTech
+                                                  );
+                                                  await getCustomersRB();
+                                                  setIsProcessing(false);
+                                                }}
+                                              >
+                                                Assign to Selected Tech
+                                              </Button>
+                                            </span>
+                                          )}
+                                        </div>
+                                      </InfoWindow>
+                                    )}
+                                </Marker>
+                              )}
+                            </Fragment>
+                          ))}
+                        </GoogleMap>
+                      </LoadScript>
+                    )}
+
                   {customers.length >= 1 &&
                     routedCustomers !== null &&
                     mapCenterPoint !== null && (
-                      <LoadScript googleMapsApiKey=''>
+                      <LoadScript googleMapsApiKey='AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag'>
                         <GoogleMap
                           mapContainerStyle={containerStyle}
                           center={mapCenterPoint}
@@ -390,17 +515,53 @@ const RouteBuilder = ({
                                           )}
                                           <br />
                                           {customer.technician === null ? (
-                                            <span>Not Assigned to Tech</span>
+                                            <span>
+                                              Not Assigned to Tech
+                                              <br />
+                                              <Button
+                                                size='sm'
+                                                color='success'
+                                                onClick={async () => {
+                                                  setIsProcessing(true);
+                                                  await updateTech(
+                                                    customer._id,
+                                                    selectedTech
+                                                  );
+                                                  await getEmployeeCustomers(
+                                                    selectedTech
+                                                  );
+                                                  await getCustomersRB();
+                                                  setIsProcessing(false);
+                                                }}
+                                              >
+                                                Assign to Selected Tech
+                                              </Button>
+                                            </span>
                                           ) : (
                                             <span>
                                               Assigned to{' '}
                                               {customer.technicianName}
+                                              <br />
+                                              <Button
+                                                size='sm'
+                                                color='success'
+                                                onClick={async () => {
+                                                  setIsProcessing(true);
+                                                  await updateTech(
+                                                    customer._id,
+                                                    selectedTech
+                                                  );
+                                                  await getEmployeeCustomers(
+                                                    selectedTech
+                                                  );
+                                                  await getCustomersRB();
+                                                  setIsProcessing(false);
+                                                }}
+                                              >
+                                                Assign to Selected Tech
+                                              </Button>
                                             </span>
                                           )}
-                                          <br />
-                                          <Button size='sm' color='success'>
-                                            Assign to Selected Tech
-                                          </Button>
                                         </div>
                                       </InfoWindow>
                                     )}
@@ -433,6 +594,13 @@ const RouteBuilder = ({
                                             </h4>
                                           </strong>{' '}
                                           {customer.serviceAddress}
+                                          <br />
+                                          <Badge color='danger'>
+                                            Not Scheduled
+                                          </Badge>
+                                          <br />
+                                          <br />
+                                          Assigned to {customer.technicianName}
                                           <br />
                                           <Button
                                             size='sm'
@@ -680,6 +848,7 @@ RouteBuilder.propTypes = {
   optimizeRoute: PropTypes.func.isRequired,
   clearCustomers: PropTypes.func.isRequired,
   updateFrequency: PropTypes.func.isRequired,
+  updateTech: PropTypes.func.isRequired,
   employees: PropTypes.object.isRequired,
   mapRedux: PropTypes.object.isRequired
 };
@@ -700,5 +869,6 @@ export default connect(mapStateToProps, {
   getCustomersRB,
   optimizeRoute,
   clearCustomers,
-  updateFrequency
+  updateFrequency,
+  updateTech
 })(RouteBuilder);

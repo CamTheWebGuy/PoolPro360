@@ -178,7 +178,9 @@ router.post(
       // console.log(serviceQuery);
 
       const result = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${serviceQuery}&key=AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${serviceQuery}&key=${config.get(
+          'google_api_key'
+        )}`
       );
 
       // console.log(result.data);
@@ -1187,8 +1189,6 @@ router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
 
     route.save();
 
-    // console.log(route.customers);
-
     return res.status(200).json(route);
   } catch (err) {
     console.log(err.message);
@@ -1227,6 +1227,68 @@ router.patch('/frequency/:customerId/:freq', auth, async (req, res) => {
     }
 
     customer.frequency = req.params.freq;
+
+    customer.save();
+
+    return res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/tech/:techId
+// @desc     Update Customer Tech (Route Builder)
+// @access   Private/User
+router.patch('/:customerId/tech/:techId', auth, async (req, res) => {
+  try {
+    const user = await User.find({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    const customer = await Customer.findById(req.params.customerId);
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+    if (user.role === 'Admin') {
+      if (customer.user !== user.owner) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id !== customer.user) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    const tech = await User.findById(req.params.techId);
+    console.log(tech.owner);
+    console.log(customer.user);
+
+    if (!tech) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    if (escape(tech.owner) !== escape(customer.user)) {
+      if (tech.role !== 'Owner') {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    if (tech.role === 'Owner') {
+      if (customer.user !== tech._id) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    customer.technician = tech._id;
+    customer.technicianName = tech.firstName + ' ' + tech.lastName;
 
     customer.save();
 
