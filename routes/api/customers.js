@@ -1268,8 +1268,6 @@ router.patch('/:customerId/tech/:techId', auth, async (req, res) => {
     }
 
     const tech = await User.findById(req.params.techId);
-    console.log(tech.owner);
-    console.log(customer.user);
 
     if (!tech) {
       return res.status(404).json({ msg: 'User not found' });
@@ -1290,9 +1288,139 @@ router.patch('/:customerId/tech/:techId', auth, async (req, res) => {
     customer.technician = tech._id;
     customer.technicianName = tech.firstName + ' ' + tech.lastName;
 
-    customer.save();
+    await customer.save();
 
     return res.status(200).json(customer);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/route/complete/:customerId
+// @desc     Mark Customer as Serviced
+// @access   Private/Technicians
+router.post('/route/complete/:customerId', auth, async (req, res) => {
+  const {
+    totalChlorine,
+    freeChlorine,
+    pHlevel,
+    alkalinity,
+    conditionerLevel,
+    hardness,
+    phosphateLevel,
+    saltLevel,
+    chlorineTablets,
+    liquidChlorine,
+    liquidAcid,
+    triChlor,
+    diChlor,
+    calHypo,
+    potassiumMono,
+    ammonia,
+    copperBased,
+    polyQuat,
+    copperBlend,
+    sodaAsh,
+    CalciumChloride,
+    conditioner,
+    sodiumBicar,
+    diatomaceous,
+    diatomaceousAlt,
+    sodiumBro,
+    dryAcid,
+    clarifier,
+    phosphateRemover,
+    salt,
+    enzymes,
+    metalSequester,
+    bromineGran,
+    bromineTab,
+    poolFlocc,
+    borate
+  } = req.body;
+
+  try {
+    const user = await User.find({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    let customer = await Customer.findById({ _id: req.params.customerId });
+
+    if (user.role === 'Admin' || user.role === 'Technician') {
+      if (customer.user !== user.owner) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id !== customer.user) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    let activity = new Activity({
+      comments: 'Service Logged',
+      log: 'Service',
+      type: '',
+      icon: 'Tools',
+      customer: req.params.customerId,
+      user: req.user.id,
+      dateAdded: Date.now(),
+      serviceLog: {
+        totalChlorine,
+        freeChlorine,
+        pHlevel,
+        alkalinity,
+        conditionerLevel,
+        hardness,
+        phosphateLevel,
+        saltLevel,
+        chlorineTablets,
+        liquidChlorine,
+        liquidAcid,
+        triChlor,
+        diChlor,
+        calHypo,
+        potassiumMono,
+        ammonia,
+        copperBased,
+        polyQuat,
+        copperBlend,
+        sodaAsh,
+        CalciumChloride,
+        conditioner,
+        sodiumBicar,
+        diatomaceous,
+        diatomaceousAlt,
+        sodiumBro,
+        dryAcid,
+        clarifier,
+        phosphateRemover,
+        salt,
+        enzymes,
+        metalSequester,
+        bromineGran,
+        bromineTab,
+        poolFlocc,
+        borate
+      }
+    });
+
+    customer.lastServiced = Date.now();
+    await activity.save();
+    await customer.save();
+
+    return res.status(200).json(activity);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {

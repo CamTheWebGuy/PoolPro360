@@ -22,6 +22,7 @@ import EditUser from './components/Layout/EditUser';
 import ViewUser from './components/Layout/ViewUser';
 import Routing from './components/Layout/Routing';
 import RouteBuilder from './components/Layout/RouteBuilder';
+import ViewRoute from './components/Layout/ViewMyRoute';
 
 import PrivateRoute from './components/routing/PrivateRoute';
 
@@ -61,6 +62,7 @@ function App() {
             <PrivateRoute exact path='/users/:id/edit' component={EditUser} />
             <PrivateRoute exact path='/users/:id/view' component={ViewUser} />
             <PrivateRoute exact path='/users/add' component={AddUser} />
+            <PrivateRoute exact path='/view-my-route' component={ViewRoute} />
             <PrivateRoute
               exact
               path='/customers/:id/manage/equipment'

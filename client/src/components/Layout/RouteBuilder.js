@@ -57,8 +57,6 @@ import {
   CardBody,
   CardHeader
 } from 'reactstrap';
-import { parse } from 'uuid';
-import { set } from 'mongoose';
 
 const containerStyle = {
   width: '100%',
@@ -331,7 +329,7 @@ const RouteBuilder = ({
                   {customers.length === 0 &&
                     mapCenterPointNC !== null &&
                     selectedTech && (
-                      <LoadScript googleMapsApiKey='AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag'>
+                      <LoadScript googleMapsApiKey=''>
                         <GoogleMap
                           mapContainerStyle={containerStyle}
                           center={mapCenterPointNC}
@@ -442,7 +440,7 @@ const RouteBuilder = ({
                   {customers.length >= 1 &&
                     routedCustomers !== null &&
                     mapCenterPoint !== null && (
-                      <LoadScript googleMapsApiKey='AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag'>
+                      <LoadScript googleMapsApiKey=''>
                         <GoogleMap
                           mapContainerStyle={containerStyle}
                           center={mapCenterPoint}

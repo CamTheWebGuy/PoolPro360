@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 
 import { Scrollbars } from 'react-custom-scrollbars';
 
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+
 import logo from '../../img/brand/blue.png';
 import { Collapse, Button, CardBody, Card } from 'reactstrap';
 
@@ -16,7 +19,7 @@ $(document).ready(function() {
   });
 });
 
-const Sidebar = props => {
+const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +39,7 @@ const Sidebar = props => {
   }
 
   useEffect(() => {
-    if (props.active === 'routing') {
+    if (active === 'routing') {
       setIsOpen(true);
     }
   }, []);
@@ -95,7 +98,7 @@ const Sidebar = props => {
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'dashboard' ? 'active' : ''
+                        active === 'dashboard' ? 'active' : ''
                       }`}
                       to='/dashboard'
                       aria-controls='navbar-dashboards'
@@ -107,7 +110,7 @@ const Sidebar = props => {
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'workorders' ? 'active' : ''
+                        active === 'workorders' ? 'active' : ''
                       }`}
                       to='/work-orders'
                     >
@@ -118,7 +121,7 @@ const Sidebar = props => {
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'customers' ? 'active' : ''
+                        active === 'customers' ? 'active' : ''
                       }`}
                       to='/customers'
                     >
@@ -129,7 +132,7 @@ const Sidebar = props => {
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'bookingforms' ? 'active' : ''
+                        active === 'bookingforms' ? 'active' : ''
                       }`}
                       to='/booking-forms'
                     >
@@ -140,7 +143,7 @@ const Sidebar = props => {
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'users' ? 'active' : ''
+                        active === 'users' ? 'active' : ''
                       }`}
                       to='/users'
                     >
@@ -160,54 +163,70 @@ const Sidebar = props => {
                       <span className='nav-link-text'>Routing</span>
                     </Link>
                   </li> */}
-                  <li className='nav-item'>
-                    <div
-                      className={`nav-link ${
-                        props.active === 'routing' ? 'active' : ''
-                      }`}
-                      onClick={toggle}
-                    >
-                      <i className='ni ni-square-pin text-primary' />
-                      <span className='nav-link-text'>Routing</span>
-                      {isOpen ? (
-                        <div className='mgn-left-50p'>
-                          <i className='fas fa-chevron-up'></i>
-                        </div>
-                      ) : (
-                        <div className='mgn-left-50p'>
-                          <i className='fas fa-chevron-down'></i>
-                        </div>
-                      )}
-                    </div>
-                    <Collapse isOpen={isOpen}>
-                      <ul className='nav nav-sm flex-column'>
-                        <li className='nav-item nav-ctrl'>
-                          <Link to='/routing/builder' className='nav-link'>
-                            <span className='sidenav-normal'>
-                              {' '}
-                              <i className='fas fa-drafting-compass text-yellow mgn-right-5'></i>
-                              {'  '}
-                              Route Builder{' '}
-                            </span>
-                          </Link>
-                        </li>
-                        <li className='nav-item nav-ctrl'>
-                          <Link to='/routing' className='nav-link'>
-                            <span className='sidenav-normal'>
-                              {' '}
-                              <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
-                              View Route{' '}
-                            </span>
-                          </Link>
-                        </li>
-                      </ul>
-                    </Collapse>
-                  </li>
+                  {isAuthenticated && !loading && user.role !== 'Technician' && (
+                    <li className='nav-item'>
+                      <div
+                        className={`nav-link ${
+                          active === 'routing' ? 'active' : ''
+                        }`}
+                        onClick={toggle}
+                      >
+                        <i className='ni ni-square-pin text-primary' />
+                        <span className='nav-link-text'>Routing</span>
+                        {isOpen ? (
+                          <div className='mgn-left-50p'>
+                            <i className='fas fa-chevron-up'></i>
+                          </div>
+                        ) : (
+                          <div className='mgn-left-50p'>
+                            <i className='fas fa-chevron-down'></i>
+                          </div>
+                        )}
+                      </div>
+                      <Collapse isOpen={isOpen}>
+                        <ul className='nav nav-sm flex-column'>
+                          <li className='nav-item nav-ctrl'>
+                            <Link to='/routing/builder' className='nav-link'>
+                              <span className='sidenav-normal'>
+                                {' '}
+                                <i className='fas fa-drafting-compass text-yellow mgn-right-5'></i>
+                                {'  '}
+                                Route Builder{' '}
+                              </span>
+                            </Link>
+                          </li>
+                          <li className='nav-item nav-ctrl'>
+                            <Link to='/routing' className='nav-link'>
+                              <span className='sidenav-normal'>
+                                {' '}
+                                <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
+                                View Route{' '}
+                              </span>
+                            </Link>
+                          </li>
+                        </ul>
+                      </Collapse>
+                    </li>
+                  )}
+
+                  {isAuthenticated && !loading && user.role === 'Technician' && (
+                    <li className='nav-item nav-ctrl'>
+                      <Link
+                        className={`nav-link ${
+                          active === 'routing' ? 'active' : ''
+                        }`}
+                        to='/view-my-route'
+                      >
+                        <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
+                        <span className='nav-link-text'>View Route</span>
+                      </Link>
+                    </li>
+                  )}
 
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'payments' ? 'active' : ''
+                        active === 'payments' ? 'active' : ''
                       }`}
                       to='/payments'
                     >
@@ -219,7 +238,7 @@ const Sidebar = props => {
                   <li className='nav-item nav-ctrl'>
                     <Link
                       className={`nav-link ${
-                        props.active === 'settings' ? 'active' : ''
+                        active === 'settings' ? 'active' : ''
                       }`}
                       to='/settings'
                     >
@@ -267,4 +286,12 @@ const Sidebar = props => {
   );
 };
 
-export default Sidebar;
+Sidebar.propTypes = {
+  auth: PropTypes.object.isRequired
+};
+
+const mapStateToProps = state => ({
+  auth: state.auth
+});
+
+export default connect(mapStateToProps, null)(Sidebar);

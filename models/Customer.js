@@ -159,6 +159,9 @@ const CustomerSchema = new mongoose.Schema({
   },
   scheduledDay: {
     type: String
+  },
+  lastServiced: {
+    type: Date
   }
 });
 

@@ -736,3 +736,105 @@ export const updateTech = (customerId, techId) => async dispatch => {
     }
   }
 };
+
+// Update Tech
+export const addServiceLog = (
+  customerId,
+  {
+    totalChlorine,
+    freeChlorine,
+    pHlevel,
+    alkalinity,
+    conditionerLevel,
+    hardness,
+    phosphateLevel,
+    saltLevel,
+    chlorineTablets,
+    liquidChlorine,
+    liquidAcid,
+    triChlor,
+    diChlor,
+    calHypo,
+    potassiumMono,
+    ammonia,
+    copperBased,
+    polyQuat,
+    copperBlend,
+    sodaAsh,
+    CalciumChloride,
+    conditioner,
+    sodiumBicar,
+    diatomaceous,
+    diatomaceousAlt,
+    sodiumBro,
+    dryAcid,
+    clarifier,
+    phosphateRemover,
+    salt,
+    enzymes,
+    metalSequester,
+    bromineGran,
+    bromineTab,
+    poolFlocc,
+    borate
+  }
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    totalChlorine,
+    freeChlorine,
+    pHlevel,
+    alkalinity,
+    conditionerLevel,
+    hardness,
+    phosphateLevel,
+    saltLevel,
+    chlorineTablets,
+    liquidChlorine,
+    liquidAcid,
+    triChlor,
+    diChlor,
+    calHypo,
+    potassiumMono,
+    ammonia,
+    copperBased,
+    polyQuat,
+    copperBlend,
+    sodaAsh,
+    CalciumChloride,
+    conditioner,
+    sodiumBicar,
+    diatomaceous,
+    diatomaceousAlt,
+    sodiumBro,
+    dryAcid,
+    clarifier,
+    phosphateRemover,
+    salt,
+    enzymes,
+    metalSequester,
+    bromineGran,
+    bromineTab,
+    poolFlocc,
+    borate
+  });
+  try {
+    await axios.post(
+      `/api/customers/route/complete/${customerId}`,
+      body,
+      config
+    );
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

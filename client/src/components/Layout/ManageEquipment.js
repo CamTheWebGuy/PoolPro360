@@ -1,5 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 
+import { useHistory } from 'react-router-dom';
+
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
@@ -138,6 +140,8 @@ const ManageEquipment = ({
     getSingleCustomer(match.params.id);
   };
 
+  const history = useHistory();
+
   return (
     <Fragment>
       <Sidebar active='customers' />
@@ -225,7 +229,10 @@ const ManageEquipment = ({
                       <Button
                         type='submit'
                         color='success'
-                        onClick={handleSubmit}
+                        onClick={() => {
+                          handleSubmit();
+                          history.push(`/customers/${match.params.id}`);
+                        }}
                       >
                         Save Changes
                       </Button>
