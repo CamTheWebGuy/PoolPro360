@@ -58,7 +58,7 @@ import {
   ModalFooter
 } from 'reactstrap';
 
-import { getEmployeeCustomers } from '../../actions/employee';
+import { getEmployeeRoute } from '../../actions/employee';
 import {
   addServiceLog,
   getChecklist,
@@ -97,11 +97,11 @@ const { ExportCSVButton } = CSVExport;
 
 const Dashboard = ({
   auth: { user, isAuthenticated, loading, token },
-  getEmployeeCustomers,
   addServiceLog,
   getChecklist,
   getCustomerServiceNotes,
-  customers: { customers, checklist, serviceNotes }
+  getEmployeeRoute,
+  customers: { checklist, serviceNotes, routeList }
 }) => {
   useEffect(() => {
     let options = {
@@ -114,7 +114,7 @@ const Dashboard = ({
 
   useEffect(() => {
     if (user) {
-      getEmployeeCustomers(user._id);
+      getEmployeeRoute(user._id, moment(new Date()).format('dddd'));
     }
   }, [user]);
 
@@ -488,13 +488,14 @@ const Dashboard = ({
                                   Today's Customers
                                 </h5>
                                 <span className='h2 font-weight-bold mb-0'>
-                                  {
+                                  {routeList && routeList.length}
+                                  {/* {
                                     customers.filter(
                                       customer =>
                                         customer.scheduledDay ===
                                         moment(new Date()).format('dddd')
                                     ).length
-                                  }
+                                  } */}
                                 </span>
                               </div>
                               <div className='col-auto'>
@@ -517,6 +518,23 @@ const Dashboard = ({
                                 </h5>
                                 <span className='h2 font-weight-bold mb-0'>
                                   {
+                                    routeList.filter(
+                                      c =>
+                                        (moment(
+                                          c.customer.lastServiced
+                                        ).isBefore(Date.now(), 'day') &&
+                                          c.customer.scheduledDay ===
+                                            moment(new Date()).format(
+                                              'dddd'
+                                            )) ||
+                                        (c.customer.lastServiced ===
+                                          undefined &&
+                                          c.customer.scheduledDay ===
+                                            moment(new Date()).format('dddd'))
+                                    ).length
+                                  }
+
+                                  {/* {
                                     customers.filter(
                                       customer =>
                                         (moment(customer.lastServiced).isBefore(
@@ -531,7 +549,7 @@ const Dashboard = ({
                                           customer.scheduledDay ===
                                             moment(new Date()).format('dddd'))
                                     ).length
-                                  }
+                                  } */}
                                 </span>
                               </div>
                               <div className='col-auto'>
@@ -554,6 +572,19 @@ const Dashboard = ({
                                 </h5>
                                 <span className='h2 font-weight-bold mb-0'>
                                   {
+                                    routeList.filter(
+                                      c =>
+                                        moment(c.customer.lastServiced).isSame(
+                                          Date.now(),
+                                          'day'
+                                        ) &&
+                                        c.customer.scheduledDay ===
+                                          moment(new Date()).format('dddd') &&
+                                        c.customer.lastServiced !== undefined
+                                    ).length
+                                  }
+
+                                  {/* {
                                     customers.filter(
                                       customer =>
                                         moment(customer.lastServiced).isSame(
@@ -564,7 +595,7 @@ const Dashboard = ({
                                           moment(new Date()).format('dddd') &&
                                         customer.lastServiced !== undefined
                                     ).length
-                                  }
+                                  } */}
                                 </span>
                               </div>
                               <div className='col-auto'>
@@ -932,7 +963,10 @@ const Dashboard = ({
                         logModal.checkedNames,
                         data
                       );
-                      await getEmployeeCustomers(user._id);
+                      await getEmployeeRoute(
+                        user._id,
+                        moment(new Date()).format('dddd')
+                      );
                       setLogModal({
                         isOpen: false,
                         active: null,
@@ -3327,23 +3361,40 @@ const Dashboard = ({
                 <Card className='shadow'>
                   <CardHeader>
                     <h3>Today's Route</h3>
+                    <Progress
+                      animated
+                      value={
+                        (100 *
+                          routeList.filter(
+                            c =>
+                              moment(c.customer.lastServiced).isSame(
+                                Date.now(),
+                                'day'
+                              ) &&
+                              c.customer.scheduledDay ===
+                                moment(new Date()).format('dddd') &&
+                              c.customer.lastServiced !== undefined
+                          ).length) /
+                        routeList.length
+                      }
+                    />
                   </CardHeader>
                   <CardBody>
                     <ListGroup>
-                      {isAuthenticated && customers && (
+                      {isAuthenticated && routeList && (
                         <Fragment>
-                          {customers.map((customer, index) => (
+                          {routeList.map((customer, index) => (
                             <Fragment key={customer._id}>
-                              {customer.scheduledDay ===
+                              {customer.customer.scheduledDay ===
                                 moment(new Date()).format('dddd') && (
                                 <ListGroupItem>
                                   <Row>
                                     <Col md='2'>
-                                      {moment(customer.lastServiced).isSame(
-                                        Date.now(),
-                                        'day'
-                                      ) &&
-                                      customer.lastServiced != undefined ? (
+                                      {moment(
+                                        customer.customer.lastServiced
+                                      ).isSame(Date.now(), 'day') &&
+                                      customer.customer.lastServiced !=
+                                        undefined ? (
                                         <div className='route-box bg-green text-center'>
                                           <h2>
                                             <i className='fas fa-check-circle'></i>
@@ -3358,15 +3409,17 @@ const Dashboard = ({
                                     <Col md='8'>
                                       <div className='text-center'>
                                         <h3>
-                                          {customer.firstName}{' '}
-                                          {customer.lastName}
+                                          {customer.customer.firstName}{' '}
+                                          {customer.customer.lastName}
                                         </h3>
-                                        <p>{customer.serviceAddress}</p>
-                                        {moment(customer.lastServiced).isSame(
-                                          Date.now(),
-                                          'day'
-                                        ) &&
-                                        customer.lastServiced != undefined ? (
+                                        <p>
+                                          {customer.customer.serviceAddress}
+                                        </p>
+                                        {moment(
+                                          customer.customer.lastServiced
+                                        ).isSame(Date.now(), 'day') &&
+                                        customer.customer.lastServiced !=
+                                          undefined ? (
                                           <span></span>
                                         ) : (
                                           <Row>
@@ -3375,7 +3428,7 @@ const Dashboard = ({
                                               <Button
                                                 className='btn-icon mgn-btm-10'
                                                 color='success'
-                                                href={`https://www.google.com/maps/dir/Current+Location/${customer.serviceLat},${customer.serviceLng}`}
+                                                href={`https://www.google.com/maps/dir/Current+Location/${customer.customer.serviceLat},${customer.customer.serviceLng}`}
                                                 target='_blank'
                                               >
                                                 <span className='btn-inner--icon'>
@@ -3392,20 +3445,25 @@ const Dashboard = ({
                                                 className='btn-icon mgn-btm-10'
                                                 color='primary'
                                                 onClick={() => {
-                                                  getChecklist(customer._id);
+                                                  getChecklist(
+                                                    customer.customer._id
+                                                  );
                                                   getCustomerServiceNotes(
-                                                    customer._id
+                                                    customer.customer._id
                                                   );
 
                                                   setLogModal({
                                                     isServiceInfoOpen: true,
-                                                    active: customer._id,
+                                                    active:
+                                                      customer.customer._id,
                                                     activeName:
-                                                      customer.firstName +
+                                                      customer.customer
+                                                        .firstName +
                                                       ' ' +
-                                                      customer.lastName,
+                                                      customer.customer
+                                                        .lastName,
                                                     customerLock:
-                                                      customer.gatecode
+                                                      customer.customer.gatecode
                                                   });
                                                 }}
                                               >
@@ -3785,10 +3843,10 @@ const Dashboard = ({
 
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
-  getEmployeeCustomers: PropTypes.func.isRequired,
   addServiceLog: PropTypes.func.isRequired,
   getChecklist: PropTypes.func.isRequired,
-  getCustomerServiceNotes: PropTypes.func.isRequired
+  getCustomerServiceNotes: PropTypes.func.isRequired,
+  getEmployeeRoute: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -3797,8 +3855,8 @@ const mapStateToProps = state => ({
 });
 
 export default connect(mapStateToProps, {
-  getEmployeeCustomers,
   addServiceLog,
   getChecklist,
-  getCustomerServiceNotes
+  getCustomerServiceNotes,
+  getEmployeeRoute
 })(Dashboard);

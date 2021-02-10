@@ -959,10 +959,15 @@ router.patch('/:customerId/information', auth, async (req, res) => {
 router.get('/employee/:employeeId', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+
     const customers = await Customer.find({
       technician: req.params.employeeId,
       $or: [{ user: req.user.id }, { user: user.owner }]
     });
+
+    if (!customers) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
 
     res.status(200).json(customers);
   } catch (err) {
