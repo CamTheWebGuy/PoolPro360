@@ -291,12 +291,14 @@ const ViewCustomer = ({
                   Edit Customer Information
                 </Link>
 
-                <a
-                  href={`mailto:${customer[0].email}`}
-                  className='btn btn-primary mb-4'
-                >
-                  Email Customer
-                </a>
+                {customer && customer[0] && (
+                  <a
+                    href={`mailto:${customer[0].email}`}
+                    className='btn btn-primary mb-4'
+                  >
+                    Email Customer
+                  </a>
+                )}
               </div>
             </div>
           </div>

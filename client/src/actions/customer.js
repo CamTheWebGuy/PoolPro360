@@ -740,6 +740,7 @@ export const updateTech = (customerId, techId) => async dispatch => {
 // Update Tech
 export const addServiceLog = (
   customerId,
+  names,
   {
     totalChlorine,
     freeChlorine,
@@ -786,6 +787,7 @@ export const addServiceLog = (
   };
 
   const body = JSON.stringify({
+    names,
     totalChlorine,
     freeChlorine,
     pHlevel,

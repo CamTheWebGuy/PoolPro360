@@ -60,7 +60,8 @@ const ActivitySchema = new mongoose.Schema({
     bromineGran: { type: String },
     bromineTab: { type: String },
     poolFlocc: { type: String },
-    borate: { type: String }
+    borate: { type: String },
+    checkList: { type: Array }
   },
   dateAdded: {
     type: Date,

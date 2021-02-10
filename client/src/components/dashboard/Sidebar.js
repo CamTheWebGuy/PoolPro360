@@ -107,50 +107,54 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                       <span className='nav-link-text'>Dashboard</span>
                     </Link>
                   </li>
-                  <li className='nav-item nav-ctrl'>
-                    <Link
-                      className={`nav-link ${
-                        active === 'workorders' ? 'active' : ''
-                      }`}
-                      to='/work-orders'
-                    >
-                      <i className='ni ni-delivery-fast text-orange' />
-                      <span className='nav-link-text'>Work Orders</span>
-                    </Link>
-                  </li>
-                  <li className='nav-item nav-ctrl'>
-                    <Link
-                      className={`nav-link ${
-                        active === 'customers' ? 'active' : ''
-                      }`}
-                      to='/customers'
-                    >
-                      <i className='ni ni-bullet-list-67 text-info' />
-                      <span className='nav-link-text'>Customers</span>
-                    </Link>
-                  </li>
-                  <li className='nav-item nav-ctrl'>
-                    <Link
-                      className={`nav-link ${
-                        active === 'bookingforms' ? 'active' : ''
-                      }`}
-                      to='/booking-forms'
-                    >
-                      <i className='ni ni-single-copy-04 text-pink' />
-                      <span className='nav-link-text'>Booking Forms</span>
-                    </Link>{' '}
-                  </li>
-                  <li className='nav-item nav-ctrl'>
-                    <Link
-                      className={`nav-link ${
-                        active === 'users' ? 'active' : ''
-                      }`}
-                      to='/users'
-                    >
-                      <i className='ni ni-circle-08 text-default' />
-                      <span className='nav-link-text'>Users</span>
-                    </Link>
-                  </li>
+                  {isAuthenticated && !loading && user.role !== 'Technician' && (
+                    <Fragment>
+                      <li className='nav-item nav-ctrl'>
+                        <Link
+                          className={`nav-link ${
+                            active === 'workorders' ? 'active' : ''
+                          }`}
+                          to='/work-orders'
+                        >
+                          <i className='ni ni-delivery-fast text-orange' />
+                          <span className='nav-link-text'>Work Orders</span>
+                        </Link>
+                      </li>
+                      <li className='nav-item nav-ctrl'>
+                        <Link
+                          className={`nav-link ${
+                            active === 'customers' ? 'active' : ''
+                          }`}
+                          to='/customers'
+                        >
+                          <i className='ni ni-bullet-list-67 text-info' />
+                          <span className='nav-link-text'>Customers</span>
+                        </Link>
+                      </li>
+                      <li className='nav-item nav-ctrl'>
+                        <Link
+                          className={`nav-link ${
+                            active === 'bookingforms' ? 'active' : ''
+                          }`}
+                          to='/booking-forms'
+                        >
+                          <i className='ni ni-single-copy-04 text-pink' />
+                          <span className='nav-link-text'>Booking Forms</span>
+                        </Link>{' '}
+                      </li>
+                      <li className='nav-item nav-ctrl'>
+                        <Link
+                          className={`nav-link ${
+                            active === 'users' ? 'active' : ''
+                          }`}
+                          to='/users'
+                        >
+                          <i className='ni ni-circle-08 text-default' />
+                          <span className='nav-link-text'>Users</span>
+                        </Link>
+                      </li>
+                    </Fragment>
+                  )}
 
                   {/* <li className='nav-item nav-ctrl'>
                     <Link
@@ -210,30 +214,45 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                   )}
 
                   {isAuthenticated && !loading && user.role === 'Technician' && (
+                    <Fragment>
+                      <li className='nav-item nav-ctrl'>
+                        <Link
+                          className={`nav-link ${
+                            active === 'routing' ? 'active' : ''
+                          }`}
+                          to='/view-my-route'
+                        >
+                          <i className='fas fa-clipboard-list text-green mgn-right-5'></i>{' '}
+                          <span className='nav-link-text'>Service Logs</span>
+                        </Link>
+                      </li>
+
+                      <li className='nav-item nav-ctrl'>
+                        <Link
+                          className={`nav-link ${
+                            active === 'routing' ? 'active' : ''
+                          }`}
+                          to='/view-my-route'
+                        >
+                          <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
+                          <span className='nav-link-text'>View Route</span>
+                        </Link>
+                      </li>
+                    </Fragment>
+                  )}
+                  {isAuthenticated && !loading && user.role !== 'Technician' && (
                     <li className='nav-item nav-ctrl'>
                       <Link
                         className={`nav-link ${
-                          active === 'routing' ? 'active' : ''
+                          active === 'payments' ? 'active' : ''
                         }`}
-                        to='/view-my-route'
+                        to='/payments'
                       >
-                        <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
-                        <span className='nav-link-text'>View Route</span>
+                        <i className='ni ni-money-coins text-green' />
+                        <span className='nav-link-text'>Payments/Billing</span>
                       </Link>
                     </li>
                   )}
-
-                  <li className='nav-item nav-ctrl'>
-                    <Link
-                      className={`nav-link ${
-                        active === 'payments' ? 'active' : ''
-                      }`}
-                      to='/payments'
-                    >
-                      <i className='ni ni-money-coins text-green' />
-                      <span className='nav-link-text'>Payments/Billing</span>
-                    </Link>
-                  </li>
 
                   <li className='nav-item nav-ctrl'>
                     <Link

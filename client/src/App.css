@@ -164,7 +164,17 @@
 }
 
 .bg-green{
-  background: #2dce89!important
+  background: #2dce89!important;
+}
+
+.bg-green-wf{
+  background: #2dce89;
+  color: white;
+}
+
+.bg-red{
+  background: #fb6340;
+  color: white;
 }
 
 .option-heading{
@@ -179,5 +189,4 @@
   background: white;
   border: 2px dashed #D5D5D5;
 } */
-
 

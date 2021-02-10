@@ -423,10 +423,27 @@ router.post(
 // @access   Private/User
 router.get('/:customerId/serviceNotes', auth, async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+
+    const customer = await Customer.findOne({
+      _id: req.params.customerId
+    });
+
+    if (user.role === 'Admin' || user.role === 'Technician') {
+      if (customer.user.toString() !== user.owner.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id.toString() !== customer.user.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
     const notes = await ServiceNotes.find({
-      customer: req.params.customerId,
-      user: req.user.id
-    }).sort({ dateAdded: -1 });
+      customer: req.params.customerId
+    }).sort({
+      dateAdded: -1
+    });
 
     res.status(200).json(notes);
   } catch (err) {
@@ -578,9 +595,24 @@ router.post(
 // @access   Private/User
 router.get('/:customerId/recentActivity', auth, async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+
+    const customer = await Customer.findOne({
+      _id: req.params.customerId
+    });
+
+    if (user.role === 'Admin' || user.role === 'Technician') {
+      if (customer.user.toString() !== user.owner.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id.toString() !== customer.user.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
     const activities = await Activity.find({
-      customer: req.params.customerId,
-      user: req.user.id
+      customer: req.params.customerId
     }).sort({ dateAdded: -1 });
 
     res.status(200).json(activities);
@@ -665,10 +697,21 @@ router.post('/:customerId/checklist/add', auth, async (req, res) => {
 // @access   Private/User
 router.get('/:customerId/checklist', auth, async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+
     const customer = await Customer.findOne({
-      _id: req.params.customerId,
-      user: req.user.id
+      _id: req.params.customerId
     });
+
+    if (user.role === 'Admin' || user.role === 'Technician') {
+      if (customer.user.toString() !== user.owner.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id.toString() !== customer.user.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
 
     res.status(200).json(customer.serviceChecklist);
   } catch (err) {
@@ -1305,6 +1348,7 @@ router.patch('/:customerId/tech/:techId', auth, async (req, res) => {
 // @access   Private/Technicians
 router.post('/route/complete/:customerId', auth, async (req, res) => {
   const {
+    names,
     totalChlorine,
     freeChlorine,
     pHlevel,
@@ -1348,7 +1392,7 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
       $or: [
         { _id: req.user.id, role: 'Admin', owner: req.user.owner },
         { _id: req.user.id, role: 'Owner' },
-        { _id: req.user.id, role: 'Technician' }
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
       ]
     });
 
@@ -1369,10 +1413,10 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
     }
 
     let activity = new Activity({
-      comments: 'Service Logged',
+      comments: 'Service Stop Completed',
       log: 'Service',
       type: '',
-      icon: 'Tools',
+      icon: 'check-circle',
       customer: req.params.customerId,
       user: req.user.id,
       dateAdded: Date.now(),
@@ -1412,7 +1456,8 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
         bromineGran,
         bromineTab,
         poolFlocc,
-        borate
+        borate,
+        checkList: names
       }
     });
 

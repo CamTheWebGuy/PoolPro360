@@ -59,7 +59,11 @@ import {
 } from 'reactstrap';
 
 import { getEmployeeCustomers } from '../../actions/employee';
-import { addServiceLog } from '../../actions/customer';
+import {
+  addServiceLog,
+  getChecklist,
+  getCustomerServiceNotes
+} from '../../actions/customer';
 
 import Chart from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
@@ -82,7 +86,8 @@ import {
   chartExample1,
   chartExample2
 } from '../../variables/chart';
-import { type } from 'jquery';
+import map from '../../reducers/map';
+import { set } from 'mongoose';
 import customer from '../../reducers/customer';
 
 const { generateTimeSlots } = require('@georgenet/timeslotter');
@@ -94,7 +99,9 @@ const Dashboard = ({
   auth: { user, isAuthenticated, loading, token },
   getEmployeeCustomers,
   addServiceLog,
-  customers: { customers }
+  getChecklist,
+  getCustomerServiceNotes,
+  customers: { customers, checklist, serviceNotes }
 }) => {
   useEffect(() => {
     let options = {
@@ -262,8 +269,29 @@ const Dashboard = ({
   const [logModal, setLogModal] = useState({
     isOpen: false,
     active: '',
-    activeName: ''
+    activeName: '',
+    isServiceInfoOpen: false,
+    customerLock: '',
+    customerNotes: null,
+    customerChecklist: null,
+    checkedItems: [],
+    checkedNames: [],
+    inProgress: false
   });
+
+  useEffect(() => {
+    setLogModal({
+      ...logModal,
+      customerChecklist: checklist
+    });
+  }, [checklist]);
+
+  useEffect(() => {
+    setLogModal({
+      ...logModal,
+      customerNotes: serviceNotes
+    });
+  }, [serviceNotes]);
 
   return (
     <Fragment>
@@ -591,6 +619,252 @@ const Dashboard = ({
               </Col>
 
               <Modal
+                isOpen={logModal.isServiceInfoOpen}
+                toggle={() => {
+                  setLogModal({
+                    ...logModal,
+                    isServiceInfoOpen: false
+                  });
+                }}
+              >
+                <ModalHeader
+                  toggle={() => {
+                    setLogModal({
+                      ...logModal,
+                      isServiceInfoOpen: false
+                    });
+                  }}
+                >
+                  Service Information For: {logModal.activeName}
+                </ModalHeader>
+                <ModalBody>
+                  <div className='form-control-label'>Gate/Lock Code:</div>
+                  <p>
+                    {logModal.gatecode ? logModal.gatecode : <span>N/A</span>}
+                  </p>
+                  {logModal.customerChecklist && logModal.customerNotes && (
+                    <Fragment>
+                      <h4 className='form-control-label'>Service Notes:</h4>
+                      <ListGroup>
+                        <Fragment>
+                          {logModal.customerNotes.length < 1 && (
+                            <h4>No Service Notes...</h4>
+                          )}
+                        </Fragment>
+                        {logModal.customerNotes &&
+                          logModal.customerNotes.map(note => (
+                            <Fragment key={note._id}>
+                              {note.showDuringVisit && (
+                                <ListGroupItem>{note.content}</ListGroupItem>
+                              )}
+                            </Fragment>
+                          ))}
+
+                        {/* <ListGroupItem>
+                          Make sure to check chemicals
+                        </ListGroupItem> */}
+                      </ListGroup>
+                      <br />
+                      <h4 className='form-control-label'>Service Checklist:</h4>
+                      <ListGroup>
+                        <Fragment>
+                          {logModal.customerChecklist.length < 1 && (
+                            <h4>No Service Checklist...</h4>
+                          )}
+                        </Fragment>
+                        {logModal.customerChecklist.map(list => (
+                          <Fragment key={list._id}>
+                            {logModal.checkedItems &&
+                            logModal.checkedItems.find(e => e === list._id) ? (
+                              <ListGroupItem
+                                className='bg-green-wf'
+                                onClick={() => {
+                                  if (
+                                    logModal.checkedItems.length === 0 ||
+                                    logModal.checkedItems == undefined
+                                  ) {
+                                    setLogModal({
+                                      ...logModal,
+                                      checkedItems: [list._id],
+                                      checkedNames: [list.item]
+                                    });
+                                  } else if (
+                                    logModal.checkedItems.length >= 1 &&
+                                    logModal.checkedItems.find(
+                                      e => e === list._id
+                                    )
+                                  ) {
+                                    const updated = logModal.checkedItems.filter(
+                                      id => id !== list._id
+                                    );
+                                    const names = logModal.checkedNames.filter(
+                                      name => name !== list.item
+                                    );
+
+                                    setLogModal({
+                                      ...logModal,
+                                      checkedItems: updated,
+                                      checkedNames: names
+                                    });
+                                  } else if (
+                                    logModal.checkedItems.length >= 1 &&
+                                    logModal.checkedItems.find(
+                                      e => e === list._id
+                                    )
+                                  ) {
+                                    const updated = [...logModal.checkedItems];
+                                    const names = [...logModal.checkedNames];
+
+                                    updated.push(list._id);
+                                    names.push(list.item);
+                                    setLogModal({
+                                      ...logModal,
+                                      checkedItems: updated,
+                                      checkedNames: names
+                                    });
+                                  }
+                                }}
+                              >
+                                <i className='fas fa-times-circle'></i>{' '}
+                                <strong>{list.item}</strong>
+                              </ListGroupItem>
+                            ) : (
+                              <ListGroupItem
+                                className='bg-red'
+                                onClick={() => {
+                                  if (
+                                    logModal.checkedItems === undefined ||
+                                    logModal.checkedItems.length === 0
+                                  ) {
+                                    setLogModal({
+                                      ...logModal,
+                                      checkedItems: [list._id],
+                                      checkedNames: [list.item]
+                                    });
+                                  } else if (
+                                    logModal.checkedItems.length >= 1
+                                  ) {
+                                    const updated = [...logModal.checkedItems];
+                                    const names = [...logModal.checkedNames];
+
+                                    updated.push(list._id);
+                                    names.push(list.item);
+                                    setLogModal({
+                                      ...logModal,
+                                      checkedItems: updated,
+                                      checkedNames: names
+                                    });
+                                  }
+                                }}
+                              >
+                                <i className='fas fa-times-circle'></i>{' '}
+                                <strong>{list.item}</strong>
+                              </ListGroupItem>
+                            )}
+                          </Fragment>
+                        ))}
+                        {/* <ListGroupItem className='bg-green-wf'>
+                      <i className='fas fa-check-circle'></i>{' '}
+                      <strong>Skim Water</strong>
+                    </ListGroupItem>
+                    <ListGroupItem className='bg-red'>
+                      <i className='fas fa-times-circle'></i>{' '}
+                      <strong>Check Filter</strong>
+                    </ListGroupItem> */}
+                      </ListGroup>
+                    </Fragment>
+                  )}
+
+                  <br />
+                  <div className='text-center'>
+                    <Button
+                      className='btn-icon mgn-btm-10'
+                      color='warning'
+                      block
+                    >
+                      <span className='btn-inner--icon'>
+                        <i className='fas fa-times'></i>
+                      </span>
+                      <span className='btn-inner--text'>Unable to Service</span>
+                    </Button>
+                    {logModal.customerChecklist &&
+                    logModal.customerChecklist.length >= 1 ? (
+                      <Fragment>
+                        {logModal.checkedItems === undefined ||
+                        logModal.checkedItems.length === 0 ? (
+                          <Fragment>
+                            <Button
+                              className='btn-icon mgn-btm-10'
+                              color='primary'
+                              block
+                              disabled
+                              onClick={() => {
+                                setLogModal({
+                                  ...logModal,
+                                  isServiceInfoOpen: false,
+                                  isOpen: true
+                                });
+                              }}
+                            >
+                              <span className='btn-inner--icon'>
+                                <i className='ni ni-check-bold'></i>
+                              </span>
+                              <span className='btn-inner--text'>
+                                Log Service
+                              </span>
+                            </Button>
+                            {logModal.customerChecklist &&
+                              logModal.customerChecklist.length >= 1 && (
+                                <p>
+                                  Must have completed at least one item from
+                                  service checklist
+                                </p>
+                              )}
+                          </Fragment>
+                        ) : (
+                          <Button
+                            className='btn-icon mgn-btm-10'
+                            color='primary'
+                            block
+                            onClick={() => {
+                              setLogModal({
+                                ...logModal,
+                                isServiceInfoOpen: false,
+                                isOpen: true
+                              });
+                            }}
+                          >
+                            <span className='btn-inner--icon'>
+                              <i className='ni ni-check-bold'></i>
+                            </span>
+                            <span className='btn-inner--text'>Log Service</span>
+                          </Button>
+                        )}
+                      </Fragment>
+                    ) : (
+                      <Button
+                        className='btn-icon mgn-btm-10'
+                        color='primary'
+                        block
+                        onClick={() => {
+                          setLogModal({
+                            ...logModal,
+                            isServiceInfoOpen: false,
+                            isOpen: true
+                          });
+                        }}
+                      >
+                        <span className='btn-inner--icon'>
+                          <i className='ni ni-check-bold'></i>
+                        </span>
+                        <span className='btn-inner--text'>Log Service</span>
+                      </Button>
+                    )}
+                  </div>
+                </ModalBody>
+              </Modal>
+
+              <Modal
                 isOpen={logModal.isOpen}
                 toggle={() => {
                   setLogModal({
@@ -653,7 +927,11 @@ const Dashboard = ({
                     }}
                     onSubmit={async data => {
                       setIsProcessing(true);
-                      await addServiceLog(logModal.active, data);
+                      await addServiceLog(
+                        logModal.active,
+                        logModal.checkedNames,
+                        data
+                      );
                       await getEmployeeCustomers(user._id);
                       setLogModal({
                         isOpen: false,
@@ -3114,13 +3392,20 @@ const Dashboard = ({
                                                 className='btn-icon mgn-btm-10'
                                                 color='primary'
                                                 onClick={() => {
+                                                  getChecklist(customer._id);
+                                                  getCustomerServiceNotes(
+                                                    customer._id
+                                                  );
+
                                                   setLogModal({
-                                                    isOpen: true,
+                                                    isServiceInfoOpen: true,
                                                     active: customer._id,
                                                     activeName:
                                                       customer.firstName +
                                                       ' ' +
-                                                      customer.lastName
+                                                      customer.lastName,
+                                                    customerLock:
+                                                      customer.gatecode
                                                   });
                                                 }}
                                               >
@@ -3128,7 +3413,7 @@ const Dashboard = ({
                                                   <i className='ni ni-settings'></i>
                                                 </span>
                                                 <span className='btn-inner--text'>
-                                                  Log Service
+                                                  Start Service
                                                 </span>
                                               </Button>
                                             </Col>
@@ -3501,7 +3786,9 @@ const Dashboard = ({
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   getEmployeeCustomers: PropTypes.func.isRequired,
-  addServiceLog: PropTypes.func.isRequired
+  addServiceLog: PropTypes.func.isRequired,
+  getChecklist: PropTypes.func.isRequired,
+  getCustomerServiceNotes: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -3511,5 +3798,7 @@ const mapStateToProps = state => ({
 
 export default connect(mapStateToProps, {
   getEmployeeCustomers,
-  addServiceLog
+  addServiceLog,
+  getChecklist,
+  getCustomerServiceNotes
 })(Dashboard);
