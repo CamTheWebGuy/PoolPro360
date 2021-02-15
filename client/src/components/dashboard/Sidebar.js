@@ -7,7 +7,7 @@ import { Scrollbars } from 'react-custom-scrollbars';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import logo from '../../img/brand/blue.png';
+import logo from '../../img/brand/logo.png';
 import { Collapse, Button, CardBody, Card } from 'reactstrap';
 
 import $ from 'jquery';

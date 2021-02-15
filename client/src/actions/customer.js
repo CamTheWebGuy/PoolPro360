@@ -102,6 +102,7 @@ export const getCustomersRB = () => async dispatch => {
     const customers = await axios.get('/api/customers');
 
     // Since the customers reducer is already being used on the route builder page, this action dispatches the information to another reducer.
+
     dispatch({
       type: GET_ALL_CUSTOMERS,
       payload: customers.data
@@ -777,7 +778,9 @@ export const addServiceLog = (
     bromineGran,
     bromineTab,
     poolFlocc,
-    borate
+    borate,
+    publicNote,
+    privateNote
   }
 ) => async dispatch => {
   const config = {
@@ -823,7 +826,9 @@ export const addServiceLog = (
     bromineGran,
     bromineTab,
     poolFlocc,
-    borate
+    borate,
+    publicNote,
+    privateNote
   });
   try {
     await axios.post(

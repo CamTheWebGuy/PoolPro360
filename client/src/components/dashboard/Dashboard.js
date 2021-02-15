@@ -17,6 +17,7 @@ import ToolkitProvider, {
 import paginationFactory from 'react-bootstrap-table2-paginator';
 
 import { Scrollbars } from 'react-custom-scrollbars';
+import ImageUploader from 'react-images-upload';
 
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit.min.css';
@@ -263,6 +264,8 @@ const Dashboard = ({
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [showChems, setShowChems] = useState(false);
+  const [showRepair, setShowRepair] = useState(false);
+  const [notesView, setNotesView] = useState(false);
   const [shockOpen, setShockOpen] = useState(false);
   const [algacidesOpen, setAlgacidesOpen] = useState(false);
   const [otherChemsOpen, setOtherChemsOpen] = useState(false);
@@ -278,6 +281,14 @@ const Dashboard = ({
     checkedNames: [],
     inProgress: false
   });
+
+  const [pictureState, setPictureState] = useState({ pictures: [] });
+
+  const onDrop = picture => {
+    setPictureState({
+      pictures: picture
+    });
+  };
 
   useEffect(() => {
     setLogModal({
@@ -808,6 +819,13 @@ const Dashboard = ({
 
                   <br />
                   <div className='text-center'>
+                    <Button className='btn-icon mgn-btm-10' color='info' block>
+                      <span className='btn-inner--icon'>
+                        <i className='fas fa-swimming-pool'></i>
+                      </span>
+                      <span className='btn-inner--text'>View Equipment</span>
+                    </Button>
+                    <hr />
                     <Button
                       className='btn-icon mgn-btm-10'
                       color='warning'
@@ -903,6 +921,8 @@ const Dashboard = ({
                     active: null,
                     activeName: null
                   });
+                  setShowChems(false);
+                  setNotesView(false);
                 }}
               >
                 <ModalHeader
@@ -912,6 +932,8 @@ const Dashboard = ({
                       active: null,
                       activeName: null
                     });
+                    setShowChems(false);
+                    setNotesView(false);
                   }}
                 >
                   Log Service for: {logModal.activeName}
@@ -954,7 +976,9 @@ const Dashboard = ({
                       bromineGran: '',
                       bromineTab: '',
                       poolFlocc: '',
-                      borate: ''
+                      borate: '',
+                      privateNote: '',
+                      publicNote: ''
                     }}
                     onSubmit={async data => {
                       setIsProcessing(true);
@@ -985,7 +1009,7 @@ const Dashboard = ({
                     }) => (
                       <Fragment>
                         <Form>
-                          {!showChems ? (
+                          {!showChems && !notesView ? (
                             <Fragment>
                               <div className='text-center'>
                                 <h4>Readings:</h4>
@@ -1346,1952 +1370,2172 @@ const Dashboard = ({
                               </FormGroup>
                             </Fragment>
                           ) : (
-                            <Fragment>
-                              <div className='text-center'>
-                                <h4>Chemical Usage:</h4>
-                              </div>
-                              <FormGroup>
-                                <Label className='form-control-label'>
-                                  Chlorine Tablets
-                                </Label>
-                                <Input
-                                  type='select'
-                                  name='chlorineTablets'
-                                  value={values.chlorineTablets}
-                                  onChange={handleChange}
-                                  onBlur={handleBlur}
-                                >
-                                  <option>No Tabs Used</option>
-                                  <option className='option-heading' disabled>
-                                    3 Inch Tabs
-                                  </option>
-                                  <option>1 Tab</option>
-                                  <option>2 Tabs</option>
-                                  <option>3 Tabs</option>
-                                  <option>4 Tabs</option>
-                                  <option>5 Tabs</option>
-                                  <option>6 Tabs</option>
-                                  <option>7 Tabs</option>
-                                  <option>8 Tabs</option>
-                                  <option>9 Tabs</option>
-                                  <option>10 Tabs</option>
-                                  <option>15 Tabs</option>
-                                  <option className='option-heading' disabled>
-                                    1 Inch Tabs
-                                  </option>
-                                  <option>1 Tab</option>
-                                  <option>2 Tabs</option>
-                                  <option>3 Tabs</option>
-                                  <option>4 Tabs</option>
-                                  <option>5 Tabs</option>
-                                  <option>6 Tabs</option>
-                                  <option>7 Tabs</option>
-                                  <option>8 Tabs</option>
-                                  <option>9 Tabs</option>
-                                  <option>10 Tabs</option>
-                                  <option>15 Tabs</option>
-                                </Input>
-                              </FormGroup>
+                            showChems &&
+                            !notesView && (
+                              <Fragment>
+                                <div className='text-center'>
+                                  <h4>Chemical Usage:</h4>
+                                </div>
+                                <FormGroup>
+                                  <Label className='form-control-label'>
+                                    Chlorine Tablets
+                                  </Label>
+                                  <Input
+                                    type='select'
+                                    name='chlorineTablets'
+                                    value={values.chlorineTablets}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                  >
+                                    <option>No Tabs Used</option>
+                                    <option className='option-heading' disabled>
+                                      3 Inch Tabs
+                                    </option>
+                                    <option>1 Tab</option>
+                                    <option>2 Tabs</option>
+                                    <option>3 Tabs</option>
+                                    <option>4 Tabs</option>
+                                    <option>5 Tabs</option>
+                                    <option>6 Tabs</option>
+                                    <option>7 Tabs</option>
+                                    <option>8 Tabs</option>
+                                    <option>9 Tabs</option>
+                                    <option>10 Tabs</option>
+                                    <option>15 Tabs</option>
+                                    <option className='option-heading' disabled>
+                                      1 Inch Tabs
+                                    </option>
+                                    <option>1 Tab</option>
+                                    <option>2 Tabs</option>
+                                    <option>3 Tabs</option>
+                                    <option>4 Tabs</option>
+                                    <option>5 Tabs</option>
+                                    <option>6 Tabs</option>
+                                    <option>7 Tabs</option>
+                                    <option>8 Tabs</option>
+                                    <option>9 Tabs</option>
+                                    <option>10 Tabs</option>
+                                    <option>15 Tabs</option>
+                                  </Input>
+                                </FormGroup>
 
-                              <FormGroup>
-                                <Label className='form-control-label'>
-                                  Liquid Chlorine
-                                </Label>
-                                <Input
-                                  type='select'
-                                  name='liquidChlorine'
-                                  value={values.liquidChlorine}
-                                  onChange={handleChange}
-                                  onBlur={handleBlur}
-                                >
-                                  <option>No Liquid Chlorine Used</option>
-                                  <option>1/8 Gallon</option>
-                                  <option>1/4 Gallon</option>
-                                  <option>1/3 Gallon</option>
-                                  <option>1/2 Gallon</option>
-                                  <option>2/3 Gallon</option>
-                                  <option>3/4 Gallon</option>
-                                  <option>1 Gallon</option>
-                                  <option>1.5 Gallons</option>
-                                  <option>2 Gallons</option>
-                                  <option>2.5 Gallons</option>
-                                  <option>3 Gallons</option>
-                                  <option>3.5 Gallons</option>
-                                  <option>4 Gallon</option>
-                                  <option>5 Gallons</option>
-                                  <option>6 Gallons</option>
-                                  <option>7 Gallons</option>
-                                  <option>8 Gallons</option>
-                                  <option>9 Gallons</option>
-                                  <option>10 Gallon</option>
-                                  <option>11 Gallons</option>
-                                  <option>12 Gallons</option>
-                                  <option>13 Gallons</option>
-                                  <option>14 Gallons</option>
-                                  <option>15 Gallons</option>
-                                  <option>16 Gallon</option>
-                                  <option>17 Gallons</option>
-                                  <option>18 Gallons</option>
-                                  <option>19 Gallons</option>
-                                  <option>20 Gallons</option>
-                                  <option className='option-heading' disabled>
-                                    Smaller Doses
-                                  </option>
-                                  <option>1/8 Cup</option>
-                                  <option>1/4 Cup</option>
-                                  <option>1/3 Cup</option>
-                                  <option>1/2 Cup</option>
-                                  <option>2/3 Cup</option>
-                                  <option>3/4 Cup</option>
-                                  <option>1 Cup</option>
-                                  <option>1.5 Cups</option>
-                                  <option>2 Cups</option>
-                                  <option>2.5 Cups</option>
-                                  <option>3 Cups</option>
-                                  <option>3.5 Cups</option>
-                                  <option>4 Cups</option>
-                                  <option>4.5 Cups</option>
-                                  <option>5 Cups</option>
-                                  <option>6 Cups</option>
-                                  <option>7 Cups</option>
-                                  <option>8 Cups</option>
-                                  <option>9 Cups</option>
-                                  <option>10 Cups</option>
-                                </Input>
-                              </FormGroup>
+                                <FormGroup>
+                                  <Label className='form-control-label'>
+                                    Liquid Chlorine
+                                  </Label>
+                                  <Input
+                                    type='select'
+                                    name='liquidChlorine'
+                                    value={values.liquidChlorine}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                  >
+                                    <option>No Liquid Chlorine Used</option>
+                                    <option>1/8 Gallon</option>
+                                    <option>1/4 Gallon</option>
+                                    <option>1/3 Gallon</option>
+                                    <option>1/2 Gallon</option>
+                                    <option>2/3 Gallon</option>
+                                    <option>3/4 Gallon</option>
+                                    <option>1 Gallon</option>
+                                    <option>1.5 Gallons</option>
+                                    <option>2 Gallons</option>
+                                    <option>2.5 Gallons</option>
+                                    <option>3 Gallons</option>
+                                    <option>3.5 Gallons</option>
+                                    <option>4 Gallon</option>
+                                    <option>5 Gallons</option>
+                                    <option>6 Gallons</option>
+                                    <option>7 Gallons</option>
+                                    <option>8 Gallons</option>
+                                    <option>9 Gallons</option>
+                                    <option>10 Gallon</option>
+                                    <option>11 Gallons</option>
+                                    <option>12 Gallons</option>
+                                    <option>13 Gallons</option>
+                                    <option>14 Gallons</option>
+                                    <option>15 Gallons</option>
+                                    <option>16 Gallon</option>
+                                    <option>17 Gallons</option>
+                                    <option>18 Gallons</option>
+                                    <option>19 Gallons</option>
+                                    <option>20 Gallons</option>
+                                    <option className='option-heading' disabled>
+                                      Smaller Doses
+                                    </option>
+                                    <option>1/8 Cup</option>
+                                    <option>1/4 Cup</option>
+                                    <option>1/3 Cup</option>
+                                    <option>1/2 Cup</option>
+                                    <option>2/3 Cup</option>
+                                    <option>3/4 Cup</option>
+                                    <option>1 Cup</option>
+                                    <option>1.5 Cups</option>
+                                    <option>2 Cups</option>
+                                    <option>2.5 Cups</option>
+                                    <option>3 Cups</option>
+                                    <option>3.5 Cups</option>
+                                    <option>4 Cups</option>
+                                    <option>4.5 Cups</option>
+                                    <option>5 Cups</option>
+                                    <option>6 Cups</option>
+                                    <option>7 Cups</option>
+                                    <option>8 Cups</option>
+                                    <option>9 Cups</option>
+                                    <option>10 Cups</option>
+                                  </Input>
+                                </FormGroup>
 
-                              <FormGroup>
-                                <Label className='form-control-label'>
-                                  Liquid Acid
-                                </Label>
-                                <Input
-                                  type='select'
-                                  name='liquidAcid'
-                                  value={values.liquidAcid}
-                                  onChange={handleChange}
-                                  onBlur={handleBlur}
-                                >
-                                  <option>No Liquid Acid Used</option>
-                                  <option>1/8 Gallon</option>
-                                  <option>1/4 Gallon</option>
-                                  <option>1/3 Gallon</option>
-                                  <option>1/2 Gallon</option>
-                                  <option>2/3 Gallon</option>
-                                  <option>3/4 Gallon</option>
-                                  <option>1 Gallon</option>
-                                  <option>1.5 Gallons</option>
-                                  <option>2 Gallons</option>
-                                  <option>2.5 Gallons</option>
-                                  <option>3 Gallons</option>
-                                  <option>3.5 Gallons</option>
-                                  <option>4 Gallon</option>
-                                  <option>5 Gallons</option>
-                                  <option>6 Gallons</option>
-                                  <option>7 Gallons</option>
-                                  <option>8 Gallons</option>
-                                  <option>9 Gallons</option>
-                                  <option>10 Gallon</option>
-                                  <option>11 Gallons</option>
-                                  <option>12 Gallons</option>
-                                  <option>13 Gallons</option>
-                                  <option>14 Gallons</option>
-                                  <option>15 Gallons</option>
-                                  <option>16 Gallon</option>
-                                  <option>17 Gallons</option>
-                                  <option>18 Gallons</option>
-                                  <option>19 Gallons</option>
-                                  <option>20 Gallons</option>
-                                  <option className='option-heading' disabled>
-                                    Smaller Doses
-                                  </option>
-                                  <option>1/8 Cup</option>
-                                  <option>1/4 Cup</option>
-                                  <option>1/3 Cup</option>
-                                  <option>1/2 Cup</option>
-                                  <option>2/3 Cup</option>
-                                  <option>3/4 Cup</option>
-                                  <option>1 Cup</option>
-                                  <option>1.5 Cups</option>
-                                  <option>2 Cups</option>
-                                  <option>2.5 Cups</option>
-                                  <option>3 Cups</option>
-                                  <option>3.5 Cups</option>
-                                  <option>4 Cups</option>
-                                  <option>4.5 Cups</option>
-                                  <option>5 Cups</option>
-                                  <option>6 Cups</option>
-                                  <option>7 Cups</option>
-                                  <option>8 Cups</option>
-                                  <option>9 Cups</option>
-                                  <option>10 Cups</option>
-                                  <option className='option-heading' disabled>
-                                    In Ounces
-                                  </option>
-                                  <option>2 Ounces</option>
-                                  <option>4 Ounces</option>
-                                  <option>6 Ounces</option>
-                                  <option>8 Ounces</option>
-                                  <option>10 Ounces</option>
-                                  <option>12 Ounces</option>
-                                  <option>14 Ounces</option>
-                                  <option>16 Ounces</option>
-                                </Input>
-                              </FormGroup>
+                                <FormGroup>
+                                  <Label className='form-control-label'>
+                                    Liquid Acid
+                                  </Label>
+                                  <Input
+                                    type='select'
+                                    name='liquidAcid'
+                                    value={values.liquidAcid}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                  >
+                                    <option>No Liquid Acid Used</option>
+                                    <option>1/8 Gallon</option>
+                                    <option>1/4 Gallon</option>
+                                    <option>1/3 Gallon</option>
+                                    <option>1/2 Gallon</option>
+                                    <option>2/3 Gallon</option>
+                                    <option>3/4 Gallon</option>
+                                    <option>1 Gallon</option>
+                                    <option>1.5 Gallons</option>
+                                    <option>2 Gallons</option>
+                                    <option>2.5 Gallons</option>
+                                    <option>3 Gallons</option>
+                                    <option>3.5 Gallons</option>
+                                    <option>4 Gallon</option>
+                                    <option>5 Gallons</option>
+                                    <option>6 Gallons</option>
+                                    <option>7 Gallons</option>
+                                    <option>8 Gallons</option>
+                                    <option>9 Gallons</option>
+                                    <option>10 Gallon</option>
+                                    <option>11 Gallons</option>
+                                    <option>12 Gallons</option>
+                                    <option>13 Gallons</option>
+                                    <option>14 Gallons</option>
+                                    <option>15 Gallons</option>
+                                    <option>16 Gallon</option>
+                                    <option>17 Gallons</option>
+                                    <option>18 Gallons</option>
+                                    <option>19 Gallons</option>
+                                    <option>20 Gallons</option>
+                                    <option className='option-heading' disabled>
+                                      Smaller Doses
+                                    </option>
+                                    <option>1/8 Cup</option>
+                                    <option>1/4 Cup</option>
+                                    <option>1/3 Cup</option>
+                                    <option>1/2 Cup</option>
+                                    <option>2/3 Cup</option>
+                                    <option>3/4 Cup</option>
+                                    <option>1 Cup</option>
+                                    <option>1.5 Cups</option>
+                                    <option>2 Cups</option>
+                                    <option>2.5 Cups</option>
+                                    <option>3 Cups</option>
+                                    <option>3.5 Cups</option>
+                                    <option>4 Cups</option>
+                                    <option>4.5 Cups</option>
+                                    <option>5 Cups</option>
+                                    <option>6 Cups</option>
+                                    <option>7 Cups</option>
+                                    <option>8 Cups</option>
+                                    <option>9 Cups</option>
+                                    <option>10 Cups</option>
+                                    <option className='option-heading' disabled>
+                                      In Ounces
+                                    </option>
+                                    <option>2 Ounces</option>
+                                    <option>4 Ounces</option>
+                                    <option>6 Ounces</option>
+                                    <option>8 Ounces</option>
+                                    <option>10 Ounces</option>
+                                    <option>12 Ounces</option>
+                                    <option>14 Ounces</option>
+                                    <option>16 Ounces</option>
+                                  </Input>
+                                </FormGroup>
 
-                              <FormGroup>
-                                <Button
-                                  className='btn-icon'
-                                  color='info'
-                                  onClick={() => {
-                                    if (shockOpen) {
-                                      setFieldValue('triChlor', '');
-                                      setFieldValue('diChlor', '');
-                                      setFieldValue('calHypo', '');
-                                      setFieldValue('potassiumMono', '');
-                                    }
-                                    setShockOpen(!shockOpen);
-                                  }}
-                                  block
-                                >
-                                  {shockOpen ? (
-                                    <Fragment>
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-minus'></i>
-                                      </span>
-                                      <span className='btn-inner--text'>
-                                        Shock
-                                      </span>
-                                    </Fragment>
-                                  ) : (
-                                    <Fragment>
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-plus'></i>
-                                      </span>
-                                      <span className='btn-inner--text'>
-                                        Shock
-                                      </span>
-                                    </Fragment>
-                                  )}
-                                </Button>
+                                <FormGroup>
+                                  <Button
+                                    className='btn-icon'
+                                    color='info'
+                                    onClick={() => {
+                                      if (shockOpen) {
+                                        setFieldValue('triChlor', '');
+                                        setFieldValue('diChlor', '');
+                                        setFieldValue('calHypo', '');
+                                        setFieldValue('potassiumMono', '');
+                                      }
+                                      setShockOpen(!shockOpen);
+                                    }}
+                                    block
+                                  >
+                                    {shockOpen ? (
+                                      <Fragment>
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-minus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Shock
+                                        </span>
+                                      </Fragment>
+                                    ) : (
+                                      <Fragment>
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-plus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Shock
+                                        </span>
+                                      </Fragment>
+                                    )}
+                                  </Button>
 
-                                <Collapse isOpen={shockOpen}>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      TriChlor Shock
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='triChlor'
-                                      value={values.triChlor}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No TriChlor Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                  <Collapse isOpen={shockOpen}>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        TriChlor Shock
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='triChlor'
+                                        value={values.triChlor}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
-                                      <option>1/8 Scoop</option>
-                                      <option>1/4 Scoop</option>
-                                      <option>1/3 Scoop</option>
-                                      <option>1/2 Scoop</option>
-                                      <option>2/3 Scoop</option>
-                                      <option>3/4 Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>No TriChlor Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+                                        <option>1/8 Scoop</option>
+                                        <option>1/4 Scoop</option>
+                                        <option>1/3 Scoop</option>
+                                        <option>1/2 Scoop</option>
+                                        <option>2/3 Scoop</option>
+                                        <option>3/4 Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      DiChlor Shock
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='diChlor'
-                                      value={values.diChlor}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No DiChlor Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        DiChlor Shock
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='diChlor'
+                                        value={values.diChlor}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
-                                      <option>1/8 Scoop</option>
-                                      <option>1/4 Scoop</option>
-                                      <option>1/3 Scoop</option>
-                                      <option>1/2 Scoop</option>
-                                      <option>2/3 Scoop</option>
-                                      <option>3/4 Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>No DiChlor Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+                                        <option>1/8 Scoop</option>
+                                        <option>1/4 Scoop</option>
+                                        <option>1/3 Scoop</option>
+                                        <option>1/2 Scoop</option>
+                                        <option>2/3 Scoop</option>
+                                        <option>3/4 Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      CalHypo Shock
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='calHypo'
-                                      value={values.calHypo}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No CalHypo Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        CalHypo Shock
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='calHypo'
+                                        value={values.calHypo}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
-                                      <option>1/8 Scoop</option>
-                                      <option>1/4 Scoop</option>
-                                      <option>1/3 Scoop</option>
-                                      <option>1/2 Scoop</option>
-                                      <option>2/3 Scoop</option>
-                                      <option>3/4 Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
+                                        <option>No CalHypo Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+                                        <option>1/8 Scoop</option>
+                                        <option>1/4 Scoop</option>
+                                        <option>1/3 Scoop</option>
+                                        <option>1/2 Scoop</option>
+                                        <option>2/3 Scoop</option>
+                                        <option>3/4 Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
 
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option>11 Pounds</option>
-                                      <option>12 Pounds</option>
-                                      <option>13 Pounds</option>
-                                      <option>14 Pounds</option>
-                                      <option>15 Pounds</option>
-                                      <option>16 Pounds</option>
-                                      <option>17 Pounds</option>
-                                      <option>18 Pounds</option>
-                                      <option>19 Pounds</option>
-                                      <option>20 Pounds</option>
-                                      <option>21 Pounds</option>
-                                      <option>22 Pounds</option>
-                                      <option>23 Pounds</option>
-                                      <option>24 Pounds</option>
-                                      <option>25 Pounds</option>
-                                      <option>26 Pounds</option>
-                                      <option>27 Pounds</option>
-                                      <option>28 Pounds</option>
-                                      <option>29 Pounds</option>
-                                      <option>30 Pounds</option>
-                                      <option>31 Pounds</option>
-                                      <option>32 Pounds</option>
-                                      <option>33 Pounds</option>
-                                      <option>34 Pounds</option>
-                                      <option>35 Pounds</option>
-                                      <option>36 Pounds</option>
-                                      <option>37 Pounds</option>
-                                      <option>38 Pounds</option>
-                                      <option>39 Pounds</option>
-                                      <option>40 Pounds</option>
-                                      <option>41 Pounds</option>
-                                      <option>42 Pounds</option>
-                                      <option>43 Pounds</option>
-                                      <option>44 Pounds</option>
-                                      <option>45 Pounds</option>
-                                      <option>46 Pounds</option>
-                                      <option>47 Pounds</option>
-                                      <option>48 Pounds</option>
-                                      <option>49 Pounds</option>
-                                      <option>50 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option>11 Pounds</option>
+                                        <option>12 Pounds</option>
+                                        <option>13 Pounds</option>
+                                        <option>14 Pounds</option>
+                                        <option>15 Pounds</option>
+                                        <option>16 Pounds</option>
+                                        <option>17 Pounds</option>
+                                        <option>18 Pounds</option>
+                                        <option>19 Pounds</option>
+                                        <option>20 Pounds</option>
+                                        <option>21 Pounds</option>
+                                        <option>22 Pounds</option>
+                                        <option>23 Pounds</option>
+                                        <option>24 Pounds</option>
+                                        <option>25 Pounds</option>
+                                        <option>26 Pounds</option>
+                                        <option>27 Pounds</option>
+                                        <option>28 Pounds</option>
+                                        <option>29 Pounds</option>
+                                        <option>30 Pounds</option>
+                                        <option>31 Pounds</option>
+                                        <option>32 Pounds</option>
+                                        <option>33 Pounds</option>
+                                        <option>34 Pounds</option>
+                                        <option>35 Pounds</option>
+                                        <option>36 Pounds</option>
+                                        <option>37 Pounds</option>
+                                        <option>38 Pounds</option>
+                                        <option>39 Pounds</option>
+                                        <option>40 Pounds</option>
+                                        <option>41 Pounds</option>
+                                        <option>42 Pounds</option>
+                                        <option>43 Pounds</option>
+                                        <option>44 Pounds</option>
+                                        <option>45 Pounds</option>
+                                        <option>46 Pounds</option>
+                                        <option>47 Pounds</option>
+                                        <option>48 Pounds</option>
+                                        <option>49 Pounds</option>
+                                        <option>50 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Non-Chlorine Shock/Potassium
-                                      Monopersulfate
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='potassiumMono'
-                                      value={values.potassiumMono}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Potassium Monopersulfate Added
-                                      </option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Non-Chlorine Shock/Potassium
+                                        Monopersulfate
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='potassiumMono'
+                                        value={values.potassiumMono}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
-                                      <option>1/8 Scoop</option>
-                                      <option>1/4 Scoop</option>
-                                      <option>1/3 Scoop</option>
-                                      <option>1/2 Scoop</option>
-                                      <option>2/3 Scoop</option>
-                                      <option>3/4 Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>
+                                          No Potassium Monopersulfate Added
+                                        </option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+                                        <option>1/8 Scoop</option>
+                                        <option>1/4 Scoop</option>
+                                        <option>1/3 Scoop</option>
+                                        <option>1/2 Scoop</option>
+                                        <option>2/3 Scoop</option>
+                                        <option>3/4 Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option>11 Pounds</option>
+                                        <option>12 Pounds</option>
+                                        <option>13 Pounds</option>
+                                        <option>14 Pounds</option>
+                                        <option>15 Pounds</option>
+                                        <option>16 Pounds</option>
+                                        <option>17 Pounds</option>
+                                        <option>18 Pounds</option>
+                                        <option>19 Pounds</option>
+                                        <option>20 Pounds</option>
+                                        <option>21 Pounds</option>
+                                        <option>22 Pounds</option>
+                                        <option>23 Pounds</option>
+                                        <option>24 Pounds</option>
+                                        <option>25 Pounds</option>
+                                        <option>26 Pounds</option>
+                                        <option>27 Pounds</option>
+                                        <option>28 Pounds</option>
+                                        <option>29 Pounds</option>
+                                        <option>30 Pounds</option>
+                                        <option>31 Pounds</option>
+                                        <option>32 Pounds</option>
+                                        <option>33 Pounds</option>
+                                        <option>34 Pounds</option>
+                                        <option>35 Pounds</option>
+                                        <option>36 Pounds</option>
+                                        <option>37 Pounds</option>
+                                        <option>38 Pounds</option>
+                                        <option>39 Pounds</option>
+                                        <option>40 Pounds</option>
+                                        <option>41 Pounds</option>
+                                        <option>42 Pounds</option>
+                                        <option>43 Pounds</option>
+                                        <option>44 Pounds</option>
+                                        <option>45 Pounds</option>
+                                        <option>46 Pounds</option>
+                                        <option>47 Pounds</option>
+                                        <option>48 Pounds</option>
+                                        <option>49 Pounds</option>
+                                        <option>50 Pounds</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Cups Measurement
+                                        </option>
+
+                                        <option>1/8 Cup</option>
+                                        <option>1/4 Cup</option>
+                                        <option>1/3 Cup</option>
+                                        <option>1/2 Cup</option>
+                                        <option>2/3 Cup</option>
+                                        <option>3/4 Cup</option>
+                                        <option>1 Cup</option>
+                                        <option>1.5 Cups</option>
+                                        <option>2 Cups</option>
+                                        <option>2.5 Cups</option>
+                                        <option>3 Cups</option>
+                                        <option>3.5 Cups</option>
+                                        <option>4 Cups</option>
+                                        <option>4.5 Cups</option>
+                                        <option>5 Cups</option>
+                                        <option>6 Cups</option>
+                                        <option>7 Cups</option>
+                                        <option>8 Cups</option>
+                                        <option>9 Cups</option>
+                                        <option>10 Cups</option>
+                                        <option>11 Cups</option>
+                                        <option>12 Cups</option>
+                                      </Input>
+                                    </FormGroup>
+                                  </Collapse>
+                                  <br />
+                                  <Button
+                                    className='btn-icon'
+                                    color='info'
+                                    onClick={() => {
+                                      if (algacidesOpen) {
+                                        setFieldValue('ammonia', '');
+                                        setFieldValue('copperBased', '');
+                                        setFieldValue('polyQuat', '');
+                                        setFieldValue('copperBlend', '');
+                                      }
+                                      setAlgacidesOpen(!algacidesOpen);
+                                    }}
+                                    block
+                                  >
+                                    {algacidesOpen ? (
+                                      <Fragment>
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-minus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Algacides
+                                        </span>
+                                      </Fragment>
+                                    ) : (
+                                      <Fragment>
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-plus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Algacides
+                                        </span>
+                                      </Fragment>
+                                    )}
+                                  </Button>
+
+                                  <Collapse isOpen={algacidesOpen}>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Ammonia Based Liquid Algacide
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='ammonia'
+                                        value={values.ammonia}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>
+                                          No Ammonia Algacide Added
+                                        </option>
+
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Copper Based Liquid Algacide
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='copperBased'
+                                        value={values.copperBased}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Pounds Measurement
-                                      </option>
+                                        <option>
+                                          No Copper Algacide Added
+                                        </option>
 
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option>11 Pounds</option>
-                                      <option>12 Pounds</option>
-                                      <option>13 Pounds</option>
-                                      <option>14 Pounds</option>
-                                      <option>15 Pounds</option>
-                                      <option>16 Pounds</option>
-                                      <option>17 Pounds</option>
-                                      <option>18 Pounds</option>
-                                      <option>19 Pounds</option>
-                                      <option>20 Pounds</option>
-                                      <option>21 Pounds</option>
-                                      <option>22 Pounds</option>
-                                      <option>23 Pounds</option>
-                                      <option>24 Pounds</option>
-                                      <option>25 Pounds</option>
-                                      <option>26 Pounds</option>
-                                      <option>27 Pounds</option>
-                                      <option>28 Pounds</option>
-                                      <option>29 Pounds</option>
-                                      <option>30 Pounds</option>
-                                      <option>31 Pounds</option>
-                                      <option>32 Pounds</option>
-                                      <option>33 Pounds</option>
-                                      <option>34 Pounds</option>
-                                      <option>35 Pounds</option>
-                                      <option>36 Pounds</option>
-                                      <option>37 Pounds</option>
-                                      <option>38 Pounds</option>
-                                      <option>39 Pounds</option>
-                                      <option>40 Pounds</option>
-                                      <option>41 Pounds</option>
-                                      <option>42 Pounds</option>
-                                      <option>43 Pounds</option>
-                                      <option>44 Pounds</option>
-                                      <option>45 Pounds</option>
-                                      <option>46 Pounds</option>
-                                      <option>47 Pounds</option>
-                                      <option>48 Pounds</option>
-                                      <option>49 Pounds</option>
-                                      <option>50 Pounds</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        PolyQuat Based Liquid Algacide
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='polyQuat'
+                                        value={values.polyQuat}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Cups Measurement
-                                      </option>
+                                        <option>
+                                          No PolyQuat Algacide Added
+                                        </option>
 
-                                      <option>1/8 Cup</option>
-                                      <option>1/4 Cup</option>
-                                      <option>1/3 Cup</option>
-                                      <option>1/2 Cup</option>
-                                      <option>2/3 Cup</option>
-                                      <option>3/4 Cup</option>
-                                      <option>1 Cup</option>
-                                      <option>1.5 Cups</option>
-                                      <option>2 Cups</option>
-                                      <option>2.5 Cups</option>
-                                      <option>3 Cups</option>
-                                      <option>3.5 Cups</option>
-                                      <option>4 Cups</option>
-                                      <option>4.5 Cups</option>
-                                      <option>5 Cups</option>
-                                      <option>6 Cups</option>
-                                      <option>7 Cups</option>
-                                      <option>8 Cups</option>
-                                      <option>9 Cups</option>
-                                      <option>10 Cups</option>
-                                      <option>11 Cups</option>
-                                      <option>12 Cups</option>
-                                    </Input>
-                                  </FormGroup>
-                                </Collapse>
-                                <br />
-                                <Button
-                                  className='btn-icon'
-                                  color='info'
-                                  onClick={() => {
-                                    if (algacidesOpen) {
-                                      setFieldValue('ammonia', '');
-                                      setFieldValue('copperBased', '');
-                                      setFieldValue('polyQuat', '');
-                                      setFieldValue('copperBlend', '');
-                                    }
-                                    setAlgacidesOpen(!algacidesOpen);
-                                  }}
-                                  block
-                                >
-                                  {algacidesOpen ? (
-                                    <Fragment>
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-minus'></i>
-                                      </span>
-                                      <span className='btn-inner--text'>
-                                        Algacides
-                                      </span>
-                                    </Fragment>
-                                  ) : (
-                                    <Fragment>
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-plus'></i>
-                                      </span>
-                                      <span className='btn-inner--text'>
-                                        Algacides
-                                      </span>
-                                    </Fragment>
-                                  )}
-                                </Button>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                <Collapse isOpen={algacidesOpen}>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Ammonia Based Liquid Algacide
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='ammonia'
-                                      value={values.ammonia}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Ammonia Algacide Added</option>
-
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Copper Based Liquid Algacide
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='copperBased'
-                                      value={values.copperBased}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Copper Algacide Added</option>
-
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      PolyQuat Based Liquid Algacide
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='polyQuat'
-                                      value={values.polyQuat}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No PolyQuat Algacide Added
-                                      </option>
-
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Copper/PolyQuat Blend Liquid Algacide
-                                      (Aqua Pure)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='copperBlend'
-                                      value={values.copperBlend}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Copper/PolyQuat Blend Algacide Added
-                                      </option>
-
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-                                </Collapse>
-                                <br />
-                                <Button
-                                  className='btn-icon'
-                                  color='info'
-                                  onClick={() => {
-                                    if (otherChemsOpen) {
-                                      setFieldValue('sodaAsh', '');
-                                      setFieldValue('CalciumChloride', '');
-                                      setFieldValue('conditioner', '');
-                                      setFieldValue('sodiumBicar', '');
-                                      setFieldValue('diatomaceous', '');
-                                      setFieldValue('diatomaceousAlt', '');
-                                      setFieldValue('sodiumBro', '');
-                                      setFieldValue('dryAcid', '');
-                                      setFieldValue('clarifier', '');
-                                      setFieldValue('phosphateRemover', '');
-                                      setFieldValue('salt', '');
-                                      setFieldValue('enzymes', '');
-                                      setFieldValue('metalSequester', '');
-                                      setFieldValue('bromineGran', '');
-                                      setFieldValue('bromineTab', '');
-                                      setFieldValue('poolFlocc', '');
-                                      setFieldValue('borate', '');
-                                    }
-                                    setOtherChemsOpen(!otherChemsOpen);
-                                  }}
-                                  block
-                                >
-                                  {otherChemsOpen ? (
-                                    <Fragment>
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-minus'></i>
-                                      </span>
-                                      <span className='btn-inner--text'>
-                                        Other Chems
-                                      </span>
-                                    </Fragment>
-                                  ) : (
-                                    <Fragment>
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-plus'></i>
-                                      </span>
-                                      <span className='btn-inner--text'>
-                                        Other Chems
-                                      </span>
-                                    </Fragment>
-                                  )}
-                                </Button>
-
-                                <Collapse isOpen={otherChemsOpen}>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Soda Ash (Sodium Carbonate)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='sodaAsh'
-                                      value={values.sodaAsh}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Soda Ash Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Copper/PolyQuat Blend Liquid Algacide
+                                        (Aqua Pure)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='copperBlend'
+                                        value={values.copperBlend}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>
+                                          No Copper/PolyQuat Blend Algacide
+                                          Added
+                                        </option>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Cups Measurement
-                                      </option>
-                                      <option>1/8 Cup</option>
-                                      <option>1/4 Cup</option>
-                                      <option>1/3 Cup</option>
-                                      <option>1/2 Cup</option>
-                                      <option>2/3 Cup</option>
-                                      <option>3/4 Cup</option>
-                                      <option>1 Cup</option>
-                                      <option>1.5 Cups</option>
-                                      <option>2 Cups</option>
-                                      <option>2.5 Cups</option>
-                                      <option>3 Cups</option>
-                                      <option>3.5 Cups</option>
-                                      <option>4 Cups</option>
-                                      <option>4.5 Cups</option>
-                                      <option>5 Cups</option>
-                                      <option>6 Cups</option>
-                                      <option>7 Cups</option>
-                                      <option>8 Cups</option>
-                                      <option>9 Cups</option>
-                                      <option>10 Cups</option>
-                                      <option>11 Cups</option>
-                                      <option>12 Cups</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
+                                  </Collapse>
+                                  <br />
+                                  <Button
+                                    className='btn-icon'
+                                    color='info'
+                                    onClick={() => {
+                                      if (otherChemsOpen) {
+                                        setFieldValue('sodaAsh', '');
+                                        setFieldValue('CalciumChloride', '');
+                                        setFieldValue('conditioner', '');
+                                        setFieldValue('sodiumBicar', '');
+                                        setFieldValue('diatomaceous', '');
+                                        setFieldValue('diatomaceousAlt', '');
+                                        setFieldValue('sodiumBro', '');
+                                        setFieldValue('dryAcid', '');
+                                        setFieldValue('clarifier', '');
+                                        setFieldValue('phosphateRemover', '');
+                                        setFieldValue('salt', '');
+                                        setFieldValue('enzymes', '');
+                                        setFieldValue('metalSequester', '');
+                                        setFieldValue('bromineGran', '');
+                                        setFieldValue('bromineTab', '');
+                                        setFieldValue('poolFlocc', '');
+                                        setFieldValue('borate', '');
+                                      }
+                                      setOtherChemsOpen(!otherChemsOpen);
+                                    }}
+                                    block
+                                  >
+                                    {otherChemsOpen ? (
+                                      <Fragment>
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-minus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Other Chems
+                                        </span>
+                                      </Fragment>
+                                    ) : (
+                                      <Fragment>
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-plus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Other Chems
+                                        </span>
+                                      </Fragment>
+                                    )}
+                                  </Button>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Calcium Chloride (Hardness+)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='CalciumChloride'
-                                      value={values.CalciumChloride}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Calcium Chloride Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                  <Collapse isOpen={otherChemsOpen}>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Soda Ash (Sodium Carbonate)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='sodaAsh'
+                                        value={values.sodaAsh}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>No Soda Ash Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Cups Measurement
-                                      </option>
-                                      <option>1/8 Cup</option>
-                                      <option>1/4 Cup</option>
-                                      <option>1/3 Cup</option>
-                                      <option>1/2 Cup</option>
-                                      <option>2/3 Cup</option>
-                                      <option>3/4 Cup</option>
-                                      <option>1 Cup</option>
-                                      <option>1.5 Cups</option>
-                                      <option>2 Cups</option>
-                                      <option>2.5 Cups</option>
-                                      <option>3 Cups</option>
-                                      <option>3.5 Cups</option>
-                                      <option>4 Cups</option>
-                                      <option>4.5 Cups</option>
-                                      <option>5 Cups</option>
-                                      <option>6 Cups</option>
-                                      <option>7 Cups</option>
-                                      <option>8 Cups</option>
-                                      <option>9 Cups</option>
-                                      <option>10 Cups</option>
-                                      <option>11 Cups</option>
-                                      <option>12 Cups</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Cups Measurement
+                                        </option>
+                                        <option>1/8 Cup</option>
+                                        <option>1/4 Cup</option>
+                                        <option>1/3 Cup</option>
+                                        <option>1/2 Cup</option>
+                                        <option>2/3 Cup</option>
+                                        <option>3/4 Cup</option>
+                                        <option>1 Cup</option>
+                                        <option>1.5 Cups</option>
+                                        <option>2 Cups</option>
+                                        <option>2.5 Cups</option>
+                                        <option>3 Cups</option>
+                                        <option>3.5 Cups</option>
+                                        <option>4 Cups</option>
+                                        <option>4.5 Cups</option>
+                                        <option>5 Cups</option>
+                                        <option>6 Cups</option>
+                                        <option>7 Cups</option>
+                                        <option>8 Cups</option>
+                                        <option>9 Cups</option>
+                                        <option>10 Cups</option>
+                                        <option>11 Cups</option>
+                                        <option>12 Cups</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Conditioner (Cyanuric Acid)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='conditioner'
-                                      value={values.conditioner}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Conditioner Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Calcium Chloride (Hardness+)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='CalciumChloride'
+                                        value={values.CalciumChloride}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>
+                                          No Calcium Chloride Added
+                                        </option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Cups Measurement
-                                      </option>
-                                      <option>1/8 Cup</option>
-                                      <option>1/4 Cup</option>
-                                      <option>1/3 Cup</option>
-                                      <option>1/2 Cup</option>
-                                      <option>2/3 Cup</option>
-                                      <option>3/4 Cup</option>
-                                      <option>1 Cup</option>
-                                      <option>1.5 Cups</option>
-                                      <option>2 Cups</option>
-                                      <option>2.5 Cups</option>
-                                      <option>3 Cups</option>
-                                      <option>3.5 Cups</option>
-                                      <option>4 Cups</option>
-                                      <option>4.5 Cups</option>
-                                      <option>5 Cups</option>
-                                      <option>6 Cups</option>
-                                      <option>7 Cups</option>
-                                      <option>8 Cups</option>
-                                      <option>9 Cups</option>
-                                      <option>10 Cups</option>
-                                      <option>11 Cups</option>
-                                      <option>12 Cups</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Cups Measurement
+                                        </option>
+                                        <option>1/8 Cup</option>
+                                        <option>1/4 Cup</option>
+                                        <option>1/3 Cup</option>
+                                        <option>1/2 Cup</option>
+                                        <option>2/3 Cup</option>
+                                        <option>3/4 Cup</option>
+                                        <option>1 Cup</option>
+                                        <option>1.5 Cups</option>
+                                        <option>2 Cups</option>
+                                        <option>2.5 Cups</option>
+                                        <option>3 Cups</option>
+                                        <option>3.5 Cups</option>
+                                        <option>4 Cups</option>
+                                        <option>4.5 Cups</option>
+                                        <option>5 Cups</option>
+                                        <option>6 Cups</option>
+                                        <option>7 Cups</option>
+                                        <option>8 Cups</option>
+                                        <option>9 Cups</option>
+                                        <option>10 Cups</option>
+                                        <option>11 Cups</option>
+                                        <option>12 Cups</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Sodium Bicarbonate (baking soda)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='sodiumBicar'
-                                      value={values.sodiumBicar}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Sodium Bicarbonate Added
-                                      </option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Conditioner (Cyanuric Acid)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='conditioner'
+                                        value={values.conditioner}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>No Conditioner Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Cups Measurement
-                                      </option>
-                                      <option>1/8 Cup</option>
-                                      <option>1/4 Cup</option>
-                                      <option>1/3 Cup</option>
-                                      <option>1/2 Cup</option>
-                                      <option>2/3 Cup</option>
-                                      <option>3/4 Cup</option>
-                                      <option>1 Cup</option>
-                                      <option>1.5 Cups</option>
-                                      <option>2 Cups</option>
-                                      <option>2.5 Cups</option>
-                                      <option>3 Cups</option>
-                                      <option>3.5 Cups</option>
-                                      <option>4 Cups</option>
-                                      <option>4.5 Cups</option>
-                                      <option>5 Cups</option>
-                                      <option>6 Cups</option>
-                                      <option>7 Cups</option>
-                                      <option>8 Cups</option>
-                                      <option>9 Cups</option>
-                                      <option>10 Cups</option>
-                                      <option>11 Cups</option>
-                                      <option>12 Cups</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Cups Measurement
+                                        </option>
+                                        <option>1/8 Cup</option>
+                                        <option>1/4 Cup</option>
+                                        <option>1/3 Cup</option>
+                                        <option>1/2 Cup</option>
+                                        <option>2/3 Cup</option>
+                                        <option>3/4 Cup</option>
+                                        <option>1 Cup</option>
+                                        <option>1.5 Cups</option>
+                                        <option>2 Cups</option>
+                                        <option>2.5 Cups</option>
+                                        <option>3 Cups</option>
+                                        <option>3.5 Cups</option>
+                                        <option>4 Cups</option>
+                                        <option>4.5 Cups</option>
+                                        <option>5 Cups</option>
+                                        <option>6 Cups</option>
+                                        <option>7 Cups</option>
+                                        <option>8 Cups</option>
+                                        <option>9 Cups</option>
+                                        <option>10 Cups</option>
+                                        <option>11 Cups</option>
+                                        <option>12 Cups</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Diatomaceous Earth
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='diatomaceous'
-                                      value={values.diatomaceous}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Diatomaceous Earth Added
-                                      </option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Sodium Bicarbonate (baking soda)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='sodiumBicar'
+                                        value={values.sodiumBicar}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>
+                                          No Sodium Bicarbonate Added
+                                        </option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Cups Measurement
+                                        </option>
+                                        <option>1/8 Cup</option>
+                                        <option>1/4 Cup</option>
+                                        <option>1/3 Cup</option>
+                                        <option>1/2 Cup</option>
+                                        <option>2/3 Cup</option>
+                                        <option>3/4 Cup</option>
+                                        <option>1 Cup</option>
+                                        <option>1.5 Cups</option>
+                                        <option>2 Cups</option>
+                                        <option>2.5 Cups</option>
+                                        <option>3 Cups</option>
+                                        <option>3.5 Cups</option>
+                                        <option>4 Cups</option>
+                                        <option>4.5 Cups</option>
+                                        <option>5 Cups</option>
+                                        <option>6 Cups</option>
+                                        <option>7 Cups</option>
+                                        <option>8 Cups</option>
+                                        <option>9 Cups</option>
+                                        <option>10 Cups</option>
+                                        <option>11 Cups</option>
+                                        <option>12 Cups</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Diatomaceous Earth
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='diatomaceous'
+                                        value={values.diatomaceous}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>
+                                          No Diatomaceous Earth Added
+                                        </option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Diatomaceous Earth Alternative (Aqua
+                                        Perl, FiberClear etc)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='diatomaceousAlt'
+                                        value={values.diatomaceousAlt}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>
+                                          No Diatomaceous Earth Alternative
+                                          Added
+                                        </option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Diatomaceous Earth Alternative (Aqua Perl,
-                                      FiberClear etc)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='diatomaceousAlt'
-                                      value={values.diatomaceousAlt}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Diatomaceous Earth Alternative Added
-                                      </option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Sodium Bromide
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='sodiumBro'
+                                        value={values.sodiumBro}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>No Sodium Bromide Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Dry Acid
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='dryAcid'
+                                        value={values.dryAcid}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>No Dry Acid Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Clarifier
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='clarifier'
+                                        value={values.clarifier}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>No Clarifier Added</option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Sodium Bromide
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='sodiumBro'
-                                      value={values.sodiumBro}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Sodium Bromide Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Phosphate Remover
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='phosphateRemover'
+                                        value={values.phosphateRemover}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>
+                                          No Phosphate Remover Added
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Salt
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='salt'
+                                        value={values.salt}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>No Salt Added</option>
+                                        <option>1 bag of Salt</option>
+                                        <option>2 bags of Salt</option>
+                                        <option>3 bags of Salt</option>
+                                        <option>4 bags of Salt</option>
+                                        <option>5 bags of Salt</option>
+                                        <option>6 bags of Salt</option>
+                                        <option>7 bags of Salt</option>
+                                        <option>8 bags of Salt</option>
+                                        <option>9 bags of Salt</option>
+                                        <option>10 bags of Salt</option>
+                                        <option>11 bags of Salt</option>
+                                        <option>12 bags of Salt</option>
+                                        <option>13 bags of Salt</option>
+                                        <option>14 bags of Salt</option>
+                                        <option>15 bags of Salt</option>
+                                        <option>16 bags of Salt</option>
+                                        <option>17 bags of Salt</option>
+                                        <option>18 bags of Salt</option>
+                                        <option>19 bags of Salt</option>
+                                        <option>20 bags of Salt</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Pool Enzymes (Pool Perfect, Pool Zyme
+                                        etc)
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='enzymes'
+                                        value={values.enzymes}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>No Pool Enzymes Added</option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Dry Acid
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='dryAcid'
-                                      value={values.dryAcid}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Dry Acid Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Metal Sequestering Agent
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='metalSequester'
+                                        value={values.metalSequester}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>
+                                          No Sequestering Agent Added
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                        <option>128 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Bromine Granular
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='bromineGran'
+                                        value={values.bromineGran}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                        <option>
+                                          No Bromine Granular Added
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                        <option>128 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Bromine Tablets
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='bromineTab'
+                                        value={values.bromineTab}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                    </Input>
-                                  </FormGroup>
+                                        <option>No Bromine Tablets Used</option>
+                                        <option>1 Tab</option>
+                                        <option>2 Tabs</option>
+                                        <option>3 Tabs</option>
+                                        <option>4 Tabs</option>
+                                        <option>5 Tabs</option>
+                                        <option>6 Tabs</option>
+                                        <option>7 Tabs</option>
+                                        <option>8 Tabs</option>
+                                        <option>9 Tabs</option>
+                                        <option>10 Tabs</option>
+                                        <option>11 Tabs</option>
+                                        <option>12 Tabs</option>
+                                        <option>13 Tabs</option>
+                                        <option>14 Tabs</option>
+                                        <option>15 Tabs</option>
+                                        <option>16 Tabs</option>
+                                        <option>17 Tabs</option>
+                                        <option>18 Tabs</option>
+                                        <option>19 Tabs</option>
+                                        <option>20 Tabs</option>
+                                        <option>21 Tabs</option>
+                                        <option>22 Tabs</option>
+                                        <option>23 Tabs</option>
+                                        <option>24 Tabs</option>
+                                        <option>25 Tabs</option>
+                                        <option>26 Tabs</option>
+                                        <option>27 Tabs</option>
+                                        <option>28 Tabs</option>
+                                        <option>29 Tabs</option>
+                                        <option>30 Tabs</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Clarifier
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='clarifier'
-                                      value={values.clarifier}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Clarifier Added</option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Phosphate Remover
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='phosphateRemover'
-                                      value={values.phosphateRemover}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Phosphate Remover Added
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Salt
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='salt'
-                                      value={values.salt}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Salt Added</option>
-                                      <option>1 bag of Salt</option>
-                                      <option>2 bags of Salt</option>
-                                      <option>3 bags of Salt</option>
-                                      <option>4 bags of Salt</option>
-                                      <option>5 bags of Salt</option>
-                                      <option>6 bags of Salt</option>
-                                      <option>7 bags of Salt</option>
-                                      <option>8 bags of Salt</option>
-                                      <option>9 bags of Salt</option>
-                                      <option>10 bags of Salt</option>
-                                      <option>11 bags of Salt</option>
-                                      <option>12 bags of Salt</option>
-                                      <option>13 bags of Salt</option>
-                                      <option>14 bags of Salt</option>
-                                      <option>15 bags of Salt</option>
-                                      <option>16 bags of Salt</option>
-                                      <option>17 bags of Salt</option>
-                                      <option>18 bags of Salt</option>
-                                      <option>19 bags of Salt</option>
-                                      <option>20 bags of Salt</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Pool Enzymes (Pool Perfect, Pool Zyme etc)
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='enzymes'
-                                      value={values.enzymes}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Pool Enzymes Added</option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Metal Sequestering Agent
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='metalSequester'
-                                      value={values.metalSequester}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>
-                                        No Sequestering Agent Added
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                      <option>128 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Bromine Granular
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='bromineGran'
-                                      value={values.bromineGran}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Bromine Granular Added</option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                      <option>128 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Bromine Tablets
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='bromineTab'
-                                      value={values.bromineTab}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Bromine Tablets Used</option>
-                                      <option>1 Tab</option>
-                                      <option>2 Tabs</option>
-                                      <option>3 Tabs</option>
-                                      <option>4 Tabs</option>
-                                      <option>5 Tabs</option>
-                                      <option>6 Tabs</option>
-                                      <option>7 Tabs</option>
-                                      <option>8 Tabs</option>
-                                      <option>9 Tabs</option>
-                                      <option>10 Tabs</option>
-                                      <option>11 Tabs</option>
-                                      <option>12 Tabs</option>
-                                      <option>13 Tabs</option>
-                                      <option>14 Tabs</option>
-                                      <option>15 Tabs</option>
-                                      <option>16 Tabs</option>
-                                      <option>17 Tabs</option>
-                                      <option>18 Tabs</option>
-                                      <option>19 Tabs</option>
-                                      <option>20 Tabs</option>
-                                      <option>21 Tabs</option>
-                                      <option>22 Tabs</option>
-                                      <option>23 Tabs</option>
-                                      <option>24 Tabs</option>
-                                      <option>25 Tabs</option>
-                                      <option>26 Tabs</option>
-                                      <option>27 Tabs</option>
-                                      <option>28 Tabs</option>
-                                      <option>29 Tabs</option>
-                                      <option>30 Tabs</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Pool Flocculant
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='poolFlocc'
-                                      value={values.poolFlocc}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Pool Flocculant Added</option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>6 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>10 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>14 Ounces</option>
-                                      <option>16 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>20 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>24 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>28 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>32 Ounces</option>
-                                      <option>48 Ounces</option>
-                                      <option>64 Ounces</option>
-                                      <option>96 Ounces</option>
-                                      <option>128 Ounces</option>
-                                    </Input>
-                                  </FormGroup>
-
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Borate
-                                    </Label>
-                                    <Input
-                                      type='select'
-                                      name='borate'
-                                      value={values.borate}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    >
-                                      <option>No Borate Added</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Pool Flocculant
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='poolFlocc'
+                                        value={values.poolFlocc}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        D.E. Scoop Measurement
-                                      </option>
+                                        <option>
+                                          No Pool Flocculant Added
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>6 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>10 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>14 Ounces</option>
+                                        <option>16 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>20 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>24 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>28 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>32 Ounces</option>
+                                        <option>48 Ounces</option>
+                                        <option>64 Ounces</option>
+                                        <option>96 Ounces</option>
+                                        <option>128 Ounces</option>
+                                      </Input>
+                                    </FormGroup>
 
-                                      <option>1/8 D.E. Scoop</option>
-                                      <option>1/4 D.E. Scoop</option>
-                                      <option>1/2 D.E. Scoop</option>
-                                      <option>3/4 D.E. Scoop</option>
-                                      <option>1 Full D.E. Scoop</option>
-                                      <option>1.5 D.E. Scoops</option>
-                                      <option>2 D.E. Scoops</option>
-                                      <option>3 D.E. Scoops</option>
-                                      <option>4 D.E. Scoops</option>
-                                      <option>5 D.E. Scoops</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Borate
+                                      </Label>
+                                      <Input
+                                        type='select'
+                                        name='borate'
+                                        value={values.borate}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
                                       >
-                                        Ounces Measurement
-                                      </option>
-                                      <option>2 Ounces</option>
-                                      <option>4 Ounces</option>
-                                      <option>8 Ounces</option>
-                                      <option>12 Ounces</option>
-                                      <option>18 Ounces</option>
-                                      <option>22 Ounces</option>
-                                      <option>26 Ounces</option>
-                                      <option>30 Ounces</option>
-                                      <option>36 Ounces</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Pounds Measurement
-                                      </option>
-                                      <option>1/2 Pound</option>
-                                      <option>1 Pound</option>
-                                      <option>1.5 Pounds</option>
-                                      <option>2 Pounds</option>
-                                      <option>2.5 Pounds</option>
-                                      <option>3 Pounds</option>
-                                      <option>3.5 Pounds</option>
-                                      <option>4 Pounds</option>
-                                      <option>4.5 Pounds</option>
-                                      <option>5 Pounds</option>
-                                      <option>6 Pounds</option>
-                                      <option>7 Pounds</option>
-                                      <option>8 Pounds</option>
-                                      <option>9 Pounds</option>
-                                      <option>10 Pounds</option>
-                                      <option>11 Pounds</option>
-                                      <option>12 Pounds</option>
-                                      <option>13 Pounds</option>
-                                      <option>14 Pounds</option>
-                                      <option>15 Pounds</option>
-                                      <option>16 Pounds</option>
-                                      <option>17 Pounds</option>
-                                      <option>18 Pounds</option>
-                                      <option>19 Pounds</option>
-                                      <option>20 Pounds</option>
-                                      <option>21 Pounds</option>
-                                      <option>22 Pounds</option>
-                                      <option>23 Pounds</option>
-                                      <option>24 Pounds</option>
-                                      <option>25 Pounds</option>
-                                      <option>26 Pounds</option>
-                                      <option>27 Pounds</option>
-                                      <option>28 Pounds</option>
-                                      <option>29 Pounds</option>
-                                      <option>30 Pounds</option>
-                                      <option>31 Pounds</option>
-                                      <option>32 Pounds</option>
-                                      <option>33 Pounds</option>
-                                      <option>34 Pounds</option>
-                                      <option>35 Pounds</option>
-                                      <option>36 Pounds</option>
-                                      <option>37 Pounds</option>
-                                      <option>38 Pounds</option>
-                                      <option>39 Pounds</option>
-                                      <option>40 Pounds</option>
-                                      <option>41 Pounds</option>
-                                      <option>42 Pounds</option>
-                                      <option>43 Pounds</option>
-                                      <option>44 Pounds</option>
-                                      <option>45 Pounds</option>
-                                      <option>46 Pounds</option>
-                                      <option>47 Pounds</option>
-                                      <option>48 Pounds</option>
-                                      <option>49 Pounds</option>
-                                      <option>50 Pounds</option>
-                                      <option
-                                        className='option-heading'
-                                        disabled
-                                      >
-                                        Cups Measurement
-                                      </option>
-                                      <option>1/8 Cup</option>
-                                      <option>1/4 Cup</option>
-                                      <option>1/3 Cup</option>
-                                      <option>1/2 Cup</option>
-                                      <option>2/3 Cup</option>
-                                      <option>3/4 Cup</option>
-                                      <option>1 Cup</option>
-                                      <option>1.5 Cups</option>
-                                      <option>2 Cups</option>
-                                      <option>2.5 Cups</option>
-                                      <option>3 Cups</option>
-                                      <option>3.5 Cups</option>
-                                      <option>4 Cups</option>
-                                      <option>4.5 Cups</option>
-                                      <option>5 Cups</option>
-                                      <option>6 Cups</option>
-                                      <option>7 Cups</option>
-                                      <option>8 Cups</option>
-                                      <option>9 Cups</option>
-                                      <option>10 Cups</option>
-                                      <option>11 Cups</option>
-                                      <option>12 Cups</option>
-                                    </Input>
-                                  </FormGroup>
-                                </Collapse>
-                              </FormGroup>
-                            </Fragment>
+                                        <option>No Borate Added</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          D.E. Scoop Measurement
+                                        </option>
+
+                                        <option>1/8 D.E. Scoop</option>
+                                        <option>1/4 D.E. Scoop</option>
+                                        <option>1/2 D.E. Scoop</option>
+                                        <option>3/4 D.E. Scoop</option>
+                                        <option>1 Full D.E. Scoop</option>
+                                        <option>1.5 D.E. Scoops</option>
+                                        <option>2 D.E. Scoops</option>
+                                        <option>3 D.E. Scoops</option>
+                                        <option>4 D.E. Scoops</option>
+                                        <option>5 D.E. Scoops</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Ounces Measurement
+                                        </option>
+                                        <option>2 Ounces</option>
+                                        <option>4 Ounces</option>
+                                        <option>8 Ounces</option>
+                                        <option>12 Ounces</option>
+                                        <option>18 Ounces</option>
+                                        <option>22 Ounces</option>
+                                        <option>26 Ounces</option>
+                                        <option>30 Ounces</option>
+                                        <option>36 Ounces</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Pounds Measurement
+                                        </option>
+                                        <option>1/2 Pound</option>
+                                        <option>1 Pound</option>
+                                        <option>1.5 Pounds</option>
+                                        <option>2 Pounds</option>
+                                        <option>2.5 Pounds</option>
+                                        <option>3 Pounds</option>
+                                        <option>3.5 Pounds</option>
+                                        <option>4 Pounds</option>
+                                        <option>4.5 Pounds</option>
+                                        <option>5 Pounds</option>
+                                        <option>6 Pounds</option>
+                                        <option>7 Pounds</option>
+                                        <option>8 Pounds</option>
+                                        <option>9 Pounds</option>
+                                        <option>10 Pounds</option>
+                                        <option>11 Pounds</option>
+                                        <option>12 Pounds</option>
+                                        <option>13 Pounds</option>
+                                        <option>14 Pounds</option>
+                                        <option>15 Pounds</option>
+                                        <option>16 Pounds</option>
+                                        <option>17 Pounds</option>
+                                        <option>18 Pounds</option>
+                                        <option>19 Pounds</option>
+                                        <option>20 Pounds</option>
+                                        <option>21 Pounds</option>
+                                        <option>22 Pounds</option>
+                                        <option>23 Pounds</option>
+                                        <option>24 Pounds</option>
+                                        <option>25 Pounds</option>
+                                        <option>26 Pounds</option>
+                                        <option>27 Pounds</option>
+                                        <option>28 Pounds</option>
+                                        <option>29 Pounds</option>
+                                        <option>30 Pounds</option>
+                                        <option>31 Pounds</option>
+                                        <option>32 Pounds</option>
+                                        <option>33 Pounds</option>
+                                        <option>34 Pounds</option>
+                                        <option>35 Pounds</option>
+                                        <option>36 Pounds</option>
+                                        <option>37 Pounds</option>
+                                        <option>38 Pounds</option>
+                                        <option>39 Pounds</option>
+                                        <option>40 Pounds</option>
+                                        <option>41 Pounds</option>
+                                        <option>42 Pounds</option>
+                                        <option>43 Pounds</option>
+                                        <option>44 Pounds</option>
+                                        <option>45 Pounds</option>
+                                        <option>46 Pounds</option>
+                                        <option>47 Pounds</option>
+                                        <option>48 Pounds</option>
+                                        <option>49 Pounds</option>
+                                        <option>50 Pounds</option>
+                                        <option
+                                          className='option-heading'
+                                          disabled
+                                        >
+                                          Cups Measurement
+                                        </option>
+                                        <option>1/8 Cup</option>
+                                        <option>1/4 Cup</option>
+                                        <option>1/3 Cup</option>
+                                        <option>1/2 Cup</option>
+                                        <option>2/3 Cup</option>
+                                        <option>3/4 Cup</option>
+                                        <option>1 Cup</option>
+                                        <option>1.5 Cups</option>
+                                        <option>2 Cups</option>
+                                        <option>2.5 Cups</option>
+                                        <option>3 Cups</option>
+                                        <option>3.5 Cups</option>
+                                        <option>4 Cups</option>
+                                        <option>4.5 Cups</option>
+                                        <option>5 Cups</option>
+                                        <option>6 Cups</option>
+                                        <option>7 Cups</option>
+                                        <option>8 Cups</option>
+                                        <option>9 Cups</option>
+                                        <option>10 Cups</option>
+                                        <option>11 Cups</option>
+                                        <option>12 Cups</option>
+                                      </Input>
+                                    </FormGroup>
+                                  </Collapse>
+                                </FormGroup>
+                              </Fragment>
+                            )
                           )}
+
                           <Fragment>
-                            {!showChems ? (
+                            {notesView && !showChems && (
+                              <Fragment>
+                                <FormGroup>
+                                  <Label className='form-control-label'>
+                                    Private Notes (Only Visible to Company)
+                                  </Label>
+                                  <Input
+                                    type='textarea'
+                                    name='publicNote'
+                                    onChange={handleChange}
+                                    value={values.publicNote}
+                                    onBlur={handleBlur}
+                                  />
+                                </FormGroup>
+                                <FormGroup>
+                                  <Label className='form-control-label'>
+                                    Public Notes (Sent to Customer)
+                                  </Label>
+                                  <Input
+                                    type='textarea'
+                                    name='privateNote'
+                                    onChange={handleChange}
+                                    value={values.privateNote}
+                                    onBlur={handleBlur}
+                                  />
+                                </FormGroup>
+
+                                <Button
+                                  color='info'
+                                  block
+                                  onClick={() => {
+                                    setShowRepair(!showRepair);
+                                  }}
+                                >
+                                  Repair Order
+                                </Button>
+                                <Collapse isOpen={showRepair}>
+                                  <Fragment>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Repair Type
+                                      </Label>
+                                      <Input type='select'>
+                                        <option>
+                                          Repair Request (Submit a Order for
+                                          Future Repair)
+                                        </option>
+                                        <option>Repair Completed</option>
+                                      </Input>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Notify Customer?
+                                      </Label>{' '}
+                                      <br />
+                                      <label className='custom-toggle'>
+                                        <Input type='checkbox' />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </label>
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Enter Description of Repair (Sent to
+                                        Customer)
+                                      </Label>
+                                      <Input type='textarea' />
+                                    </FormGroup>
+
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Note for Office (Company Only)
+                                      </Label>
+                                      <Input type='textarea' />
+                                    </FormGroup>
+
+                                    <ImageUploader
+                                      withIcon={true}
+                                      buttonText='Choose images'
+                                      onChange={onDrop}
+                                      imgExtension={[
+                                        '.jpg',
+                                        '.gif',
+                                        '.png',
+                                        '.gif'
+                                      ]}
+                                      maxFileSize={5242880}
+                                      withPreview={true}
+                                    />
+                                  </Fragment>
+                                </Collapse>
+                                <br />
+                              </Fragment>
+                            )}
+                          </Fragment>
+
+                          <Fragment>
+                            {!showChems && !notesView && (
                               <Button
                                 color='primary'
                                 className='btn-icon'
                                 block
                                 onClick={() => {
                                   setShowChems(!showChems);
+                                }}
+                              >
+                                <span className='btn-inner--text'>Next</span>
+                                <span className='btn-inner--icon'>
+                                  <i className='ni ni-bold-right'></i>
+                                </span>
+                              </Button>
+                            )}
+                          </Fragment>
+
+                          <Fragment>
+                            {!showChems && notesView && (
+                              <Row>
+                                <Col>
+                                  <Button
+                                    color='secondary'
+                                    className='btn-icon'
+                                    block
+                                    onClick={() => {
+                                      setShowChems(!showChems);
+                                      setNotesView(!notesView);
+                                    }}
+                                  >
+                                    <span className='btn-inner--icon'>
+                                      <i className='ni ni-bold-left'></i>
+                                    </span>
+                                    <span className='btn-inner--text'>
+                                      Back
+                                    </span>
+                                  </Button>
+                                </Col>
+                                <Col>
+                                  <Button
+                                    color='success'
+                                    className='btn-icon'
+                                    block
+                                    type='submit'
+                                    onClick={handleSubmit}
+                                  >
+                                    <span className='btn-inner--icon'>
+                                      <i className='fas fa-check-circle'></i>
+                                    </span>
+                                    <span className='btn-inner--text'>
+                                      Complete Service
+                                    </span>
+                                  </Button>
+                                </Col>
+                              </Row>
+                            )}
+                          </Fragment>
+
+                          <Fragment>
+                            {showChems && !notesView && (
+                              <Row>
+                                <Col>
+                                  <Button
+                                    color='secondary'
+                                    className='btn-icon'
+                                    block
+                                    onClick={() => {
+                                      setShowChems(!showChems);
+                                    }}
+                                  >
+                                    <span className='btn-inner--icon'>
+                                      <i className='ni ni-bold-left'></i>
+                                    </span>
+                                    <span className='btn-inner--text'>
+                                      Back
+                                    </span>
+                                  </Button>
+                                </Col>
+                                <Col>
+                                  <Button
+                                    color='primary'
+                                    className='btn-icon'
+                                    block
+                                    onClick={() => {
+                                      setNotesView(!notesView);
+                                      setShowChems(!showChems);
+                                    }}
+                                  >
+                                    <span className='btn-inner--text'>
+                                      Next
+                                    </span>
+                                    <span className='btn-inner--icon'>
+                                      <i className='ni ni-bold-right'></i>
+                                    </span>
+                                  </Button>
+                                </Col>
+                              </Row>
+                            )}
+                          </Fragment>
+
+                          {/* <Fragment>
+                            {!showChems && !notesView ? (
+                              <Button
+                                color='primary'
+                                className='btn-icon'
+                                block
+                                onClick={() => {
+                                  setNotesView(!notesView);
                                 }}
                               >
                                 <span className='btn-inner--text'>Next</span>
@@ -3349,7 +3593,7 @@ const Dashboard = ({
                                 </Col>
                               </Row>
                             )}
-                          </Fragment>
+                          </Fragment> */}
                         </Form>
                       </Fragment>
                     )}
