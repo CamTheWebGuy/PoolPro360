@@ -6,6 +6,10 @@ const ActivitySchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: 'users'
   },
+  creator: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
   customer: {
     type: Schema.Types.ObjectId,
     ref: 'customer'
@@ -63,6 +67,11 @@ const ActivitySchema = new mongoose.Schema({
     borate: { type: String },
     checkList: { type: Array }
   },
+  images: [
+    {
+      url: { type: String }
+    }
+  ],
   dateAdded: {
     type: Date,
     default: Date.now()

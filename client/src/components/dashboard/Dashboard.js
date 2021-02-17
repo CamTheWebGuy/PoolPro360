@@ -7,6 +7,8 @@ import Dashnav from '../dashboard/Dashnav';
 
 import { Formik } from 'formik';
 
+import axios from 'axios';
+
 import * as Yup from 'yup';
 
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -282,10 +284,36 @@ const Dashboard = ({
     inProgress: false
   });
 
-  const [pictureState, setPictureState] = useState({ pictures: [] });
+  const [logPictureState, setLogPictureState] = useState({ pictures: [] });
+
+  // console.log(logPictureState);
+
+  const uploadImages = async activity => {
+    try {
+      const config = {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+
+      let uploadPromises = logPictureState.pictures.map(image => {
+        let data = new FormData();
+        data.append('image', image, image.name);
+        return axios.patch(
+          `/api/customers/recentActivity/edit/${activity._id}`,
+          data,
+          config
+        );
+      });
+
+      await axios.all(uploadPromises);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const onDrop = picture => {
-    setPictureState({
+    setLogPictureState({
       pictures: picture
     });
   };
@@ -978,15 +1006,25 @@ const Dashboard = ({
                       poolFlocc: '',
                       borate: '',
                       privateNote: '',
-                      publicNote: ''
+                      publicNote: '',
+                      repairOrder: false,
+                      repairType:
+                        'Repair Request (Submit a Order for Future Repair)',
+                      repairNotify: false,
+                      repairDescription: '',
+                      repairOfficeNote: ''
                     }}
                     onSubmit={async data => {
                       setIsProcessing(true);
-                      await addServiceLog(
+
+                      const log = await addServiceLog(
                         logModal.active,
                         logModal.checkedNames,
+                        logPictureState.pictures,
                         data
                       );
+                      await uploadImages(log);
+
                       await getEmployeeRoute(
                         user._id,
                         moment(new Date()).format('dddd')
@@ -994,8 +1032,17 @@ const Dashboard = ({
                       setLogModal({
                         isOpen: false,
                         active: null,
-                        activeName: null
+                        activeName: null,
+                        isServiceInfoOpen: false
                       });
+
+                      setShowChems(false);
+                      setShowRepair(false);
+                      setNotesView(false);
+                      setShockOpen(false);
+                      setAlgacidesOpen(false);
+                      setOtherChemsOpen(false);
+
                       setIsProcessing(false);
                     }}
                     render={({
@@ -3330,25 +3377,43 @@ const Dashboard = ({
                               <Fragment>
                                 <FormGroup>
                                   <Label className='form-control-label'>
-                                    Private Notes (Only Visible to Company)
+                                    Log Images (Emailed to Customer)
                                   </Label>
-                                  <Input
-                                    type='textarea'
-                                    name='publicNote'
-                                    onChange={handleChange}
-                                    value={values.publicNote}
-                                    onBlur={handleBlur}
+                                  <ImageUploader
+                                    withIcon={true}
+                                    buttonText='Choose images'
+                                    onChange={onDrop}
+                                    imgExtension={[
+                                      '.jpg',
+                                      '.gif',
+                                      '.png',
+                                      '.gif'
+                                    ]}
+                                    maxFileSize={5242880}
+                                    withPreview={true}
                                   />
                                 </FormGroup>
                                 <FormGroup>
                                   <Label className='form-control-label'>
-                                    Public Notes (Sent to Customer)
+                                    Private Notes (Only Visible to Company)
                                   </Label>
                                   <Input
                                     type='textarea'
                                     name='privateNote'
                                     onChange={handleChange}
                                     value={values.privateNote}
+                                    onBlur={handleBlur}
+                                  />
+                                </FormGroup>
+                                <FormGroup>
+                                  <Label className='form-control-label'>
+                                    Note To Customer (Emailed to Customer)
+                                  </Label>
+                                  <Input
+                                    type='textarea'
+                                    name='publicNote'
+                                    onChange={handleChange}
+                                    value={values.publicNote}
                                     onBlur={handleBlur}
                                   />
                                 </FormGroup>
@@ -3477,9 +3542,22 @@ const Dashboard = ({
                                     <span className='btn-inner--icon'>
                                       <i className='fas fa-check-circle'></i>
                                     </span>
-                                    <span className='btn-inner--text'>
-                                      Complete Service
-                                    </span>
+                                    {isProcessing ? (
+                                      <span className='btn-inner--text'>
+                                        <SpinnerCircular
+                                          size={24}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />
+                                        Processing...
+                                      </span>
+                                    ) : (
+                                      <span className='btn-inner--text'>
+                                        Complete Service
+                                      </span>
+                                    )}
                                   </Button>
                                 </Col>
                               </Row>

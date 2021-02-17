@@ -296,8 +296,6 @@ router.post('/:customerId/uploadImage', auth, async (req, res) => {
 
     const downloadUrl = await uploadToS3(req, res);
 
-    console.log(downloadUrl);
-
     const newImage = {
       url: downloadUrl
     };
@@ -552,8 +550,19 @@ router.post(
   ],
   async (req, res) => {
     try {
+      const user = await User.find({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' },
+          { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+        ]
+      });
+
       const customer = await Customer.findOne({
-        user: req.user.id,
+        user:
+          user.role === 'Technician' || user.role === 'Admin'
+            ? req.user.owner
+            : req.user.id,
         _id: req.params.customerId
       });
 
@@ -561,6 +570,16 @@ router.post(
         return res
           .status(404)
           .json({ errors: [{ msg: 'Customer not found' }] });
+      }
+
+      if (user.role === 'Admin' || user.role === 'Technician') {
+        if (customer.user.toString() !== user.owner.toString()) {
+          return res.status(401).json({ msg: 'User not authorized' });
+        }
+      } else if (user.role === 'Owner') {
+        if (user._id.toString() !== customer.user.toString()) {
+          return res.status(401).json({ msg: 'User not authorized' });
+        }
       }
 
       const { comments, log, type, icon } = req.body;
@@ -571,7 +590,11 @@ router.post(
         type,
         icon,
         customer: req.params.customerId,
-        user: req.user.id,
+        user:
+          user.role === 'Technician' || user.role === 'Admin'
+            ? req.user.owner
+            : req.user.id,
+        creator: req.user.id,
         dateAdded: Date.now()
       });
 
@@ -589,6 +612,48 @@ router.post(
     }
   }
 );
+
+// @route    PATCH api/customers/recentActivity/edit/:activityId
+// @desc     Update Activity by ID
+// @access   Private/User
+router.patch('/recentActivity/edit/:activityId', auth, async (req, res) => {
+  const user = await User.findById(req.user.id);
+
+  const activity = await Activity.findById(req.params.activityId);
+
+  try {
+    // Permissions Check
+    if (user.role === 'Admin' || user.role === 'Technician') {
+      if (activity.user.toString() !== user.owner.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id.toString() !== activity.user.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    const downloadUrl = await uploadToS3(req, res);
+
+    const newImage = {
+      url: downloadUrl
+    };
+
+    activity.images = activity.images || [];
+
+    await activity.images.push(newImage);
+
+    activity.save();
+
+    res.status(200).json({ msg: 'Activity Updated' });
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
 
 // @route    GET api/customers/:customerId/recentActivity/
 // @desc     Get All a Customers Recent Activity
@@ -1389,11 +1454,13 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
     bromineGran,
     bromineTab,
     poolFlocc,
-    borate
+    borate,
+    privateNote,
+    publicNote
   } = req.body;
 
   try {
-    const user = await User.find({
+    const user = await User.findOne({
       $or: [
         { _id: req.user.id, role: 'Admin', owner: req.user.owner },
         { _id: req.user.id, role: 'Owner' },
@@ -1408,11 +1475,11 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
     let customer = await Customer.findById({ _id: req.params.customerId });
 
     if (user.role === 'Admin' || user.role === 'Technician') {
-      if (customer.user !== user.owner) {
+      if (customer.user.toString() !== user.owner.toString()) {
         return res.status(401).json({ msg: 'User not authorized' });
       }
     } else if (user.role === 'Owner') {
-      if (user._id !== customer.user) {
+      if (user._id.toString() !== customer.user.toString()) {
         return res.status(401).json({ msg: 'User not authorized' });
       }
     }
@@ -1423,7 +1490,11 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
       type: '',
       icon: 'check-circle',
       customer: req.params.customerId,
-      user: req.user.id,
+
+      user:
+        user.role === 'Technician' || user.role === 'Admin'
+          ? user.owner
+          : req.user.id,
       dateAdded: Date.now(),
       serviceLog: {
         totalChlorine,
@@ -1465,6 +1536,21 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
         checkList: names
       }
     });
+
+    if (privateNote) {
+      let serviceNote = new ServiceNotes({
+        showDuringVisit: false,
+        content: privateNote,
+        customer: req.params.customerId,
+        user:
+          user.role === 'Admin' || user.role === 'Technician'
+            ? user.owner
+            : user._id,
+        dateAdded: Date.now()
+      });
+
+      await serviceNote.save();
+    }
 
     customer.lastServiced = Date.now();
     await activity.save();

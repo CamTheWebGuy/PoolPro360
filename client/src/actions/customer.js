@@ -742,6 +742,7 @@ export const updateTech = (customerId, techId) => async dispatch => {
 export const addServiceLog = (
   customerId,
   names,
+  pictures,
   {
     totalChlorine,
     freeChlorine,
@@ -789,7 +790,12 @@ export const addServiceLog = (
     }
   };
 
-  const body = JSON.stringify({
+  // let data = new FormData();
+  // pictures.map(image => {
+  //   return data.append('image', image, image.name);
+  // });
+
+  let body = JSON.stringify({
     names,
     totalChlorine,
     freeChlorine,
@@ -830,12 +836,14 @@ export const addServiceLog = (
     publicNote,
     privateNote
   });
+
   try {
-    await axios.post(
+    let result = await axios.post(
       `/api/customers/route/complete/${customerId}`,
       body,
       config
     );
+    return result.data;
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;
