@@ -6,7 +6,46 @@ const config = require('config');
 const { check, validationResult } = require('express-validator');
 const auth = require('../../middleware/auth');
 
+const aws = require('aws-sdk');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const { v4: uuidv4 } = require('uuid');
+
 const User = require('../../models/User');
+
+aws.config.update({
+  secretAccessKey: config.get('aws_secret_key'),
+  accessKeyId: config.get('aws_access_key'),
+  region: 'us-west-2'
+});
+
+const s3 = new aws.S3();
+
+const upload = multer({
+  storage: multerS3({
+    s3,
+    bucket: 'poolpro360',
+    metadata: function(req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function(req, file, cb) {
+      cb(null, req.s3Key);
+    }
+  })
+});
+
+const singleFileUpload = upload.single('image');
+
+const uploadToS3 = (req, res) => {
+  req.s3Key = uuidv4();
+  let downloadUrl = `https://s3-us-west-2.amazonaws.com/poolpro360/${req.s3Key}`;
+  return new Promise((resolve, reject) => {
+    return singleFileUpload(req, res, err => {
+      if (err) return reject(err);
+      return resolve(downloadUrl);
+    });
+  });
+};
 
 // @route    POST api/users
 // @desc     Register User
@@ -113,7 +152,7 @@ router.post(
 
 // @route    POST api/users
 // @desc     Register Sub User
-// @access   Public
+// @access   Private/User
 router.post(
   '/subuser',
   [
@@ -215,5 +254,147 @@ router.post(
     }
   }
 );
+
+// @route    POST api/users/updateBusinessInfo
+// @desc     Update User Business Information
+// @access   Private/User
+router.post(
+  '/updateBusinessInfo',
+  [
+    auth,
+    [
+      check('businessName', 'a Business Name is required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('businessPhone')
+        .trim()
+        .escape(),
+      check('businessEmail')
+        .isEmail()
+        .normalizeEmail()
+        .trim()
+        .escape(),
+      check('businessAddress')
+        .trim()
+        .escape()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      businessName,
+      businessPhone,
+      businessEmail,
+      businessAddress
+    } = req.body;
+
+    try {
+      // Find user making request in DB where role is Admin or Owner
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      // If no user found, return error
+      if (!user) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+
+      // If user making request is a Admin, then check to get their owners ID. Then fetch owner information and make changes to the owner account.
+      if (user.role === 'Admin') {
+        const owner = User.findOne({ _id: req.user.owner, role: 'Owner' });
+
+        // If no user found, return error
+        if (!owner) {
+          return res.status(404).json({ msg: 'User not found' });
+        }
+
+        owner.businessInfo.businessName = businessName;
+        owner.businessInfo.businessPhone = businessPhone;
+        owner.businessInfo.businessEmail = businessEmail;
+        owner.businessInfo.businessAddress = businessAddress;
+
+        await owner.save();
+
+        return res.status(200).json(owner);
+      }
+
+      if (user.role === 'Owner') {
+        user.businessInfo.businessName = businessName;
+        user.businessInfo.businessPhone = businessPhone;
+        user.businessInfo.businessEmail = businessEmail;
+        user.businessInfo.businessAddress = businessAddress;
+
+        await user.save();
+
+        return res.status(200).json(user);
+      }
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    POST api/users/updateLogo
+// @desc     Update User Business Logo
+// @access   Private/User
+router.post('/updateLogo', auth, async (req, res) => {
+  try {
+    // Find user making request in DB where role is Admin or Owner
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // If no user found, return error
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    if (user.role === 'Admin') {
+      const owner = User.findOne({ _id: req.user.owner, role: 'Owner' });
+
+      // If no user found, return error
+      if (!owner) {
+        return res.status(404).json({ msg: 'User not found' });
+      }
+
+      // Upload Logo (attached as form data) to AWS S3
+      const downloadUrl = await uploadToS3(req, res);
+
+      // Save AWS URL in DB
+      owner.businessInfo.businessLogo = downloadUrl;
+      owner.save();
+      return res.status(200).json(owner);
+    }
+
+    if (user.role === 'Owner') {
+      // Upload Logo (attached as form data) to AWS S3
+      const downloadUrl = await uploadToS3(req, res);
+
+      // Save AWS URL in DB
+      user.businessInfo.businessLogo = downloadUrl;
+      user.save();
+      return res.status(200).json(user);
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 module.exports = router;

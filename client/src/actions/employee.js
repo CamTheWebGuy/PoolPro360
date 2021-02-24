@@ -180,7 +180,6 @@ export const getEmployeeRoute = (id, day) => async dispatch => {
 
 // Mark Employee Inactive
 export const markEmployeeInactive = id => async dispatch => {
-  console.log('made it here');
   try {
     await axios.patch(`/api/employees/${id}/inactive`);
     dispatch(setAlert('User Updated', 'success'));

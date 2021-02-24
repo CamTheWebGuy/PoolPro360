@@ -259,7 +259,7 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                       className={`nav-link ${
                         active === 'settings' ? 'active' : ''
                       }`}
-                      to='/settings'
+                      to='/account-settings'
                     >
                       <i className='ni ni-settings text-red' />
                       <span className='nav-link-text'>Settings</span>

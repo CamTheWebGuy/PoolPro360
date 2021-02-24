@@ -853,3 +853,61 @@ export const addServiceLog = (
     }
   }
 };
+
+// Send Service Report Email
+export const sendServiceReport = (customerId, activityId) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  try {
+    await axios.post(
+      `/api/customers/servicereport/${customerId}/${activityId}`
+    );
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Account Customer Notification Settings ()
+export const updateAccountEmailSettings = ({
+  emailSendSummary,
+  emailSendChecklist,
+  emailSendReadings,
+  emailShowReadingNumbers,
+  emailShowChemicalsUsed
+}) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    emailSendSummary,
+    emailSendChecklist,
+    emailSendReadings,
+    emailShowReadingNumbers,
+    emailShowChemicalsUsed
+  });
+
+  try {
+    await axios.post(`/api/customers/updateEmailSettings`, body, config);
+
+    dispatch(setAlert('Settings Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

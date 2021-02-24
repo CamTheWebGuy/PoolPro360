@@ -65,7 +65,8 @@ import { getEmployeeRoute } from '../../actions/employee';
 import {
   addServiceLog,
   getChecklist,
-  getCustomerServiceNotes
+  getCustomerServiceNotes,
+  sendServiceReport
 } from '../../actions/customer';
 
 import Chart from 'chart.js';
@@ -104,6 +105,7 @@ const Dashboard = ({
   getChecklist,
   getCustomerServiceNotes,
   getEmployeeRoute,
+  sendServiceReport,
   customers: { checklist, serviceNotes, routeList }
 }) => {
   useEffect(() => {
@@ -1024,6 +1026,8 @@ const Dashboard = ({
                         data
                       );
                       await uploadImages(log);
+
+                      await sendServiceReport(logModal.active, log._id);
 
                       await getEmployeeRoute(
                         user._id,
@@ -4168,7 +4172,8 @@ Dashboard.propTypes = {
   addServiceLog: PropTypes.func.isRequired,
   getChecklist: PropTypes.func.isRequired,
   getCustomerServiceNotes: PropTypes.func.isRequired,
-  getEmployeeRoute: PropTypes.func.isRequired
+  getEmployeeRoute: PropTypes.func.isRequired,
+  sendServiceReport: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -4180,5 +4185,6 @@ export default connect(mapStateToProps, {
   addServiceLog,
   getChecklist,
   getCustomerServiceNotes,
-  getEmployeeRoute
+  getEmployeeRoute,
+  sendServiceReport
 })(Dashboard);

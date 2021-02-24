@@ -56,6 +56,20 @@ const UserSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  businessInfo: {
+    businessLogo: { type: String },
+    businessName: { type: String },
+    businessPhone: { type: String },
+    businessEmail: { type: String },
+    businessAddress: { type: String }
+  },
+  emailSettings: {
+    emailSendSummary: { type: Boolean, default: true },
+    emailSendChecklist: { type: Boolean, default: true },
+    emailSendReadings: { type: Boolean, default: true },
+    emailShowReadingNumbers: { type: Boolean, default: false },
+    emailShowChemicalsUsed: { type: Boolean, default: true }
   }
 });
 

@@ -4,6 +4,10 @@ const auth = require('../../middleware/auth');
 const config = require('config');
 const { check, validationResult } = require('express-validator');
 
+const nodemailer = require('nodemailer');
+const nodemailMailgun = require('nodemailer-mailgun-transport');
+const moment = require('moment');
+
 const Customer = require('../../models/Customer');
 const ServiceNotes = require('../../models/ServiceNotes');
 const Activity = require('../../models/Activity');
@@ -1565,5 +1569,275 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// @route    POST api/customers/servicereport/:customerId/:activityId
+// @desc     Email Customer Service Report by ID
+// @access   Private/User
+router.post(
+  '/servicereport/:customerId/:activityId',
+  auth,
+  async (req, res) => {
+    try {
+      // Search for User in DB
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' },
+          { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+        ]
+      });
+
+      // If no user found, return error
+      if (!user) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+
+      // Search for Customer in DB
+      let customer = await Customer.findById({ _id: req.params.customerId });
+
+      // Permissions Check
+      if (user.role === 'Admin' || user.role === 'Technician') {
+        if (customer.user.toString() !== user.owner.toString()) {
+          return res.status(401).json({ msg: 'User not authorized' });
+        }
+      } else if (user.role === 'Owner') {
+        if (user._id.toString() !== customer.user.toString()) {
+          return res.status(401).json({ msg: 'User not authorized' });
+        }
+      }
+
+      // Get Activity Log
+      const activity = await Activity.findOne({
+        _id: req.params.activityId,
+        customer: customer._id
+      });
+
+      // If no user found, return error
+      if (!activity) {
+        return res.status(401).json({ msg: 'Not found or not authorized' });
+      }
+
+      // Calculate Chlorine Level
+      let freeChlorine = '';
+      // The values are stored as strings, we are convering them back into numbers so we can run the calculations
+      const fcNumber = parseInt(activity.serviceLog.freeChlorine);
+
+      if (fcNumber >= 2.0 && fcNumber <= 4.0) {
+        freeChlorine = 'Average';
+      } else if (fcNumber < 2.0) {
+        freeChlorine = 'Below Average';
+      } else if (fcNumber > 4.0) {
+        freeChlorine = 'Above Average';
+      }
+
+      // Calculate PH Level
+      let ph = '';
+      const phNumber = parseInt(activity.serviceLog.pHlevel);
+
+      if (phNumber >= 7.4 && phNumber <= 7.6) {
+        ph = 'Average';
+      } else if (phNumber < 7.4) {
+        ph = 'Below Average';
+      } else if (phNumber > 7.6) {
+        ph = 'Above Average';
+      }
+
+      // Calculate Alkalinity
+      let alk = '';
+      const alkNumber = parseInt(activity.serviceLog.alkalinity);
+
+      if (alkNumber >= 100 && alkNumber <= 150) {
+        alk = 'Average';
+      } else if (alkNumber < 100) {
+        alk = 'Below Average';
+      } else if (alkNumber > 150) {
+        alk = 'Above Average';
+      }
+
+      // Get Images URLs
+      let imageArray = [];
+      const images = activity.images;
+      images.map(image => imageArray.push(image.url));
+
+      // Nodemailer Auth
+      const auth = {
+        auth: {
+          api_key: config.get('mailgun_api_key'),
+          domain: config.get('mailgun_domain')
+        }
+      };
+
+      // Nodemailer Transporter
+      let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+
+      // Mail Options
+      const mailOptions = {
+        from: 'PoolPro360 <no-reply@poolpro360.com>',
+        to: 'cameronanchondo@gmail.com',
+        subject: `Pool Service Report for ${moment(activity.dateAdded).format(
+          'MM/DD/YYYY'
+        )}`,
+        template: 'service',
+        'h:X-Mailgun-Variables': JSON.stringify({
+          name: 'Natalie',
+          tchlorine: 'Average',
+          tchlorcolor: '2dc26b',
+          fchlorine: freeChlorine,
+          fchlorcolor: '2dc26b',
+          phBalance: ph,
+          phcolor: '2dc26b',
+          alkalinity: alk,
+          alkcolor: 'e67e23',
+          images: imageArray,
+          serviceAddress: customer.serviceAddress,
+          serviceDate: moment(activity.dateAdded).format('MMM DD, YYYY'),
+          serviceTime: moment(activity.dateAdded).format('h:mm a'),
+          checklist: activity.serviceLog.checkList
+        })
+      };
+
+      // Send Email
+      transporter.sendMail(mailOptions, (err, data) => {
+        if (err) {
+          return console.log('Error: ', err);
+        } else {
+          console.log('Message has been sent');
+        }
+      });
+
+      return res.status(200).json('Sent');
+    } catch (err) {
+      console.log(err.message);
+      if (err.kind === 'ObjectId') {
+        return res
+          .status(404)
+          .json({ errors: [{ msg: 'Customer not found' }] });
+      }
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    POST api/customers/updateEmailSettings
+// @desc     Email Customer Service Report by ID
+// @access   Private/User
+router.post(
+  '/updateEmailSettings',
+  [
+    auth,
+    [
+      check('emailSendSummary')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('emailSendChecklist')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('emailSendReadings')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('emailShowReadingNumbers')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('emailShowChemicalsUsed')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      emailSendSummary,
+      emailSendChecklist,
+      emailSendReadings,
+      emailShowReadingNumbers,
+      emailShowChemicalsUsed
+    } = req.body;
+
+    try {
+      // Search for User in DB
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      // If no user found, return error
+      if (!user) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+
+      // Technicians not allowed to use this route
+      // Edit: Simplified DB Query to run this check itself.
+      // if (user.role === 'Technician') {
+      //   return res.status(401).json({ msg: 'User not authorized' });
+      // }
+
+      // If user making request is a Admin, then check to get their owners ID. Then fetch owner information and make changes to the owner.
+      if (user.role === 'Admin') {
+        const owner = User.findOne({ _id: req.user.owner, role: 'Owner' });
+
+        // If no user found, return error
+        if (!owner) {
+          return res.status(404).json({ msg: 'User not found' });
+        }
+
+        owner.emailSettings.emailSendSummary = emailSendSummary;
+        owner.emailSettings.emailSendChecklist = emailSendChecklist;
+        owner.emailSettings.emailSendReadings = emailSendReadings;
+        owner.emailSettings.emailShowReadingNumbers = emailShowReadingNumbers;
+        owner.emailSettings.emailShowChemicalsUsed = emailShowChemicalsUsed;
+
+        await owner.save();
+
+        return res.status(200).json(owner);
+      }
+
+      if (user.role === 'Owner') {
+        user.emailSettings.emailSendSummary = emailSendSummary;
+        user.emailSettings.emailSendChecklist = emailSendChecklist;
+        user.emailSettings.emailSendReadings = emailSendReadings;
+        user.emailSettings.emailShowReadingNumbers = emailShowReadingNumbers;
+        user.emailSettings.emailShowChemicalsUsed = emailShowChemicalsUsed;
+
+        await user.save();
+
+        return res.status(200).json(user);
+      }
+    } catch (err) {
+      console.log(err.message);
+      if (err.kind === 'ObjectId') {
+        return res
+          .status(404)
+          .json({ errors: [{ msg: 'Customer not found' }] });
+      }
+      res.status(500).send('Server Error');
+    }
+  }
+);
 
 module.exports = router;
