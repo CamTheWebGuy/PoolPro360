@@ -347,10 +347,10 @@ router.post(
   }
 );
 
-// @route    POST api/users/updateLogo
-// @desc     Update User Business Logo
+// @route    GET api/users/businessInfo
+// @desc     Get User Business Info
 // @access   Private/User
-router.post('/updateLogo', auth, async (req, res) => {
+router.get('/businessInfo', auth, async (req, res) => {
   try {
     // Find user making request in DB where role is Admin or Owner
     const user = await User.findOne({
@@ -373,23 +373,15 @@ router.post('/updateLogo', auth, async (req, res) => {
         return res.status(404).json({ msg: 'User not found' });
       }
 
-      // Upload Logo (attached as form data) to AWS S3
-      const downloadUrl = await uploadToS3(req, res);
+      const businessInfo = owner.businessInfo;
 
-      // Save AWS URL in DB
-      owner.businessInfo.businessLogo = downloadUrl;
-      owner.save();
-      return res.status(200).json(owner);
+      return res.status(200).json(businessInfo);
     }
 
     if (user.role === 'Owner') {
-      // Upload Logo (attached as form data) to AWS S3
-      const downloadUrl = await uploadToS3(req, res);
+      const businessInfo = user.businessInfo;
 
-      // Save AWS URL in DB
-      user.businessInfo.businessLogo = downloadUrl;
-      user.save();
-      return res.status(200).json(user);
+      return res.status(200).json(businessInfo);
     }
   } catch (err) {
     console.error(err.message);

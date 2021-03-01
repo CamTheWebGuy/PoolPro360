@@ -27,6 +27,9 @@ const ActivitySchema = new mongoose.Schema({
   comments: {
     type: String
   },
+  noteToCustomer: {
+    type: String
+  },
   serviceLog: {
     totalChlorine: { type: String },
     totalChlorine: { type: String },

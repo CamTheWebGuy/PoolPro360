@@ -781,7 +781,12 @@ export const addServiceLog = (
     poolFlocc,
     borate,
     publicNote,
-    privateNote
+    privateNote,
+    repairOrder,
+    repairType,
+    repairNotify,
+    repairDescription,
+    repairOfficeNote
   }
 ) => async dispatch => {
   const config = {
@@ -834,7 +839,12 @@ export const addServiceLog = (
     poolFlocc,
     borate,
     publicNote,
-    privateNote
+    privateNote,
+    repairOrder,
+    repairType,
+    repairNotify,
+    repairDescription,
+    repairOfficeNote
   });
 
   try {
@@ -882,7 +892,8 @@ export const updateAccountEmailSettings = ({
   emailSendChecklist,
   emailSendReadings,
   emailShowReadingNumbers,
-  emailShowChemicalsUsed
+  emailShowChemicalsUsed,
+  emailSendTechnician
 }) => async dispatch => {
   const config = {
     headers: {
@@ -895,7 +906,8 @@ export const updateAccountEmailSettings = ({
     emailSendChecklist,
     emailSendReadings,
     emailShowReadingNumbers,
-    emailShowChemicalsUsed
+    emailShowChemicalsUsed,
+    emailSendTechnician
   });
 
   try {

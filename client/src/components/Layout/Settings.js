@@ -12,7 +12,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import { updateAccountEmailSettings } from '../../actions/customer';
-import { updateBusinessInfo } from '../../actions/user';
+import { updateBusinessInfo, getBusinessInfo } from '../../actions/user';
 
 import {
   Container,
@@ -54,7 +54,12 @@ import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
 import Footer from '../Layout/Footer';
 
-const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
+const Settings = ({
+  updateAccountEmailSettings,
+  updateBusinessInfo,
+  getBusinessInfo,
+  businessInfo: { businessInfo, loading }
+}) => {
   const [activeTab, setActiveTab] = useState('1');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -97,6 +102,12 @@ const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
       console.log(err);
     }
   };
+
+  const [infoProcessing, setInfoProcessing] = useState(null);
+
+  useEffect(() => {
+    getBusinessInfo();
+  }, [getBusinessInfo]);
 
   return (
     <Fragment>
@@ -142,31 +153,6 @@ const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
                 <Col lg={{ size: 'auto' }}>
                   <h3 className='mb-0'>Account Settings</h3>
                 </Col>
-                <Col lg={{ size: 'auto', offset: 7 }}>
-                  {/* <Button
-                    className='btn-icon'
-                    color='success'
-                    onClick={handleEmailSubmit}
-                  >
-                    <span className='btn-inner--icon'>
-                      <i className='fas fa-save'></i>
-                    </span>
-                    {isProcessing ? (
-                      <span className='btn-inner--text'>
-                        <SpinnerCircular
-                          size={24}
-                          thickness={180}
-                          speed={100}
-                          color='rgba(57, 125, 172, 1)'
-                          secondaryColor='rgba(0, 0, 0, 0.44)'
-                        />{' '}
-                        Processing...
-                      </span>
-                    ) : (
-                      <span className='btn-inner--text'>Save Changes</span>
-                    )}
-                  </Button> */}
-                </Col>
               </div>
             </CardHeader>
             <CardBody>
@@ -209,142 +195,174 @@ const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
                 <TabPane tabId='1'>
                   <Row>
                     <Col sm='12'>
-                      <Formik
-                        initialValues={{
-                          businessName: '',
-                          businessPhone: '',
-                          businessEmail: '',
-                          businessAddress: ''
-                        }}
-                        onSubmit={async data => {
-                          await uploadLogo();
-                          await updateBusinessInfo(data);
-                        }}
-                        render={({
-                          handleSubmit,
-                          handleChange,
-                          handleBlur,
-                          values
-                        }) => (
-                          <Container>
-                            <Form>
-                              <br />
-                              <h6 className='heading-small text-muted mb-4'>
-                                Business Settings:
-                              </h6>
+                      {!loading && businessInfo ? (
+                        <Formik
+                          initialValues={{
+                            businessName: businessInfo
+                              ? businessInfo.businessName
+                              : '',
+                            businessPhone: businessInfo
+                              ? businessInfo.businessPhone
+                              : '',
+                            businessEmail: businessInfo
+                              ? businessInfo.businessEmail
+                              : '',
+                            businessAddress: businessInfo.businessAddress
+                          }}
+                          onSubmit={async data => {
+                            setInfoProcessing(true);
+                            await uploadLogo();
+                            await updateBusinessInfo(data);
+                            // await getBusinessInfo();
+                            setInfoProcessing(false);
+                          }}
+                          render={({
+                            handleSubmit,
+                            handleChange,
+                            handleBlur,
+                            values
+                          }) => (
+                            <Container>
+                              <Form>
+                                <br />
+                                <h6 className='heading-small text-muted mb-4'>
+                                  Business Settings:
+                                </h6>
 
-                              <div className='pl-lg-4'>
-                                <Row>
-                                  <Col>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Business Logo:
-                                      </Label>
-                                      <ImageUploader
-                                        withIcon={true}
-                                        buttonText='Choose Image'
-                                        onChange={onDrop}
-                                        imgExtension={[
-                                          '.jpg',
-                                          '.gif',
-                                          '.png',
-                                          '.gif'
-                                        ]}
-                                        maxFileSize={5242880}
-                                        withPreview={true}
-                                        singleImage={true}
-                                      />
-                                    </FormGroup>
-                                  </Col>
-                                  <Col>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Business Name:
-                                      </Label>
-                                      <Input
-                                        type='text'
-                                        name='businessName'
-                                        value={values.businessName}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                      />
-                                    </FormGroup>
+                                <div className='pl-lg-4'>
+                                  <Row>
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Business Logo:
+                                        </Label>
+                                        <ImageUploader
+                                          withIcon={true}
+                                          buttonText='Choose Image'
+                                          onChange={onDrop}
+                                          imgExtension={[
+                                            '.jpg',
+                                            '.gif',
+                                            '.png',
+                                            '.gif'
+                                          ]}
+                                          maxFileSize={5242880}
+                                          withPreview={true}
+                                          singleImage={true}
+                                        />
+                                      </FormGroup>
+                                    </Col>
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Business Name:
+                                        </Label>
+                                        <Input
+                                          type='text'
+                                          name='businessName'
+                                          value={values.businessName}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                        />
+                                      </FormGroup>
 
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Business Phone:
-                                      </Label>
-                                      <Input
-                                        type='tel'
-                                        name='businessPhone'
-                                        value={values.businessPhone}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                      />
-                                    </FormGroup>
-                                  </Col>
-                                </Row>
-                                <Row>
-                                  <Col>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Business Email:
-                                      </Label>
-                                      <Input
-                                        type='tel'
-                                        name='businessEmail'
-                                        value={values.businessEmail}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                      />
-                                    </FormGroup>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Business Phone:
+                                        </Label>
+                                        <Input
+                                          type='tel'
+                                          name='businessPhone'
+                                          value={values.businessPhone}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                        />
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+                                  <Row>
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Business Email:
+                                        </Label>
+                                        <Input
+                                          type='tel'
+                                          name='businessEmail'
+                                          value={values.businessEmail}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                        />
+                                      </FormGroup>
 
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Business Address:
-                                      </Label>
-                                      <Input
-                                        type='tel'
-                                        name='businessAddress'
-                                        value={values.businessAddress}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                      />
-                                    </FormGroup>
-                                  </Col>
-                                </Row>
-                              </div>
-                            </Form>
-                            <Button
-                              className='btn-icon'
-                              color='success'
-                              type='submit'
-                              onClick={handleSubmit}
-                              block
-                            >
-                              <span className='btn-inner--icon'>
-                                <i className='fas fa-save'></i>
-                              </span>
-                              {isProcessing ? (
-                                <span className='btn-inner--text'>
-                                  <SpinnerCircular
-                                    size={24}
-                                    thickness={180}
-                                    speed={100}
-                                    color='rgba(57, 125, 172, 1)'
-                                    secondaryColor='rgba(0, 0, 0, 0.44)'
-                                  />{' '}
-                                  Processing...
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Business Address:
+                                        </Label>
+                                        <Input
+                                          type='tel'
+                                          name='businessAddress'
+                                          value={values.businessAddress}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                        />
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+                                </div>
+                              </Form>
+                              <Button
+                                className='btn-icon'
+                                color='success'
+                                type='submit'
+                                onClick={handleSubmit}
+                                block
+                              >
+                                <span className='btn-inner--icon'>
+                                  <i className='fas fa-save'></i>
                                 </span>
-                              ) : (
-                                <span className='btn-inner--text'>
-                                  Save Changes
-                                </span>
-                              )}
-                            </Button>
-                          </Container>
-                        )}
-                      />
+                                {infoProcessing ? (
+                                  <span className='btn-inner--text'>
+                                    <SpinnerCircular
+                                      size={24}
+                                      thickness={180}
+                                      speed={100}
+                                      color='rgba(57, 125, 172, 1)'
+                                      secondaryColor='rgba(0, 0, 0, 0.44)'
+                                    />{' '}
+                                    Processing...
+                                  </span>
+                                ) : (
+                                  <span className='btn-inner--text'>
+                                    Save Changes
+                                  </span>
+                                )}
+                              </Button>
+                            </Container>
+                          )}
+                        />
+                      ) : (
+                        <Container>
+                          <div className='text-center mgn-top-50'>
+                            <Row>
+                              <Col sm='12'>
+                                <SpinnerCircular
+                                  size={40}
+                                  thickness={180}
+                                  speed={100}
+                                  color='rgba(57, 125, 172, 1)'
+                                  secondaryColor='rgba(0, 0, 0, 0.44)'
+                                />{' '}
+                              </Col>
+                            </Row>
+                            <Row>
+                              <Col sm='12'>
+                                <h4>Loading Data...</h4>
+                              </Col>
+                            </Row>
+                          </div>
+                        </Container>
+                      )}
                     </Col>
                   </Row>
                 </TabPane>
@@ -356,7 +374,8 @@ const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
                         emailSendChecklist: true,
                         emailSendReadings: true,
                         emailShowReadingNumbers: false,
-                        emailShowChemicalsUsed: true
+                        emailShowChemicalsUsed: true,
+                        emailSendTechnician: true
                       }}
                       onSubmit={async data => {
                         setIsProcessing(true);
@@ -415,6 +434,33 @@ const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
                                         backgroundColor: 'red'
                                       }}
                                     ></div>
+                                  </FormGroup>
+                                  <FormGroup>
+                                    <Label className='form-control-label'>
+                                      Send Technician Name? <br />
+                                      <small>
+                                        <em>
+                                          Default: Enabled - If enabled, will
+                                          attach technicians name to email sent
+                                          to customer.
+                                        </em>
+                                      </small>
+                                    </Label>
+
+                                    <br />
+                                    <Label className='custom-toggle'>
+                                      <Input
+                                        type='checkbox'
+                                        name='emailSendTechnician'
+                                        onChange={handleChange}
+                                        checked={values.emailSendTechnician}
+                                      />
+                                      <span
+                                        className='custom-toggle-slider rounded-circle'
+                                        data-label-off='No'
+                                        data-label-on='Yes'
+                                      ></span>
+                                    </Label>
                                   </FormGroup>
                                   <FormGroup>
                                     <Label className='form-control-label'>
@@ -616,10 +662,17 @@ const Settings = ({ updateAccountEmailSettings, updateBusinessInfo }) => {
 
 Settings.propTypes = {
   updateAccountEmailSettings: PropTypes.func.isRequired,
-  updateBusinessInfo: PropTypes.func.isRequired
+  updateBusinessInfo: PropTypes.func.isRequired,
+  getBusinessInfo: PropTypes.func.isRequired,
+  businessInfo: PropTypes.object.isRequired
 };
 
-export default connect(null, {
+const mapStateToProps = state => ({
+  businessInfo: state.user
+});
+
+export default connect(mapStateToProps, {
   updateAccountEmailSettings,
-  updateBusinessInfo
+  updateBusinessInfo,
+  getBusinessInfo
 })(Settings);

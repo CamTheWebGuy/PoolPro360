@@ -69,7 +69,8 @@ const UserSchema = new mongoose.Schema({
     emailSendChecklist: { type: Boolean, default: true },
     emailSendReadings: { type: Boolean, default: true },
     emailShowReadingNumbers: { type: Boolean, default: false },
-    emailShowChemicalsUsed: { type: Boolean, default: true }
+    emailShowChemicalsUsed: { type: Boolean, default: true },
+    emailShowTechnician: { type: Boolean, default: true }
   }
 });
 

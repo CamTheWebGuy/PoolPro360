@@ -287,6 +287,9 @@ const Dashboard = ({
   });
 
   const [logPictureState, setLogPictureState] = useState({ pictures: [] });
+  const [repairPictureState, setRepairPictureState] = useState({
+    pictures: []
+  });
 
   // console.log(logPictureState);
 
@@ -318,6 +321,10 @@ const Dashboard = ({
     setLogPictureState({
       pictures: picture
     });
+  };
+
+  const onDropRepair = picture => {
+    setRepairPictureState({ pictures: picture });
   };
 
   useEffect(() => {
@@ -1023,6 +1030,7 @@ const Dashboard = ({
                         logModal.active,
                         logModal.checkedNames,
                         logPictureState.pictures,
+
                         data
                       );
                       await uploadImages(log);
@@ -3414,6 +3422,43 @@ const Dashboard = ({
                                     Note To Customer (Emailed to Customer)
                                   </Label>
                                   <Input
+                                    type='select'
+                                    name='publicNote'
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                  >
+                                    <option disabled selected>
+                                      Click Here to Select Quick Note
+                                    </option>
+                                    <option>
+                                      Please add water to your pool immediately.
+                                    </option>
+                                    <option>
+                                      Unable to service the pool due to the gate
+                                      being locked.
+                                    </option>
+                                    <option>
+                                      Unable to service the pool due to the gate
+                                      being locked.
+                                    </option>
+                                    <option>
+                                      Repairs needed, we were unable to service
+                                      the pool due to repairs being needed.
+                                    </option>
+                                    <option>
+                                      Your pool was shocked, no swimming for at
+                                      least 24 hours.
+                                    </option>
+                                    <option>No swimming for 30 minutes.</option>
+                                    <option>No swimming for 1 hour.</option>
+                                    <option>No swimming for 2 hours.</option>
+                                    <option>No swimming for 3 hours.</option>
+                                    <option>No swimming for 4 hours.</option>
+                                    <option>No swimming for 5 hours.</option>
+                                    <option>No swimming for 6 hours.</option>
+                                  </Input>
+                                  <br />
+                                  <Input
                                     type='textarea'
                                     name='publicNote'
                                     onChange={handleChange}
@@ -3427,8 +3472,17 @@ const Dashboard = ({
                                   block
                                   onClick={() => {
                                     setShowRepair(!showRepair);
+                                    setFieldValue(
+                                      'repairOrder',
+                                      !values.repairOrder
+                                    );
                                   }}
                                 >
+                                  {!showRepair ? (
+                                    <span>Add</span>
+                                  ) : (
+                                    <span>Cancel</span>
+                                  )}{' '}
                                   Repair Order
                                 </Button>
                                 <Collapse isOpen={showRepair}>
@@ -3437,7 +3491,13 @@ const Dashboard = ({
                                       <Label className='form-control-label'>
                                         Repair Type
                                       </Label>
-                                      <Input type='select'>
+                                      <Input
+                                        type='select'
+                                        name='repairType'
+                                        value={values.repairType}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                      >
                                         <option>
                                           Repair Request (Submit a Order for
                                           Future Repair)
@@ -3452,7 +3512,13 @@ const Dashboard = ({
                                       </Label>{' '}
                                       <br />
                                       <label className='custom-toggle'>
-                                        <Input type='checkbox' />
+                                        <Input
+                                          type='checkbox'
+                                          name='repairNotify'
+                                          value={values.repairNotify}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                        />
                                         <span
                                           className='custom-toggle-slider rounded-circle'
                                           data-label-off='No'
@@ -3466,20 +3532,34 @@ const Dashboard = ({
                                         Enter Description of Repair (Sent to
                                         Customer)
                                       </Label>
-                                      <Input type='textarea' />
+                                      <Input
+                                        type='textarea'
+                                        name='repairDescription'
+                                        value={values.repairDescription}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                      />
                                     </FormGroup>
 
                                     <FormGroup>
                                       <Label className='form-control-label'>
                                         Note for Office (Company Only)
                                       </Label>
-                                      <Input type='textarea' />
+                                      <Input
+                                        type='textarea'
+                                        name='repairOfficeNote'
+                                        value={values.repairOfficeNote}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                      />
                                     </FormGroup>
-
+                                    {/* <Label className='form-control-label'>
+                                      Add Picture(s) of Item(s) That Need Repair
+                                    </Label>
                                     <ImageUploader
                                       withIcon={true}
                                       buttonText='Choose images'
-                                      onChange={onDrop}
+                                      onChange={onDropRepair}
                                       imgExtension={[
                                         '.jpg',
                                         '.gif',
@@ -3488,7 +3568,7 @@ const Dashboard = ({
                                       ]}
                                       maxFileSize={5242880}
                                       withPreview={true}
-                                    />
+                                    /> */}
                                   </Fragment>
                                 </Collapse>
                                 <br />
@@ -3609,73 +3689,6 @@ const Dashboard = ({
                               </Row>
                             )}
                           </Fragment>
-
-                          {/* <Fragment>
-                            {!showChems && !notesView ? (
-                              <Button
-                                color='primary'
-                                className='btn-icon'
-                                block
-                                onClick={() => {
-                                  setNotesView(!notesView);
-                                }}
-                              >
-                                <span className='btn-inner--text'>Next</span>
-                                <span className='btn-inner--icon'>
-                                  <i className='ni ni-bold-right'></i>
-                                </span>
-                              </Button>
-                            ) : (
-                              <Row>
-                                <Col>
-                                  <Button
-                                    color='secondary'
-                                    className='btn-icon'
-                                    block
-                                    onClick={() => {
-                                      setShowChems(!showChems);
-                                    }}
-                                  >
-                                    <span className='btn-inner--icon'>
-                                      <i className='ni ni-bold-left'></i>
-                                    </span>
-                                    <span className='btn-inner--text'>
-                                      Back
-                                    </span>
-                                  </Button>
-                                </Col>
-                                <Col>
-                                  <Button
-                                    color='success'
-                                    type='submit'
-                                    className='btn-icon'
-                                    block
-                                    onClick={handleSubmit}
-                                  >
-                                    <span className='btn-inner--text'>
-                                      {isProcessing ? (
-                                        <span>
-                                          <SpinnerCircular
-                                            size={24}
-                                            thickness={180}
-                                            speed={100}
-                                            color='rgba(57, 125, 172, 1)'
-                                            secondaryColor='rgba(0, 0, 0, 0.44)'
-                                          />{' '}
-                                          Processing...
-                                        </span>
-                                      ) : (
-                                        <span>Save Log</span>
-                                      )}
-                                    </span>
-                                    <span className='btn-inner--icon'>
-                                      <i className='ni ni-cloud-upload-96'></i>
-                                    </span>
-                                  </Button>
-                                </Col>
-                              </Row>
-                            )}
-                          </Fragment> */}
                         </Form>
                       </Fragment>
                     )}

@@ -22,6 +22,7 @@ const multerS3 = require('multer-s3');
 const { v4: uuidv4 } = require('uuid');
 // const { findOneAndDelete } = require('../../models/Customer');
 const { Service } = require('aws-sdk');
+const WorkOrders = require('../../models/WorkOrders');
 
 aws.config.update({
   secretAccessKey: config.get('aws_secret_key'),
@@ -1460,7 +1461,12 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
     poolFlocc,
     borate,
     privateNote,
-    publicNote
+    publicNote,
+    repairOrder,
+    repairType,
+    repairNotify,
+    repairDescription,
+    repairOfficeNote
   } = req.body;
 
   try {
@@ -1500,6 +1506,7 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
           ? user.owner
           : req.user.id,
       dateAdded: Date.now(),
+      noteToCustomer: publicNote,
       serviceLog: {
         totalChlorine,
         freeChlorine,
@@ -1556,6 +1563,87 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
       await serviceNote.save();
     }
 
+    if (repairOrder) {
+      let workOrder = new WorkOrders({
+        method: 'Manual',
+        orderType: 'Repair Request',
+        status: repairType === 'Repair Completed' ? 'Completed' : 'Unassigned',
+        description: repairDescription,
+        creator: user._id,
+        notifyCustomer: repairNotify
+      });
+
+      await workOrder.save();
+
+      if (repairNotify) {
+        let isOwner = null;
+
+        if (user.role !== 'Owner') {
+          isOwner = false;
+        } else {
+          isOwner = true;
+        }
+
+        let owner = null;
+
+        if (isOwner === false) {
+          owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+        }
+
+        // Nodemailer Auth
+        const auth = {
+          auth: {
+            api_key: config.get('mailgun_api_key'),
+            domain: config.get('mailgun_domain')
+          }
+        };
+
+        // Nodemailer Transporter
+        let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+
+        // Mail Options
+        const mailOptions = {
+          from: `${
+            isOwner
+              ? user.businessInfo.businessName
+              : owner.businessInfo.businessName
+          } <no-reply@poolpro360.com>`,
+          to: 'cameronanchondo@gmail.com',
+          replyTo: isOwner ? user.email : owner.email,
+          subject: `A Repair Request Has Been Submitted.`,
+          template: 'repairorder',
+          'h:X-Mailgun-Variables': JSON.stringify({
+            firstName: customer.firstName,
+            businessName: isOwner
+              ? user.businessInfo.businessName
+              : owner.businessInfo.businessName,
+            businessEmail: isOwner
+              ? user.businessInfo.businessEmail
+              : owner.businessInfo.businessEmail,
+            businessAddress: isOwner
+              ? user.businessInfo.businessAddress
+              : owner.businessInfo.businessAddress,
+            businessPhone: isOwner
+              ? user.businessInfo.businessPhone
+              : owner.businessInfo.businessPhone,
+            businessLogo: isOwner
+              ? user.businessInfo.businessLogo
+              : owner.businessInfo.businessLogo,
+            description: repairDescription
+          })
+        };
+
+        // Send Email
+        transporter.sendMail(mailOptions, (err, data) => {
+          if (err) {
+            return console.log('Error: ', err);
+          } else {
+            console.log('Repair Message has been sent');
+          }
+        });
+      }
+    }
+
     customer.lastServiced = Date.now();
     await activity.save();
     await customer.save();
@@ -1578,7 +1666,7 @@ router.post(
   auth,
   async (req, res) => {
     try {
-      // Search for User in DB
+      // Search for User making request in DB
       const user = await User.findOne({
         $or: [
           { _id: req.user.id, role: 'Admin', owner: req.user.owner },
@@ -1594,6 +1682,14 @@ router.post(
           .json({ msg: 'User not found or not authorized' });
       }
 
+      let isOwner = null;
+
+      if (user.role !== 'Owner') {
+        isOwner = false;
+      } else {
+        isOwner = true;
+      }
+
       // Search for Customer in DB
       let customer = await Customer.findById({ _id: req.params.customerId });
 
@@ -1606,6 +1702,12 @@ router.post(
         if (user._id.toString() !== customer.user.toString()) {
           return res.status(401).json({ msg: 'User not authorized' });
         }
+      }
+
+      let owner = null;
+
+      if (isOwner === false) {
+        owner = await User.findOne({ _id: user.owner, role: 'Owner' });
       }
 
       // Get Activity Log
@@ -1674,14 +1776,47 @@ router.post(
 
       // Mail Options
       const mailOptions = {
-        from: 'PoolPro360 <no-reply@poolpro360.com>',
+        from: `${
+          isOwner
+            ? user.businessInfo.businessName
+            : owner.businessInfo.businessName
+        } <no-reply@poolpro360.com>`,
         to: 'cameronanchondo@gmail.com',
+        replyTo: isOwner ? user.email : owner.email,
         subject: `Pool Service Report for ${moment(activity.dateAdded).format(
           'MM/DD/YYYY'
         )}`,
         template: 'service',
         'h:X-Mailgun-Variables': JSON.stringify({
-          name: 'Natalie',
+          sendServiceChecklist: isOwner
+            ? user.emailSettings.emailSendChecklist
+            : owner.emailSettings.emailSendChecklist,
+          sendChemicalReadings: isOwner
+            ? user.emailSettings.emailSendReadings
+            : owner.emailSettings.emailSendReadings,
+          sendChemicalsUsed: isOwner
+            ? user.emailSettings.emailShowChemicalsUsed
+            : owner.emailSettings.emailShowChemicalsUsed,
+          sendTechnician: isOwner
+            ? user.emailSettings.emailShowTechnician
+            : owner.emailSettings.emailShowTechnician,
+          technician: customer.technicianName,
+          firstName: customer.firstName,
+          businessName: isOwner
+            ? user.businessInfo.businessName
+            : owner.businessInfo.businessName,
+          businessEmail: isOwner
+            ? user.businessInfo.businessEmail
+            : owner.businessInfo.businessEmail,
+          businessAddress: isOwner
+            ? user.businessInfo.businessAddress
+            : owner.businessInfo.businessAddress,
+          businessPhone: isOwner
+            ? user.businessInfo.businessPhone
+            : owner.businessInfo.businessPhone,
+          businessLogo: isOwner
+            ? user.businessInfo.businessLogo
+            : owner.businessInfo.businessLogo,
           tchlorine: 'Average',
           tchlorcolor: '2dc26b',
           fchlorine: freeChlorine,
@@ -1694,6 +1829,7 @@ router.post(
           serviceAddress: customer.serviceAddress,
           serviceDate: moment(activity.dateAdded).format('MMM DD, YYYY'),
           serviceTime: moment(activity.dateAdded).format('h:mm a'),
+          serviceNote: activity.noteToCustomer,
           checklist: activity.serviceLog.checkList
         })
       };
@@ -1757,6 +1893,12 @@ router.post(
         .isEmpty()
         .trim()
         .escape()
+        .toBoolean(),
+      check('emailSendTechnician')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
         .toBoolean()
     ]
   ],
@@ -1772,7 +1914,8 @@ router.post(
       emailSendChecklist,
       emailSendReadings,
       emailShowReadingNumbers,
-      emailShowChemicalsUsed
+      emailShowChemicalsUsed,
+      emailSendTechnician
     } = req.body;
 
     try {
@@ -1811,6 +1954,7 @@ router.post(
         owner.emailSettings.emailSendReadings = emailSendReadings;
         owner.emailSettings.emailShowReadingNumbers = emailShowReadingNumbers;
         owner.emailSettings.emailShowChemicalsUsed = emailShowChemicalsUsed;
+        owner.emailSettings.emailShowTechnician = emailSendTechnician;
 
         await owner.save();
 
@@ -1823,6 +1967,7 @@ router.post(
         user.emailSettings.emailSendReadings = emailSendReadings;
         user.emailSettings.emailShowReadingNumbers = emailShowReadingNumbers;
         user.emailSettings.emailShowChemicalsUsed = emailShowChemicalsUsed;
+        user.emailSettings.emailShowTechnician = emailSendTechnician;
 
         await user.save();
 
