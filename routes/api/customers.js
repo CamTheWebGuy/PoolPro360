@@ -261,6 +261,46 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route    GET api/customers/emailSettings
+// @desc     Get Email Settings
+// @access   Private/User
+router.get('/emailSettings', auth, async (req, res) => {
+  try {
+    // Search for User Making Request in DB
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // If no user found, return error
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    // If user making request is a Admin, then check to get their owners ID. Then fetch owner information and make changes to the owner.
+    if (user.role === 'Admin') {
+      const owner = User.findOne({ _id: req.user.owner, role: 'Owner' });
+
+      // If no user found, return error
+      if (!owner) {
+        return res.status(404).json({ msg: 'User not found' });
+      }
+
+      return res.status(200).json(owner.emailSettings);
+    }
+
+    if (user.role === 'Owner') {
+      return res.status(200).json(user.emailSettings);
+    }
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route    GET api/customers/:id
 // @desc     Get a Customer
 // @access   Private/User
@@ -1218,7 +1258,53 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
       return res.status(201).json(route.customers);
     }
 
-    res.status(200).json(route.customers);
+    let filteredCustomers = route.customers.filter(e => {
+      const frequency = e.customer.frequency;
+
+      if (
+        frequency === 'Weekly' ||
+        frequency === '' ||
+        frequency === undefined ||
+        frequency === null
+      ) {
+        return e;
+      } else if (frequency === 'Bi-Weekly (Every 2 Weeks)') {
+        const difference = moment(Date.now()).diff(
+          moment(e.customer.lastServiced),
+          'days'
+        );
+
+        if (difference >= 14 || difference === 0) {
+          return e;
+        }
+      }
+
+      if (frequency === 'Tri-Weekly (Every 3 Weeks)') {
+        const difference = moment(Date.now()).diff(
+          moment(e.customer.lastServiced),
+          'days'
+        );
+
+        if (difference >= 21 || difference === 0) {
+          return e;
+        }
+      }
+
+      if (frequency === 'Monthly (Every 4 Weeks)') {
+        const difference = moment(Date.now()).diff(
+          moment(e.customer.lastServiced),
+          'days'
+        );
+
+        if (difference >= 28 || difference === 0) {
+          return e;
+        }
+      }
+    });
+
+    // console.log(filteredCustomers);
+
+    res.status(200).json(filteredCustomers);
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {
@@ -1500,7 +1586,7 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
       type: '',
       icon: 'check-circle',
       customer: req.params.customerId,
-
+      creator: req.user.id,
       user:
         user.role === 'Technician' || user.role === 'Admin'
           ? user.owner
@@ -1610,7 +1696,11 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
           } <no-reply@poolpro360.com>`,
           to: 'cameronanchondo@gmail.com',
           replyTo: isOwner ? user.email : owner.email,
-          subject: `A Repair Request Has Been Submitted.`,
+          subject: `${
+            repairType === 'Repair Completed'
+              ? 'A Repair Was Completed On Your Pool'
+              : 'A Repair Request Has Been Submitted.'
+          }`,
           template: 'repairorder',
           'h:X-Mailgun-Variables': JSON.stringify({
             firstName: customer.firstName,
@@ -1629,7 +1719,15 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
             businessLogo: isOwner
               ? user.businessInfo.businessLogo
               : owner.businessInfo.businessLogo,
-            description: repairDescription
+            description: repairDescription,
+            heading:
+              repairType === 'Repair Completed'
+                ? `We've Completed a Repair On Your Pool!`
+                : `We've Submitted a Repair Order!`,
+            info:
+              repairType === 'Repair Completed'
+                ? `One of our technicians noticed an issue with your pool while servicing it and was able to repair it for you today.`
+                : `One of our technicians noticed an issue with your pool while servicing it and wasn't able to repair it today. We have submitted a repair request for a future repair.`
           })
         };
 
@@ -1723,39 +1821,154 @@ router.post(
 
       // Calculate Chlorine Level
       let freeChlorine = '';
+      let fcColor = '';
       // The values are stored as strings, we are convering them back into numbers so we can run the calculations
       const fcNumber = parseInt(activity.serviceLog.freeChlorine);
 
-      if (fcNumber >= 2.0 && fcNumber <= 4.0) {
-        freeChlorine = 'Average';
-      } else if (fcNumber < 2.0) {
-        freeChlorine = 'Below Average';
-      } else if (fcNumber > 4.0) {
-        freeChlorine = 'Above Average';
+      const readingNumbers = isOwner
+        ? user.emailSettings.emailShowReadingNumbers
+        : owner.emailSettings.emailShowReadingNumbers;
+
+      if (readingNumbers === true) {
+        freeChlorine = parseInt(activity.serviceLog.freeChlorine);
+        fcColor = '2dc26b';
+      } else {
+        if (fcNumber >= 2.0 && fcNumber <= 4.0) {
+          freeChlorine = 'Average';
+          fcColor = '2dc26b';
+        } else if (fcNumber < 2.0) {
+          freeChlorine = 'Below Average';
+          fcColor = 'df4c43';
+        } else if (fcNumber > 4.0) {
+          freeChlorine = 'Above Average';
+          fcColor = 'e67e23';
+        }
       }
 
       // Calculate PH Level
       let ph = '';
+      let phColor = '';
       const phNumber = parseInt(activity.serviceLog.pHlevel);
 
-      if (phNumber >= 7.4 && phNumber <= 7.6) {
-        ph = 'Average';
-      } else if (phNumber < 7.4) {
-        ph = 'Below Average';
-      } else if (phNumber > 7.6) {
-        ph = 'Above Average';
+      if (readingNumbers === true) {
+        ph = parseInt(activity.serviceLog.pHlevel);
+        phColor = '2dc26b';
+      } else {
+        if (phNumber >= 7.4 && phNumber <= 7.6) {
+          ph = 'Average';
+          phColor = '2dc26b';
+        } else if (phNumber < 7.4) {
+          ph = 'Below Average';
+          phColor = 'df4c43';
+        } else if (phNumber > 7.6) {
+          ph = 'Above Average';
+          phColor = 'e67e23';
+        }
       }
 
       // Calculate Alkalinity
       let alk = '';
+      let alkColor = '';
       const alkNumber = parseInt(activity.serviceLog.alkalinity);
 
-      if (alkNumber >= 100 && alkNumber <= 150) {
-        alk = 'Average';
-      } else if (alkNumber < 100) {
-        alk = 'Below Average';
-      } else if (alkNumber > 150) {
-        alk = 'Above Average';
+      if (readingNumbers === true) {
+        alk = parseInt(activity.serviceLog.alkalinity);
+        alkColor = '2dc26b';
+      } else {
+        if (alkNumber >= 100 && alkNumber <= 150) {
+          alk = 'Average';
+          alkColor = '2dc26b';
+        } else if (alkNumber < 100) {
+          alk = 'Below Average';
+          alkColor = 'df4c43';
+        } else if (alkNumber > 150) {
+          alk = 'Above Average';
+          alkColor = 'e67e23';
+        }
+      }
+
+      // Calculate Conditoner
+      let conditioner = '';
+      let conditionerColor = '';
+      const conditionerNumber = parseInt(activity.serviceLog.conditionerLevel);
+
+      if (readingNumbers === true) {
+        conditioner = parseInt(activity.serviceLog.conditionerLevel);
+        conditionerColor = '2dc26b';
+      } else {
+        if (conditionerNumber >= 40 && conditionerNumber <= 100) {
+          conditioner = 'Average';
+          conditionerColor = '2dc26b';
+        } else if (conditionerNumber < 40) {
+          conditioner = 'Below Average';
+          conditionerColor = 'df4c43';
+        } else if (conditionerNumber > 100) {
+          conditioner = 'Above Average';
+          conditionerColor = 'e67e23';
+        }
+      }
+
+      // Calculate Hardness
+      let hardness = '';
+      let hardnessColor = '';
+      const hardnessNumber = parseInt(activity.serviceLog.hardness);
+
+      if (readingNumbers === true) {
+        hardness = parseInt(activity.serviceLog.hardness);
+        hardnessColor = '2dc26b';
+      } else {
+        if (hardnessNumber >= 180 && hardnessNumber <= 220) {
+          hardness = 'Average';
+          hardnessColor = '2dc26b';
+        } else if (hardnessNumber < 180) {
+          hardness = 'Below Average';
+          hardnessColor = 'df4c43';
+        } else if (hardnessNumber > 220) {
+          hardness = 'Above Average';
+          hardnessColor = 'e67e23';
+        }
+      }
+
+      // Calculate Phosphate
+      let phosphate = '';
+      let phosphateColor = '';
+      const phosphateNumber = parseInt(activity.serviceLog.phosphateLevel);
+
+      if (readingNumbers === true) {
+        phosphate = parseInt(activity.serviceLog.phosphateLevel);
+        phosphateColor = '2dc26b';
+      } else {
+        if (phosphateNumber >= 100 && phosphateNumber <= 125) {
+          phosphate = 'Average';
+          phosphateColor = '2dc26b';
+        } else if (phosphateNumber < 100) {
+          phosphate = 'Below Average';
+          phosphateColor = 'df4c43';
+        } else if (phosphateNumber > 125) {
+          phosphate = 'Above Average';
+          phosphateColor = 'e67e23';
+        }
+      }
+
+      // Calculate Salt Level
+      let salt = '';
+      let saltColor = '';
+      const saltNumber = parseInt(activity.serviceLog.saltLevel);
+
+      if (readingNumbers === true) {
+        salt = parseInt(activity.serviceLog.saltLevel);
+        saltColor = '2dc26b';
+      } else {
+        if (saltNumber >= 2700 && saltNumber <= 3400) {
+          salt = 'Average';
+          saltColor = '2dc26b';
+        } else if (saltNumber < 2700) {
+          salt = 'Below Average';
+          saltColor = 'df4c43';
+        } else if (saltNumber > 3400) {
+          salt = 'Above Average';
+          saltColor = 'e67e23';
+        }
       }
 
       // Get Images URLs
@@ -1817,14 +2030,74 @@ router.post(
           businessLogo: isOwner
             ? user.businessInfo.businessLogo
             : owner.businessInfo.businessLogo,
-          tchlorine: 'Average',
-          tchlorcolor: '2dc26b',
+          showFreeChlorine: isOwner
+            ? user.emailSettings.emailSendFreeChlorine
+            : owner.emailSettings.emailSendFreeChlorine,
           fchlorine: freeChlorine,
           fchlorcolor: '2dc26b',
+          showPH: isOwner
+            ? user.emailSettings.emailSendpHlevel
+            : owner.emailSettings.emailSendpHlevel,
           phBalance: ph,
-          phcolor: '2dc26b',
+          phcolor: phColor,
+          showAlk: isOwner
+            ? user.emailSettings.emailSendAlkalinity
+            : owner.emailSettings.emailSendAlkalinity,
           alkalinity: alk,
-          alkcolor: 'e67e23',
+          alkcolor: alkColor,
+          showConditioner: isOwner
+            ? user.emailSettings.emailSendConditioner
+            : owner.emailSettings.emailSendConditioner,
+          conditioner: conditioner,
+          conditionerColor: conditionerColor,
+          showHardnesss: isOwner
+            ? user.emailSettings.emailSendHardness
+            : owner.emailSettings.emailSendHardness,
+          hardness: hardness,
+          hardnessColor: hardnessColor,
+          showPhosphate: isOwner
+            ? user.emailSettings.emailSendPhosphateLevel
+            : owner.emailSettings.emailSendPhosphateLevel,
+          phosphate: phosphate,
+          phosphateColor: phosphateColor,
+          showSalt: isOwner
+            ? user.emailSettings.emailSendSaltLevel
+            : owner.emailSettings.emailSendSaltLevel,
+          salt: salt,
+          saltColor: saltColor,
+
+          chlorineTablets: activity.serviceLog.chlorineTablets,
+          liquidChlorine: activity.serviceLog.liquidChlorine,
+          liquidAcid: activity.serviceLog.liquidAcid,
+          triChlor: activity.serviceLog.triChlor,
+          diChlor: activity.serviceLog.diChlor,
+          calHypo: activity.serviceLog.calHypo,
+          potassiumMono: activity.serviceLog.potassiumMono,
+          ammonia: activity.serviceLog.ammonia,
+
+          copperBased: activity.serviceLog.copperBased,
+          polyQuat: activity.serviceLog.polyQuat,
+          copperBlend: activity.serviceLog.copperBlend,
+          sodaAsh: activity.serviceLog.sodaAsh,
+          CalciumChloride: activity.serviceLog.CalciumChloride,
+          conditioner: activity.serviceLog.conditioner,
+          sodiumBicar: activity.serviceLog.sodiumBicar,
+          diatomaceous: activity.serviceLog.diatomaceous,
+
+          diatomaceousAlt: activity.serviceLog.diatomaceousAlt,
+          sodiumBro: activity.serviceLog.sodiumBro,
+          dryAcid: activity.serviceLog.dryAcid,
+          clarifier: activity.serviceLog.clarifier,
+          phosphateRemover: activity.serviceLog.phosphateRemover,
+          salt: activity.serviceLog.salt,
+          enzymes: activity.serviceLog.enzymes,
+          metalSequester: activity.serviceLog.metalSequester,
+
+          bromineGran: activity.serviceLog.bromineGran,
+          bromineTab: activity.serviceLog.bromineTab,
+          poolFlocc: activity.serviceLog.poolFlocc,
+          borate: activity.serviceLog.borate,
+
           images: imageArray,
           serviceAddress: customer.serviceAddress,
           serviceDate: moment(activity.dateAdded).format('MMM DD, YYYY'),
@@ -1857,7 +2130,7 @@ router.post(
 );
 
 // @route    POST api/customers/updateEmailSettings
-// @desc     Email Customer Service Report by ID
+// @desc     Update Email Settings
 // @access   Private/User
 router.post(
   '/updateEmailSettings',
@@ -1980,6 +2253,134 @@ router.post(
           .status(404)
           .json({ errors: [{ msg: 'Customer not found' }] });
       }
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    POST api/customers/updateEmailChemicalFields
+// @desc     Update Email Settings Chem Fields
+// @access   Private/User
+router.post(
+  '/updateEmailChemicalFields',
+  [
+    auth,
+    [
+      check('freeChlorine')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('pHlevel')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('alkalinity')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('conditionerLevel')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('hardness')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('phosphateLevel')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
+      check('saltLevel')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const {
+      freeChlorine,
+      pHlevel,
+      alkalinity,
+      conditionerLevel,
+      hardness,
+      phosphateLevel,
+      saltLevel
+    } = req.body;
+
+    try {
+      // Search for User Making Request in DB
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      // If no user found, return error
+      if (!user) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+
+      // If user making request is a Admin, then check to get their owners ID. Then fetch owner information and make changes to the owner.
+      if (user.role === 'Admin') {
+        const owner = User.findOne({ _id: req.user.owner, role: 'Owner' });
+
+        // If no user found, return error
+        if (!owner) {
+          return res.status(404).json({ msg: 'User not found' });
+        }
+
+        owner.emailSettings.emailSendFreeChlorine = freeChlorine;
+        owner.emailSettings.emailSendpHlevel = pHlevel;
+        owner.emailSettings.emailSendAlkalinity = alkalinity;
+        owner.emailSettings.emailSendConditioner = conditionerLevel;
+        owner.emailSettings.emailSendHardness = hardness;
+        owner.emailSettings.emailSendPhosphateLevel = phosphateLevel;
+        owner.emailSettings.emailSendSaltLevel = saltLevel;
+
+        await owner.save();
+
+        return res.status(200).json(owner);
+      }
+
+      if (user.role === 'Owner') {
+        user.emailSettings.emailSendFreeChlorine = freeChlorine;
+        user.emailSettings.emailSendpHlevel = pHlevel;
+        user.emailSettings.emailSendAlkalinity = alkalinity;
+        user.emailSettings.emailSendConditioner = conditionerLevel;
+        user.emailSettings.emailSendHardness = hardness;
+        user.emailSettings.emailSendPhosphateLevel = phosphateLevel;
+        user.emailSettings.emailSendSaltLevel = saltLevel;
+
+        await user.save();
+
+        return res.status(200).json(user);
+      }
+    } catch (err) {
+      console.log(err.message);
+
       res.status(500).send('Server Error');
     }
   }

@@ -8,7 +8,8 @@ import {
   GET_CUSTOMER_RECENT_ACTIVITY,
   GET_CUSTOMER_CHECKLIST,
   GET_ALL_CUSTOMERS,
-  CLEAR_CUSTOMERS
+  CLEAR_CUSTOMERS,
+  GET_EMAIL_SETTINGS
 } from './types';
 
 // Add Customer
@@ -886,7 +887,7 @@ export const sendServiceReport = (customerId, activityId) => async dispatch => {
   }
 };
 
-// Update Account Customer Notification Settings ()
+// Update Account Customer Notification Settings
 export const updateAccountEmailSettings = ({
   emailSendSummary,
   emailSendChecklist,
@@ -914,6 +915,65 @@ export const updateAccountEmailSettings = ({
     await axios.post(`/api/customers/updateEmailSettings`, body, config);
 
     dispatch(setAlert('Settings Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Account Customer Readings Settings
+export const updateAccountEmailReadings = ({
+  freeChlorine,
+  pHlevel,
+  alkalinity,
+  conditionerLevel,
+  hardness,
+  phosphateLevel,
+  saltLevel
+}) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    freeChlorine,
+    pHlevel,
+    alkalinity,
+    conditionerLevel,
+    hardness,
+    phosphateLevel,
+    saltLevel
+  });
+
+  try {
+    await axios.post(`/api/customers/updateEmailChemicalFields`, body, config);
+
+    dispatch(setAlert('Settings Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Email Settings
+export const getEmailSettings = () => async dispatch => {
+  try {
+    const settings = await axios.get(`/api/customers/emailSettings`);
+
+    dispatch({
+      type: GET_EMAIL_SETTINGS,
+      payload: settings.data
+    });
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

@@ -181,6 +181,10 @@
   font-weight: bold;
 }
 
+.nav-tabs .nav-item {
+  cursor: pointer;
+}
+
 
 
 /* .builder__dropzone{

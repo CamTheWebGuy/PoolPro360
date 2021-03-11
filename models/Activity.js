@@ -32,7 +32,6 @@ const ActivitySchema = new mongoose.Schema({
   },
   serviceLog: {
     totalChlorine: { type: String },
-    totalChlorine: { type: String },
     freeChlorine: { type: String },
     pHlevel: { type: String },
     alkalinity: { type: String },

@@ -11,7 +11,11 @@ import emailExample from '../../img/emails/Example.JPG';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
-import { updateAccountEmailSettings } from '../../actions/customer';
+import {
+  updateAccountEmailSettings,
+  updateAccountEmailReadings,
+  getEmailSettings
+} from '../../actions/customer';
 import { updateBusinessInfo, getBusinessInfo } from '../../actions/user';
 
 import {
@@ -56,9 +60,11 @@ import Footer from '../Layout/Footer';
 
 const Settings = ({
   updateAccountEmailSettings,
+  updateAccountEmailReadings,
   updateBusinessInfo,
   getBusinessInfo,
-  businessInfo: { businessInfo, loading }
+  getEmailSettings,
+  businessInfo: { businessInfo, emailSettings, loading, emailLoading }
 }) => {
   const [activeTab, setActiveTab] = useState('1');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -107,7 +113,8 @@ const Settings = ({
 
   useEffect(() => {
     getBusinessInfo();
-  }, [getBusinessInfo]);
+    getEmailSettings();
+  }, [getBusinessInfo, getEmailSettings]);
 
   return (
     <Fragment>
@@ -178,11 +185,23 @@ const Settings = ({
                       Email Settings
                     </NavLink>
                   </NavItem>
+
                   <NavItem>
                     <NavLink
                       className={classnames({ active: activeTab === '3' })}
                       onClick={() => {
                         toggle('3');
+                      }}
+                    >
+                      Email Chemical Fields
+                    </NavLink>
+                  </NavItem>
+
+                  <NavItem>
+                    <NavLink
+                      className={classnames({ active: activeTab === '4' })}
+                      onClick={() => {
+                        toggle('4');
                       }}
                     >
                       User Permissions
@@ -368,237 +387,510 @@ const Settings = ({
                 </TabPane>
                 <TabPane tabId='2'>
                   <Row>
-                    <Formik
-                      initialValues={{
-                        emailSendSummary: true,
-                        emailSendChecklist: true,
-                        emailSendReadings: true,
-                        emailShowReadingNumbers: false,
-                        emailShowChemicalsUsed: true,
-                        emailSendTechnician: true
-                      }}
-                      onSubmit={async data => {
-                        setIsProcessing(true);
-                        await updateAccountEmailSettings(data);
-                        setIsProcessing(false);
-                      }}
-                      innerRef={emailRef}
-                      render={({
-                        handleSubmit,
-                        handleChange,
-                        handleBlur,
-                        values
-                      }) => (
-                        <Container>
-                          <Form onSubmit={handleSubmit}>
-                            <br />
-                            <h6 className='heading-small text-muted mb-4'>
-                              Service Emails:
-                            </h6>
+                    {!emailLoading && emailSettings ? (
+                      <Formik
+                        initialValues={{
+                          emailSendSummary: emailSettings.emailSendSummary,
+                          emailSendChecklist: emailSettings.emailSendChecklist,
+                          emailSendReadings: emailSettings.emailSendReadings,
+                          emailShowReadingNumbers:
+                            emailSettings.emailShowReadingNumbers,
+                          emailShowChemicalsUsed:
+                            emailSettings.emailShowChemicalsUsed,
+                          emailSendTechnician: emailSettings.emailShowTechnician
+                        }}
+                        onSubmit={async data => {
+                          setIsProcessing(true);
+                          await updateAccountEmailSettings(data);
+                          setIsProcessing(false);
+                        }}
+                        innerRef={emailRef}
+                        render={({
+                          handleSubmit,
+                          handleChange,
+                          handleBlur,
+                          values
+                        }) => (
+                          <Container>
+                            <Form onSubmit={handleSubmit}>
+                              <br />
+                              <h6 className='heading-small text-muted mb-4'>
+                                Service Emails:
+                              </h6>
 
-                            <div className='pl-lg-4'>
-                              <Row>
-                                <Col>
-                                  {' '}
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Send Service Summary to Customer? <br />
-                                      <small>
-                                        <em>
-                                          Default: Enabled - If enabled, a email
-                                          summary will be emailed to the
-                                          customer each time a technician logs a
-                                          service visit for that customer.
-                                        </em>
-                                      </small>
-                                    </Label>
+                              <div className='pl-lg-4'>
+                                <Row>
+                                  <Col>
+                                    {' '}
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Send Service Summary to Customer? <br />
+                                        <small>
+                                          <em>
+                                            Default: Enabled - If enabled, a
+                                            email summary will be emailed to the
+                                            customer each time a technician logs
+                                            a service visit for that customer.
+                                          </em>
+                                        </small>
+                                      </Label>
 
-                                    <br />
-                                    <Label className='custom-toggle'>
-                                      <Input
-                                        type='checkbox'
-                                        name='emailSendSummary'
-                                        onChange={handleChange}
-                                        checked={values.emailSendSummary}
-                                      />
-                                      <span
-                                        className='custom-toggle-slider rounded-circle'
-                                        data-label-off='No'
-                                        data-label-on='Yes'
-                                      ></span>
-                                    </Label>
-                                    <div
-                                      style={{
-                                        width: 10,
-                                        height: 10,
-                                        backgroundColor: 'red'
-                                      }}
-                                    ></div>
-                                  </FormGroup>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Send Technician Name? <br />
-                                      <small>
-                                        <em>
-                                          Default: Enabled - If enabled, will
-                                          attach technicians name to email sent
-                                          to customer.
-                                        </em>
-                                      </small>
-                                    </Label>
+                                      <br />
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailSendSummary'
+                                          onChange={handleChange}
+                                          checked={values.emailSendSummary}
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                      <div
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: 'red'
+                                        }}
+                                      ></div>
+                                    </FormGroup>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Send Technician Name? <br />
+                                        <small>
+                                          <em>
+                                            Default: Enabled - If enabled, will
+                                            attach technicians name to email
+                                            sent to customer.
+                                          </em>
+                                        </small>
+                                      </Label>
 
-                                    <br />
-                                    <Label className='custom-toggle'>
-                                      <Input
-                                        type='checkbox'
-                                        name='emailSendTechnician'
-                                        onChange={handleChange}
-                                        checked={values.emailSendTechnician}
-                                      />
-                                      <span
-                                        className='custom-toggle-slider rounded-circle'
-                                        data-label-off='No'
-                                        data-label-on='Yes'
-                                      ></span>
-                                    </Label>
-                                  </FormGroup>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Send Service Checklist?
                                       <br />
-                                      <small>
-                                        <em>
-                                          Default: Enabled - This will attach a
-                                          list of all completed services.
-                                        </em>
-                                      </small>
-                                    </Label>
-                                    <br />
-                                    <Label className='custom-toggle'>
-                                      <Input
-                                        type='checkbox'
-                                        name='emailSendChecklist'
-                                        onChange={handleChange}
-                                        checked={values.emailSendChecklist}
-                                      />
-                                      <span
-                                        className='custom-toggle-slider rounded-circle'
-                                        data-label-off='No'
-                                        data-label-on='Yes'
-                                      ></span>
-                                    </Label>
-                                    <div
-                                      style={{
-                                        width: 10,
-                                        height: 10,
-                                        backgroundColor: 'orange'
-                                      }}
-                                    ></div>
-                                  </FormGroup>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Send Chemical Readings?
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailSendTechnician'
+                                          onChange={handleChange}
+                                          checked={values.emailSendTechnician}
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                    </FormGroup>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Send Service Checklist?
+                                        <br />
+                                        <small>
+                                          <em>
+                                            Default: Enabled - This will attach
+                                            a list of all completed services.
+                                          </em>
+                                        </small>
+                                      </Label>
                                       <br />
-                                      <small>
-                                        <em>
-                                          Default: Enabled - This will attach a
-                                          list of chemical readings.
-                                        </em>
-                                      </small>
-                                    </Label>
-                                    <br />
-                                    <Label className='custom-toggle'>
-                                      <Input
-                                        type='checkbox'
-                                        name='emailSendReadings'
-                                        onChange={handleChange}
-                                        checked={values.emailSendReadings}
-                                      />
-                                      <span
-                                        className='custom-toggle-slider rounded-circle'
-                                        data-label-off='No'
-                                        data-label-on='Yes'
-                                      ></span>
-                                    </Label>
-                                    <div
-                                      style={{
-                                        width: 10,
-                                        height: 10,
-                                        backgroundColor: 'dodgerblue'
-                                      }}
-                                    ></div>
-                                  </FormGroup>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Show Chemical Reading Numbers?
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailSendChecklist'
+                                          onChange={handleChange}
+                                          checked={values.emailSendChecklist}
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                      <div
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: 'orange'
+                                        }}
+                                      ></div>
+                                    </FormGroup>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Send Chemical Readings?
+                                        <br />
+                                        <small>
+                                          <em>
+                                            Default: Enabled - This will attach
+                                            a list of chemical readings.
+                                          </em>
+                                        </small>
+                                      </Label>
                                       <br />
-                                      <small>
-                                        <em>
-                                          Default: Disabled - By default the
-                                          chemical readings will be sent to the
-                                          customer as "Average", "Below Average"
-                                          or "Above Average". With this option
-                                          enabled the exact reading numbers will
-                                          be sent to the customer.
-                                        </em>
-                                      </small>
-                                    </Label>
-                                    <br />
-                                    <Label className='custom-toggle'>
-                                      <Input
-                                        type='checkbox'
-                                        name='emailShowReadingNumbers'
-                                        onChange={handleChange}
-                                        checked={values.emailShowReadingNumbers}
-                                      />
-                                      <span
-                                        className='custom-toggle-slider rounded-circle'
-                                        data-label-off='No'
-                                        data-label-on='Yes'
-                                      ></span>
-                                    </Label>
-                                    <div
-                                      style={{
-                                        width: 10,
-                                        height: 10,
-                                        backgroundColor: 'dodgerblue'
-                                      }}
-                                    ></div>
-                                  </FormGroup>
-                                  <FormGroup>
-                                    <Label className='form-control-label'>
-                                      Send Chemicals Used?
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailSendReadings'
+                                          onChange={handleChange}
+                                          checked={values.emailSendReadings}
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                      <div
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: 'dodgerblue'
+                                        }}
+                                      ></div>
+                                    </FormGroup>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Show Chemical Reading Numbers?
+                                        <br />
+                                        <small>
+                                          <em>
+                                            Default: Disabled - By default the
+                                            chemical readings will be sent to
+                                            the customer as "Average", "Below
+                                            Average" or "Above Average". With
+                                            this option enabled the exact
+                                            reading numbers will be sent to the
+                                            customer.
+                                          </em>
+                                        </small>
+                                      </Label>
                                       <br />
-                                      <small>
-                                        <em>
-                                          Default: Enabled - Sends a list of the
-                                          chemicals added to the pool during
-                                          service visit.
-                                        </em>
-                                      </small>
-                                    </Label>
-                                    <br />
-                                    <Label className='custom-toggle'>
-                                      <Input
-                                        type='checkbox'
-                                        name='emailShowChemicalsUsed'
-                                        onChange={handleChange}
-                                        checked={values.emailShowChemicalsUsed}
-                                      />
-                                      <span
-                                        className='custom-toggle-slider rounded-circle'
-                                        data-label-off='No'
-                                        data-label-on='Yes'
-                                      ></span>
-                                    </Label>
-                                    <div
-                                      style={{
-                                        width: 10,
-                                        height: 10,
-                                        backgroundColor: 'purple'
-                                      }}
-                                    ></div>
-                                  </FormGroup>
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailShowReadingNumbers'
+                                          onChange={handleChange}
+                                          checked={
+                                            values.emailShowReadingNumbers
+                                          }
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                      <div
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: 'dodgerblue'
+                                        }}
+                                      ></div>
+                                    </FormGroup>
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Send Chemicals Used?
+                                        <br />
+                                        <small>
+                                          <em>
+                                            Default: Enabled - Sends a list of
+                                            the chemicals added to the pool
+                                            during service visit.
+                                          </em>
+                                        </small>
+                                      </Label>
+                                      <br />
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailShowChemicalsUsed'
+                                          onChange={handleChange}
+                                          checked={
+                                            values.emailShowChemicalsUsed
+                                          }
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                      <div
+                                        style={{
+                                          width: 10,
+                                          height: 10,
+                                          backgroundColor: 'purple'
+                                        }}
+                                      ></div>
+                                    </FormGroup>
+                                    <Button
+                                      className='btn-icon'
+                                      type='submit'
+                                      color='success'
+                                      onClick={handleSubmit}
+                                      block
+                                    >
+                                      <span className='btn-inner--icon'>
+                                        <i className='fas fa-save'></i>
+                                      </span>
+                                      {isProcessing ? (
+                                        <span className='btn-inner--text'>
+                                          <SpinnerCircular
+                                            size={24}
+                                            thickness={180}
+                                            speed={100}
+                                            color='rgba(57, 125, 172, 1)'
+                                            secondaryColor='rgba(0, 0, 0, 0.44)'
+                                          />{' '}
+                                          Processing...
+                                        </span>
+                                      ) : (
+                                        <span className='btn-inner--text'>
+                                          Save Changes
+                                        </span>
+                                      )}
+                                    </Button>
+                                  </Col>
+                                  <Col>
+                                    <Card>
+                                      <CardBody className='text-center'>
+                                        <img src={emailExample} />
+                                      </CardBody>
+                                    </Card>
+                                  </Col>
+                                </Row>
+                              </div>
+                            </Form>
+                          </Container>
+                        )}
+                      />
+                    ) : (
+                      <Container>
+                        <div className='text-center mgn-top-50'>
+                          <Row>
+                            <Col sm='12'>
+                              <SpinnerCircular
+                                size={40}
+                                thickness={180}
+                                speed={100}
+                                color='rgba(57, 125, 172, 1)'
+                                secondaryColor='rgba(0, 0, 0, 0.44)'
+                              />{' '}
+                            </Col>
+                          </Row>
+                          <Row>
+                            <Col sm='12'>
+                              <h4>Loading Data...</h4>
+                            </Col>
+                          </Row>
+                        </div>
+                      </Container>
+                    )}
+                  </Row>
+                </TabPane>
+
+                <TabPane tabId='3'>
+                  <Row>
+                    <Col sm='12'>
+                      {!emailLoading && emailSettings ? (
+                        <Formik
+                          initialValues={{
+                            freeChlorine: emailSettings.emailSendFreeChlorine,
+                            pHlevel: emailSettings.emailSendpHlevel,
+                            alkalinity: emailSettings.emailSendAlkalinity,
+                            conditionerLevel:
+                              emailSettings.emailSendConditioner,
+                            hardness: emailSettings.emailSendHardness,
+                            phosphateLevel:
+                              emailSettings.emailSendPhosphateLevel,
+                            saltLevel: emailSettings.emailSendSaltLevel
+                          }}
+                          onSubmit={async data => {
+                            setIsProcessing(true);
+                            await updateAccountEmailReadings(data);
+
+                            setIsProcessing(false);
+                          }}
+                          render={({
+                            handleSubmit,
+                            handleChange,
+                            handleBlur,
+                            values
+                          }) => (
+                            <Container>
+                              <Form>
+                                <br />
+                                <h6 className='heading-small text-muted mb-4'>
+                                  Email Chemical Field Settings: <br />
+                                  <small>
+                                    If the "Send Chemical Readings?" option is
+                                    enabled you can choose what readings to send
+                                    the customer here.
+                                  </small>
+                                </h6>
+
+                                <div className='pl-lg-4'>
+                                  <Row>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send Free Chlorine Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='freeChlorine'
+                                            onChange={handleChange}
+                                            checked={values.freeChlorine}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send pH Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='pHlevel'
+                                            onChange={handleChange}
+                                            checked={values.pHlevel}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+
+                                  <Row>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send Alkalinity Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='alkalinity'
+                                            onChange={handleChange}
+                                            checked={values.alkalinity}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send Conditioner Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='conditionerLevel'
+                                            onChange={handleChange}
+                                            checked={values.conditionerLevel}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+
+                                  <Row>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send Hardness Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='hardness'
+                                            onChange={handleChange}
+                                            checked={values.hardness}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send Phosphate Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='phosphateLevel'
+                                            onChange={handleChange}
+                                            checked={values.phosphateLevel}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+
+                                  <Row>
+                                    <Col sm='6'>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Send Salt Level?
+                                        </Label>
+                                        <br />
+                                        <Label className='custom-toggle'>
+                                          <Input
+                                            type='checkbox'
+                                            name='saltLevel'
+                                            onChange={handleChange}
+                                            checked={values.saltLevel}
+                                          />
+                                          <span
+                                            className='custom-toggle-slider rounded-circle'
+                                            data-label-off='No'
+                                            data-label-on='Yes'
+                                          ></span>
+                                        </Label>
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
                                   <Button
                                     className='btn-icon'
                                     type='submit'
@@ -626,24 +918,38 @@ const Settings = ({
                                       </span>
                                     )}
                                   </Button>
-                                </Col>
-                                <Col>
-                                  <Card>
-                                    <CardBody className='text-center'>
-                                      <img src={emailExample} />
-                                    </CardBody>
-                                  </Card>
-                                </Col>
-                              </Row>
-                            </div>
-                          </Form>
+                                </div>
+                              </Form>
+                            </Container>
+                          )}
+                        />
+                      ) : (
+                        <Container>
+                          <div className='text-center mgn-top-50'>
+                            <Row>
+                              <Col sm='12'>
+                                <SpinnerCircular
+                                  size={40}
+                                  thickness={180}
+                                  speed={100}
+                                  color='rgba(57, 125, 172, 1)'
+                                  secondaryColor='rgba(0, 0, 0, 0.44)'
+                                />{' '}
+                              </Col>
+                            </Row>
+                            <Row>
+                              <Col sm='12'>
+                                <h4>Loading Data...</h4>
+                              </Col>
+                            </Row>
+                          </div>
                         </Container>
                       )}
-                    />
+                    </Col>
                   </Row>
                 </TabPane>
 
-                <TabPane tabId='3'>
+                <TabPane tabId='4'>
                   <Row>
                     <Col sm='12'>
                       <h4>User Permissions</h4>
@@ -664,7 +970,10 @@ Settings.propTypes = {
   updateAccountEmailSettings: PropTypes.func.isRequired,
   updateBusinessInfo: PropTypes.func.isRequired,
   getBusinessInfo: PropTypes.func.isRequired,
-  businessInfo: PropTypes.object.isRequired
+  updateAccountEmailReadings: PropTypes.func.isRequired,
+  getEmailSettings: PropTypes.func.isRequired,
+  businessInfo: PropTypes.object.isRequired,
+  emailSettings: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -674,5 +983,7 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps, {
   updateAccountEmailSettings,
   updateBusinessInfo,
-  getBusinessInfo
+  getBusinessInfo,
+  updateAccountEmailReadings,
+  getEmailSettings
 })(Settings);

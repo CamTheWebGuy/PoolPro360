@@ -1,8 +1,10 @@
-import { GET_BUSINESS_INFO } from '../actions/types';
+import { GET_BUSINESS_INFO, GET_EMAIL_SETTINGS } from '../actions/types';
 
 const initialState = {
   businessInfo: {},
-  loading: true
+  emailSettings: {},
+  loading: true,
+  emailLoading: true
 };
 
 export default function(state = initialState, action) {
@@ -13,6 +15,12 @@ export default function(state = initialState, action) {
         ...state,
         businessInfo: payload,
         loading: false
+      };
+    case GET_EMAIL_SETTINGS:
+      return {
+        ...state,
+        emailSettings: payload,
+        emailLoading: false
       };
     default:
       return state;

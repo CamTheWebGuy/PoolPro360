@@ -70,7 +70,14 @@ const UserSchema = new mongoose.Schema({
     emailSendReadings: { type: Boolean, default: true },
     emailShowReadingNumbers: { type: Boolean, default: false },
     emailShowChemicalsUsed: { type: Boolean, default: true },
-    emailShowTechnician: { type: Boolean, default: true }
+    emailShowTechnician: { type: Boolean, default: true },
+    emailSendFreeChlorine: { type: Boolean, default: true },
+    emailSendpHlevel: { type: Boolean, default: true },
+    emailSendAlkalinity: { type: Boolean, default: true },
+    emailSendConditioner: { type: Boolean, default: false },
+    emailSendHardness: { type: Boolean, default: false },
+    emailSendPhosphateLevel: { type: Boolean, default: false },
+    emailSendSaltLevel: { type: Boolean, default: false }
   }
 });
 

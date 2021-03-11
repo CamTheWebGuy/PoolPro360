@@ -286,6 +286,21 @@ const Dashboard = ({
     inProgress: false
   });
 
+  const [routeDay, setRouteDay] = useState('Today');
+
+  useEffect(async () => {
+    if (user) {
+      if (routeDay === 'Today') {
+        return await getEmployeeRoute(
+          user._id,
+          moment(new Date()).format('dddd')
+        );
+      }
+
+      await getEmployeeRoute(user._id, routeDay);
+    }
+  }, [routeDay]);
+
   const [logPictureState, setLogPictureState] = useState({ pictures: [] });
   const [repairPictureState, setRepairPictureState] = useState({
     pictures: []
@@ -511,7 +526,7 @@ const Dashboard = ({
                             <div className='row'>
                               <div className='col'>
                                 <h5 className='card-title text-uppercase text-muted mb-0'>
-                                  Day Of Week
+                                  Today Is:
                                 </h5>
                                 <span className='h2 font-weight-bold mb-0'>
                                   {moment(new Date()).format('dddd')}
@@ -533,7 +548,7 @@ const Dashboard = ({
                             <div className='row'>
                               <div className='col'>
                                 <h5 className='card-title text-uppercase text-muted mb-0'>
-                                  Today's Customers
+                                  {routeDay}'s Customers
                                 </h5>
                                 <span className='h2 font-weight-bold mb-0'>
                                   {routeList && routeList.length}
@@ -672,7 +687,24 @@ const Dashboard = ({
                     <h3>Control Center</h3>
                   </CardHeader>
                   <CardBody>
-                    <Button className='btn-icon mgn-btm-10' color='primary'>
+                    <Label className='form-control-label'>
+                      View Route For:
+                    </Label>
+                    <Input
+                      type='select'
+                      onChange={e => setRouteDay(e.target.value)}
+                    >
+                      <option>Today</option>
+                      <option>Monday</option>
+                      <option>Tuesday</option>
+                      <option>Wednesday</option>
+                      <option>Thursday</option>
+                      <option>Friday</option>
+                      <option>Saturday</option>
+                      <option>Sunday</option>
+                    </Input>
+
+                    {/* <Button className='btn-icon mgn-btm-10' color='primary'>
                       <span className='btn-inner--icon'>
                         <i className='ni ni-settings'></i>
                       </span>
@@ -692,7 +724,7 @@ const Dashboard = ({
                         <i className='ni ni-badge'></i>
                       </span>
                       <span className='btn-inner--text'>Clock In/Out</span>
-                    </Button>
+                    </Button> */}
                   </CardBody>
                 </Card>
               </Col>
@@ -3541,7 +3573,7 @@ const Dashboard = ({
                                       />
                                     </FormGroup>
 
-                                    <FormGroup>
+                                    {/* <FormGroup>
                                       <Label className='form-control-label'>
                                         Note for Office (Company Only)
                                       </Label>
@@ -3552,7 +3584,7 @@ const Dashboard = ({
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                       />
-                                    </FormGroup>
+                                    </FormGroup> */}
                                     {/* <Label className='form-control-label'>
                                       Add Picture(s) of Item(s) That Need Repair
                                     </Label>
@@ -3699,20 +3731,20 @@ const Dashboard = ({
               <Col md='8'>
                 <Card className='shadow'>
                   <CardHeader>
-                    <h3>Today's Route</h3>
+                    <h3>{routeDay}'s Route</h3>
                     <Progress
                       animated
                       value={
                         (100 *
-                          routeList.filter(
-                            c =>
-                              moment(c.customer.lastServiced).isSame(
-                                Date.now(),
-                                'day'
-                              ) &&
-                              c.customer.scheduledDay ===
-                                moment(new Date()).format('dddd') &&
-                              c.customer.lastServiced !== undefined
+                          routeList.filter(c =>
+                            moment(c.customer.lastServiced).isSame(
+                              Date.now(),
+                              'day'
+                            ) &&
+                            (c.customer.scheduledDay === routeDay) === 'Today'
+                              ? moment(new Date()).format('dddd')
+                              : routeDay &&
+                                c.customer.lastServiced !== undefined
                           ).length) /
                         routeList.length
                       }
@@ -3724,103 +3756,111 @@ const Dashboard = ({
                         <Fragment>
                           {routeList.map((customer, index) => (
                             <Fragment key={customer._id}>
-                              {customer.customer.scheduledDay ===
-                                moment(new Date()).format('dddd') && (
-                                <ListGroupItem>
-                                  <Row>
-                                    <Col md='2'>
-                                      {moment(
-                                        customer.customer.lastServiced
-                                      ).isSame(Date.now(), 'day') &&
-                                      customer.customer.lastServiced !=
-                                        undefined ? (
-                                        <div className='route-box bg-green text-center'>
-                                          <h2>
-                                            <i className='fas fa-check-circle'></i>
-                                          </h2>
-                                        </div>
-                                      ) : (
-                                        <div className='route-box text-center'>
-                                          <h2>{index + 1}</h2>
-                                        </div>
-                                      )}
-                                    </Col>
-                                    <Col md='8'>
-                                      <div className='text-center'>
-                                        <h3>
-                                          {customer.customer.firstName}{' '}
-                                          {customer.customer.lastName}
-                                        </h3>
-                                        <p>
-                                          {customer.customer.serviceAddress}
-                                        </p>
-                                        {moment(
-                                          customer.customer.lastServiced
-                                        ).isSame(Date.now(), 'day') &&
-                                        customer.customer.lastServiced !=
-                                          undefined ? (
-                                          <span></span>
-                                        ) : (
-                                          <Row>
-                                            <Col>
-                                              {' '}
-                                              <Button
-                                                className='btn-icon mgn-btm-10'
-                                                color='success'
-                                                href={`https://www.google.com/maps/dir/Current+Location/${customer.customer.serviceLat},${customer.customer.serviceLng}`}
-                                                target='_blank'
-                                              >
-                                                <span className='btn-inner--icon'>
-                                                  <i className='ni ni-delivery-fast'></i>
-                                                </span>
-                                                <span className='btn-inner--text'>
-                                                  GPS To Stop
-                                                </span>
-                                              </Button>
-                                            </Col>
-                                            <Col>
-                                              {' '}
-                                              <Button
-                                                className='btn-icon mgn-btm-10'
-                                                color='primary'
-                                                onClick={() => {
-                                                  getChecklist(
-                                                    customer.customer._id
-                                                  );
-                                                  getCustomerServiceNotes(
-                                                    customer.customer._id
-                                                  );
+                              {(customer.customer.scheduledDay === routeDay) ===
+                              'Today'
+                                ? moment(new Date()).format('dddd')
+                                : routeDay && (
+                                    <ListGroupItem>
+                                      <Row>
+                                        <Col md='2'>
+                                          {moment(
+                                            customer.customer.lastServiced
+                                          ).isSame(Date.now(), 'day') &&
+                                          customer.customer.lastServiced !=
+                                            undefined ? (
+                                            <div className='route-box bg-green text-center'>
+                                              <h2>
+                                                <i className='fas fa-check-circle'></i>
+                                              </h2>
+                                            </div>
+                                          ) : (
+                                            <div className='route-box text-center'>
+                                              <h2>{index + 1}</h2>
+                                            </div>
+                                          )}
+                                        </Col>
+                                        <Col md='8'>
+                                          <div className='text-center'>
+                                            <h3>
+                                              {customer.customer.firstName}{' '}
+                                              {customer.customer.lastName}
+                                            </h3>
+                                            <p>
+                                              {customer.customer.serviceAddress}
+                                            </p>
+                                            {(moment(
+                                              customer.customer.lastServiced
+                                            ).isSame(Date.now(), 'day') &&
+                                              customer.customer.lastServiced !=
+                                                undefined) ||
+                                            (routeDay !== 'Today' &&
+                                              routeDay !==
+                                                moment(new Date()).format(
+                                                  'dddd'
+                                                )) ? (
+                                              <span></span>
+                                            ) : (
+                                              <Row>
+                                                <Col>
+                                                  {' '}
+                                                  <Button
+                                                    className='btn-icon mgn-btm-10'
+                                                    color='success'
+                                                    href={`https://www.google.com/maps/dir/Current+Location/${customer.customer.serviceLat},${customer.customer.serviceLng}`}
+                                                    target='_blank'
+                                                  >
+                                                    <span className='btn-inner--icon'>
+                                                      <i className='ni ni-delivery-fast'></i>
+                                                    </span>
+                                                    <span className='btn-inner--text'>
+                                                      GPS To Stop
+                                                    </span>
+                                                  </Button>
+                                                </Col>
+                                                <Col>
+                                                  {' '}
+                                                  <Button
+                                                    className='btn-icon mgn-btm-10'
+                                                    color='primary'
+                                                    onClick={() => {
+                                                      getChecklist(
+                                                        customer.customer._id
+                                                      );
+                                                      getCustomerServiceNotes(
+                                                        customer.customer._id
+                                                      );
 
-                                                  setLogModal({
-                                                    isServiceInfoOpen: true,
-                                                    active:
-                                                      customer.customer._id,
-                                                    activeName:
-                                                      customer.customer
-                                                        .firstName +
-                                                      ' ' +
-                                                      customer.customer
-                                                        .lastName,
-                                                    customerLock:
-                                                      customer.customer.gatecode
-                                                  });
-                                                }}
-                                              >
-                                                <span className='btn-inner--icon'>
-                                                  <i className='ni ni-settings'></i>
-                                                </span>
-                                                <span className='btn-inner--text'>
-                                                  Start Service
-                                                </span>
-                                              </Button>
-                                            </Col>
-                                          </Row>
-                                        )}
-                                      </div>
-                                    </Col>
-                                  </Row>
-                                </ListGroupItem>
-                              )}
+                                                      setLogModal({
+                                                        isServiceInfoOpen: true,
+                                                        active:
+                                                          customer.customer._id,
+                                                        activeName:
+                                                          customer.customer
+                                                            .firstName +
+                                                          ' ' +
+                                                          customer.customer
+                                                            .lastName,
+                                                        customerLock:
+                                                          customer.customer
+                                                            .gatecode
+                                                      });
+                                                    }}
+                                                  >
+                                                    <span className='btn-inner--icon'>
+                                                      <i className='ni ni-settings'></i>
+                                                    </span>
+                                                    <span className='btn-inner--text'>
+                                                      Start Service
+                                                    </span>
+                                                  </Button>
+                                                </Col>
+                                              </Row>
+                                            )}
+                                          </div>
+                                        </Col>
+                                      </Row>
+                                    </ListGroupItem>
+                                  )}
                             </Fragment>
                           ))}
                         </Fragment>
