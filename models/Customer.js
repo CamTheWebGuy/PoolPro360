@@ -162,6 +162,9 @@ const CustomerSchema = new mongoose.Schema({
   },
   lastServiced: {
     type: Date
+  },
+  unableService: {
+    type: Date
   }
 });
 

@@ -1756,6 +1756,133 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
   }
 });
 
+// @route    POST api/customers/route/unableservice/:customerId
+// @desc     Mark as Unable to Service
+// @access   Private/Technicians
+router.post('/route/unableservice/:customerId', auth, async (req, res) => {
+  const { message } = req.body;
+
+  try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    let customer = await Customer.findById({ _id: req.params.customerId });
+
+    if (user.role === 'Admin' || user.role === 'Technician') {
+      if (customer.user.toString() !== user.owner.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    } else if (user.role === 'Owner') {
+      if (user._id.toString() !== customer.user.toString()) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+    }
+
+    let activity = new Activity({
+      comments: `Unable to Service | ${message}`,
+      log: 'Service',
+      type: '',
+      icon: 'check-circle',
+      customer: req.params.customerId,
+      creator: req.user.id,
+      user:
+        user.role === 'Technician' || user.role === 'Admin'
+          ? user.owner
+          : req.user.id,
+      dateAdded: Date.now()
+    });
+
+    // Set Customer Unable to Service Node
+    customer.unableService = Date.now();
+
+    await customer.save();
+    await activity.save();
+
+    // Nodemailer Auth
+    const auth = {
+      auth: {
+        api_key: config.get('mailgun_api_key'),
+        domain: config.get('mailgun_domain')
+      }
+    };
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+    }
+
+    // Nodemailer Transporter
+    let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+
+    // Mail Options
+    const mailOptions = {
+      from: `${
+        isOwner
+          ? user.businessInfo.businessName
+          : owner.businessInfo.businessName
+      } <no-reply@poolpro360.com>`,
+      to: 'cameronanchondo@gmail.com',
+      replyTo: isOwner ? user.email : owner.email,
+      subject: `Unable To Service Your Pool`,
+      template: 'unableservice',
+      'h:X-Mailgun-Variables': JSON.stringify({
+        firstName: customer.firstName,
+        businessName: isOwner
+          ? user.businessInfo.businessName
+          : owner.businessInfo.businessName,
+        businessEmail: isOwner
+          ? user.businessInfo.businessEmail
+          : owner.businessInfo.businessEmail,
+        businessAddress: isOwner
+          ? user.businessInfo.businessAddress
+          : owner.businessInfo.businessAddress,
+        businessPhone: isOwner
+          ? user.businessInfo.businessPhone
+          : owner.businessInfo.businessPhone,
+        businessLogo: isOwner
+          ? user.businessInfo.businessLogo
+          : owner.businessInfo.businessLogo,
+        message: message
+      })
+    };
+
+    // Send Email
+    transporter.sendMail(mailOptions, (err, data) => {
+      if (err) {
+        return console.log('Error: ', err);
+      } else {
+        console.log('Message has been sent');
+      }
+    });
+
+    return res.status(200).json(activity);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route    POST api/customers/servicereport/:customerId/:activityId
 // @desc     Email Customer Service Report by ID
 // @access   Private/User

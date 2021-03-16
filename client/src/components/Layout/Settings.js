@@ -100,7 +100,7 @@ const Settings = ({
       let uploadPromises = logoState.pictures.map(image => {
         let data = new FormData();
         data.append('image', image, image.name);
-        return axios.post(`/api/users/updateLogo`, data, config);
+        return axios.post('/api/users/updateLogo', data, config);
       });
 
       await axios.all(uploadPromises);
@@ -254,7 +254,15 @@ const Settings = ({
                                       <FormGroup>
                                         <Label className='form-control-label'>
                                           Business Logo:
-                                        </Label>
+                                        </Label>{' '}
+                                        <br />
+                                        {businessInfo.businessLogo && (
+                                          <img
+                                            width='50%'
+                                            src={businessInfo.businessLogo}
+                                            alt={businessInfo.businessName}
+                                          />
+                                        )}
                                         <ImageUploader
                                           withIcon={true}
                                           buttonText='Choose Image'

@@ -66,7 +66,8 @@ import {
   addServiceLog,
   getChecklist,
   getCustomerServiceNotes,
-  sendServiceReport
+  sendServiceReport,
+  unableService
 } from '../../actions/customer';
 
 import Chart from 'chart.js';
@@ -106,6 +107,7 @@ const Dashboard = ({
   getCustomerServiceNotes,
   getEmployeeRoute,
   sendServiceReport,
+  unableService,
   customers: { checklist, serviceNotes, routeList }
 }) => {
   useEffect(() => {
@@ -283,10 +285,46 @@ const Dashboard = ({
     customerChecklist: null,
     checkedItems: [],
     checkedNames: [],
-    inProgress: false
+    inProgress: false,
+    equipment: null
   });
 
   const [routeDay, setRouteDay] = useState('Today');
+  const [showEquipmentList, setShowEquipmentList] = useState(false);
+  const [showUnableService, setShowUnableService] = useState(false);
+
+  const [unableServiceMessage, setUnableServiceMessage] = useState('');
+  const [unableProcessing, setUnableProcessing] = useState(false);
+
+  const submitUnableService = async () => {
+    setUnableProcessing(true);
+    await unableService(logModal.active, unableServiceMessage);
+    if (routeDay === 'Today') {
+      await getEmployeeRoute(user._id, moment(new Date()).format('dddd'));
+    } else {
+      await getEmployeeRoute(user._id, routeDay);
+    }
+
+    setLogModal({
+      isOpen: false,
+      active: '',
+      activeName: '',
+      isServiceInfoOpen: false,
+      customerLock: '',
+      customerNotes: null,
+      customerChecklist: null,
+      checkedItems: [],
+      checkedNames: [],
+      inProgress: false,
+      equipment: null
+    });
+    setShowUnableService(false);
+    setUnableProcessing(false);
+  };
+
+  const onUnableChange = e => {
+    setUnableServiceMessage(e.target.value);
+  };
 
   useEffect(async () => {
     if (user) {
@@ -748,174 +786,346 @@ const Dashboard = ({
                 >
                   Service Information For: {logModal.activeName}
                 </ModalHeader>
-                <ModalBody>
-                  <div className='form-control-label'>Gate/Lock Code:</div>
-                  <p>
-                    {logModal.gatecode ? logModal.gatecode : <span>N/A</span>}
-                  </p>
-                  {logModal.customerChecklist && logModal.customerNotes && (
-                    <Fragment>
-                      <h4 className='form-control-label'>Service Notes:</h4>
-                      <ListGroup>
-                        <Fragment>
-                          {logModal.customerNotes.length < 1 && (
-                            <h4>No Service Notes...</h4>
-                          )}
-                        </Fragment>
-                        {logModal.customerNotes &&
-                          logModal.customerNotes.map(note => (
-                            <Fragment key={note._id}>
-                              {note.showDuringVisit && (
-                                <ListGroupItem>{note.content}</ListGroupItem>
+                {showEquipmentList ? (
+                  <ModalBody>
+                    <Row>
+                      <Col>
+                        <Label className='form-control-label'>
+                          Pool Cleaner:
+                        </Label>
+                        <br />
+                        {logModal.equipment.cleanerMake}{' '}
+                        {logModal.equipment.cleanerModel}
+                      </Col>
+                      <Col>
+                        <Label className='form-control-label'>Filter:</Label>
+                        <br />
+                        {logModal.equipment.filterMake}{' '}
+                        {logModal.equipment.filterModel}
+                      </Col>
+                    </Row>
+                    <br />
+
+                    <Row>
+                      <Col>
+                        <Label className='form-control-label'>Heater:</Label>
+                        <br />
+                        {logModal.equipment.heaterMake}{' '}
+                        {logModal.equipment.heaterModel}
+                      </Col>
+                      <Col>
+                        <Label className='form-control-label'>Pump:</Label>
+                        <br />
+                        {logModal.equipment.pumpMake}{' '}
+                        {logModal.equipment.pumpModel}
+                      </Col>
+                    </Row>
+
+                    <br />
+
+                    <Row>
+                      <Col>
+                        <Label className='form-control-label'>
+                          Pool Gallons:
+                        </Label>
+                        <br />
+                        {logModal.equipment.poolGallons}{' '}
+                      </Col>
+                      <Col>
+                        <Label className='form-control-label'>Pool Type:</Label>
+                        <br />
+                        {logModal.equipment.poolType}{' '}
+                      </Col>
+                    </Row>
+                    <br />
+                    <hr />
+
+                    {logModal.equipment.other.length >= 1 && (
+                      <h4>Other Equipment</h4>
+                    )}
+                    <br />
+
+                    {logModal.equipment.other.map(item => (
+                      <Fragment>
+                        <Row>
+                          <Col>
+                            <Label className='form-control-label'>
+                              Category:
+                            </Label>
+                            <br />
+                            {item.category}
+                          </Col>
+                          <Col>
+                            <Label className='form-control-label'>Make:</Label>
+                            <br />
+                            {item.make}
+                          </Col>
+                          <Col>
+                            <Label className='form-control-label'>Model:</Label>
+                            <br />
+                            {item.model}
+                          </Col>
+                        </Row>
+                        <br />
+                      </Fragment>
+                    ))}
+
+                    <br />
+                    <Row>
+                      <Button
+                        className='btn-icon'
+                        onClick={() => setShowEquipmentList(!showEquipmentList)}
+                        color='default'
+                        block
+                      >
+                        <span class='btn-inner--icon'>
+                          <i class='fas fa-chevron-left'></i>
+                        </span>
+                        <span class='btn-inner--text'>Go Back</span>
+                      </Button>
+                    </Row>
+                  </ModalBody>
+                ) : (
+                  <ModalBody>
+                    <div className='form-control-label'>Gate/Lock Code:</div>
+                    <p>
+                      {logModal.gatecode ? logModal.gatecode : <span>N/A</span>}
+                    </p>
+                    {logModal.customerChecklist && logModal.customerNotes && (
+                      <Fragment>
+                        <h4 className='form-control-label'>Service Notes:</h4>
+                        <ListGroup>
+                          <Fragment>
+                            {logModal.customerNotes.length < 1 && (
+                              <h4>No Service Notes...</h4>
+                            )}
+                          </Fragment>
+                          {logModal.customerNotes &&
+                            logModal.customerNotes.map(note => (
+                              <Fragment key={note._id}>
+                                {note.showDuringVisit && (
+                                  <ListGroupItem>{note.content}</ListGroupItem>
+                                )}
+                              </Fragment>
+                            ))}
+                        </ListGroup>
+                        <br />
+                        <h4 className='form-control-label'>
+                          Service Checklist:
+                        </h4>
+                        <ListGroup>
+                          <Fragment>
+                            {logModal.customerChecklist.length < 1 && (
+                              <h4>No Service Checklist...</h4>
+                            )}
+                          </Fragment>
+                          {logModal.customerChecklist.map(list => (
+                            <Fragment key={list._id}>
+                              {logModal.checkedItems &&
+                              logModal.checkedItems.find(
+                                e => e === list._id
+                              ) ? (
+                                <ListGroupItem
+                                  className='bg-green-wf'
+                                  onClick={() => {
+                                    if (
+                                      logModal.checkedItems.length === 0 ||
+                                      logModal.checkedItems == undefined
+                                    ) {
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: [list._id],
+                                        checkedNames: [list.item]
+                                      });
+                                    } else if (
+                                      logModal.checkedItems.length >= 1 &&
+                                      logModal.checkedItems.find(
+                                        e => e === list._id
+                                      )
+                                    ) {
+                                      const updated = logModal.checkedItems.filter(
+                                        id => id !== list._id
+                                      );
+                                      const names = logModal.checkedNames.filter(
+                                        name => name !== list.item
+                                      );
+
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: updated,
+                                        checkedNames: names
+                                      });
+                                    } else if (
+                                      logModal.checkedItems.length >= 1 &&
+                                      logModal.checkedItems.find(
+                                        e => e === list._id
+                                      )
+                                    ) {
+                                      const updated = [
+                                        ...logModal.checkedItems
+                                      ];
+                                      const names = [...logModal.checkedNames];
+
+                                      updated.push(list._id);
+                                      names.push(list.item);
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: updated,
+                                        checkedNames: names
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <i className='fas fa-times-circle'></i>{' '}
+                                  <strong>{list.item}</strong>
+                                </ListGroupItem>
+                              ) : (
+                                <ListGroupItem
+                                  className='bg-red'
+                                  onClick={() => {
+                                    if (
+                                      logModal.checkedItems === undefined ||
+                                      logModal.checkedItems.length === 0
+                                    ) {
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: [list._id],
+                                        checkedNames: [list.item]
+                                      });
+                                    } else if (
+                                      logModal.checkedItems.length >= 1
+                                    ) {
+                                      const updated = [
+                                        ...logModal.checkedItems
+                                      ];
+                                      const names = [...logModal.checkedNames];
+
+                                      updated.push(list._id);
+                                      names.push(list.item);
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: updated,
+                                        checkedNames: names
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <i className='fas fa-times-circle'></i>{' '}
+                                  <strong>{list.item}</strong>
+                                </ListGroupItem>
                               )}
                             </Fragment>
                           ))}
+                        </ListGroup>
+                      </Fragment>
+                    )}
 
-                        {/* <ListGroupItem>
-                          Make sure to check chemicals
-                        </ListGroupItem> */}
-                      </ListGroup>
-                      <br />
-                      <h4 className='form-control-label'>Service Checklist:</h4>
-                      <ListGroup>
+                    <br />
+                    <div className='text-center'>
+                      <Button
+                        className='btn-icon mgn-btm-10'
+                        color='info'
+                        block
+                        onClick={() => setShowEquipmentList(!showEquipmentList)}
+                      >
+                        <span className='btn-inner--icon'>
+                          <i className='fas fa-swimming-pool'></i>
+                        </span>
+                        <span className='btn-inner--text'>View Equipment</span>
+                      </Button>
+                      <hr />
+                      <Button
+                        className='btn-icon mgn-btm-10'
+                        color='warning'
+                        block
+                        onClick={() => setShowUnableService(!showUnableService)}
+                      >
+                        <span className='btn-inner--icon'>
+                          <i className='fas fa-times'></i>
+                        </span>
+                        <span className='btn-inner--text'>
+                          Unable to Service
+                        </span>
+                      </Button>
+                      {showUnableService && (
                         <Fragment>
-                          {logModal.customerChecklist.length < 1 && (
-                            <h4>No Service Checklist...</h4>
-                          )}
-                        </Fragment>
-                        {logModal.customerChecklist.map(list => (
-                          <Fragment key={list._id}>
-                            {logModal.checkedItems &&
-                            logModal.checkedItems.find(e => e === list._id) ? (
-                              <ListGroupItem
-                                className='bg-green-wf'
-                                onClick={() => {
-                                  if (
-                                    logModal.checkedItems.length === 0 ||
-                                    logModal.checkedItems == undefined
-                                  ) {
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: [list._id],
-                                      checkedNames: [list.item]
-                                    });
-                                  } else if (
-                                    logModal.checkedItems.length >= 1 &&
-                                    logModal.checkedItems.find(
-                                      e => e === list._id
-                                    )
-                                  ) {
-                                    const updated = logModal.checkedItems.filter(
-                                      id => id !== list._id
-                                    );
-                                    const names = logModal.checkedNames.filter(
-                                      name => name !== list.item
-                                    );
-
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: updated,
-                                      checkedNames: names
-                                    });
-                                  } else if (
-                                    logModal.checkedItems.length >= 1 &&
-                                    logModal.checkedItems.find(
-                                      e => e === list._id
-                                    )
-                                  ) {
-                                    const updated = [...logModal.checkedItems];
-                                    const names = [...logModal.checkedNames];
-
-                                    updated.push(list._id);
-                                    names.push(list.item);
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: updated,
-                                      checkedNames: names
-                                    });
-                                  }
-                                }}
-                              >
-                                <i className='fas fa-times-circle'></i>{' '}
-                                <strong>{list.item}</strong>
-                              </ListGroupItem>
+                          <Label className='form-control-label'>
+                            Reason Unable To Service (May Be Sent to Customer):
+                          </Label>
+                          <Input
+                            type='textarea'
+                            onChange={e => onUnableChange(e)}
+                          />
+                          <br />
+                          <Button
+                            className='btn-icon'
+                            color='default'
+                            block
+                            onClick={submitUnableService}
+                          >
+                            <span className='btn-inner--icon'>
+                              <i className='fas fa-exclamation-circle'></i>
+                            </span>
+                            {unableProcessing ? (
+                              <span className='btn-inner--text'>
+                                <SpinnerCircular
+                                  size={24}
+                                  thickness={180}
+                                  speed={100}
+                                  color='rgba(57, 125, 172, 1)'
+                                  secondaryColor='rgba(0, 0, 0, 0.44)'
+                                />
+                                Processing...
+                              </span>
                             ) : (
-                              <ListGroupItem
-                                className='bg-red'
-                                onClick={() => {
-                                  if (
-                                    logModal.checkedItems === undefined ||
-                                    logModal.checkedItems.length === 0
-                                  ) {
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: [list._id],
-                                      checkedNames: [list.item]
-                                    });
-                                  } else if (
-                                    logModal.checkedItems.length >= 1
-                                  ) {
-                                    const updated = [...logModal.checkedItems];
-                                    const names = [...logModal.checkedNames];
+                              <span className='btn-inner--text'>
+                                Mark Unable To Service
+                              </span>
+                            )}
+                          </Button>
+                          <br />
+                        </Fragment>
+                      )}
 
-                                    updated.push(list._id);
-                                    names.push(list.item);
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: updated,
-                                      checkedNames: names
-                                    });
-                                  }
+                      {logModal.customerChecklist &&
+                      logModal.customerChecklist.length >= 1 ? (
+                        <Fragment>
+                          {logModal.checkedItems === undefined ||
+                          logModal.checkedItems.length === 0 ? (
+                            <Fragment>
+                              <Button
+                                className='btn-icon mgn-btm-10'
+                                color='primary'
+                                block
+                                disabled
+                                onClick={() => {
+                                  setLogModal({
+                                    ...logModal,
+                                    isServiceInfoOpen: false,
+                                    isOpen: true
+                                  });
                                 }}
                               >
-                                <i className='fas fa-times-circle'></i>{' '}
-                                <strong>{list.item}</strong>
-                              </ListGroupItem>
-                            )}
-                          </Fragment>
-                        ))}
-                        {/* <ListGroupItem className='bg-green-wf'>
-                      <i className='fas fa-check-circle'></i>{' '}
-                      <strong>Skim Water</strong>
-                    </ListGroupItem>
-                    <ListGroupItem className='bg-red'>
-                      <i className='fas fa-times-circle'></i>{' '}
-                      <strong>Check Filter</strong>
-                    </ListGroupItem> */}
-                      </ListGroup>
-                    </Fragment>
-                  )}
-
-                  <br />
-                  <div className='text-center'>
-                    <Button className='btn-icon mgn-btm-10' color='info' block>
-                      <span className='btn-inner--icon'>
-                        <i className='fas fa-swimming-pool'></i>
-                      </span>
-                      <span className='btn-inner--text'>View Equipment</span>
-                    </Button>
-                    <hr />
-                    <Button
-                      className='btn-icon mgn-btm-10'
-                      color='warning'
-                      block
-                    >
-                      <span className='btn-inner--icon'>
-                        <i className='fas fa-times'></i>
-                      </span>
-                      <span className='btn-inner--text'>Unable to Service</span>
-                    </Button>
-                    {logModal.customerChecklist &&
-                    logModal.customerChecklist.length >= 1 ? (
-                      <Fragment>
-                        {logModal.checkedItems === undefined ||
-                        logModal.checkedItems.length === 0 ? (
-                          <Fragment>
+                                <span className='btn-inner--icon'>
+                                  <i className='ni ni-check-bold'></i>
+                                </span>
+                                <span className='btn-inner--text'>
+                                  Log Service
+                                </span>
+                              </Button>
+                              {logModal.customerChecklist &&
+                                logModal.customerChecklist.length >= 1 && (
+                                  <p>
+                                    Must have completed at least one item from
+                                    service checklist
+                                  </p>
+                                )}
+                            </Fragment>
+                          ) : (
                             <Button
                               className='btn-icon mgn-btm-10'
                               color='primary'
                               block
-                              disabled
                               onClick={() => {
                                 setLogModal({
                                   ...logModal,
@@ -931,55 +1141,30 @@ const Dashboard = ({
                                 Log Service
                               </span>
                             </Button>
-                            {logModal.customerChecklist &&
-                              logModal.customerChecklist.length >= 1 && (
-                                <p>
-                                  Must have completed at least one item from
-                                  service checklist
-                                </p>
-                              )}
-                          </Fragment>
-                        ) : (
-                          <Button
-                            className='btn-icon mgn-btm-10'
-                            color='primary'
-                            block
-                            onClick={() => {
-                              setLogModal({
-                                ...logModal,
-                                isServiceInfoOpen: false,
-                                isOpen: true
-                              });
-                            }}
-                          >
-                            <span className='btn-inner--icon'>
-                              <i className='ni ni-check-bold'></i>
-                            </span>
-                            <span className='btn-inner--text'>Log Service</span>
-                          </Button>
-                        )}
-                      </Fragment>
-                    ) : (
-                      <Button
-                        className='btn-icon mgn-btm-10'
-                        color='primary'
-                        block
-                        onClick={() => {
-                          setLogModal({
-                            ...logModal,
-                            isServiceInfoOpen: false,
-                            isOpen: true
-                          });
-                        }}
-                      >
-                        <span className='btn-inner--icon'>
-                          <i className='ni ni-check-bold'></i>
-                        </span>
-                        <span className='btn-inner--text'>Log Service</span>
-                      </Button>
-                    )}
-                  </div>
-                </ModalBody>
+                          )}
+                        </Fragment>
+                      ) : (
+                        <Button
+                          className='btn-icon mgn-btm-10'
+                          color='primary'
+                          block
+                          onClick={() => {
+                            setLogModal({
+                              ...logModal,
+                              isServiceInfoOpen: false,
+                              isOpen: true
+                            });
+                          }}
+                        >
+                          <span className='btn-inner--icon'>
+                            <i className='ni ni-check-bold'></i>
+                          </span>
+                          <span className='btn-inner--text'>Log Service</span>
+                        </Button>
+                      )}
+                    </div>
+                  </ModalBody>
+                )}
               </Modal>
 
               <Modal
@@ -3775,7 +3960,15 @@ const Dashboard = ({
                                             </div>
                                           ) : (
                                             <div className='route-box text-center'>
-                                              <h2>{index + 1}</h2>
+                                              {customer.customer
+                                                .unableService !== undefined &&
+                                              moment(
+                                                customer.customer.unableService
+                                              ).isSame(Date.now(), 'day') ? (
+                                                <i className='fas fa-times-circle color-white'></i>
+                                              ) : (
+                                                <h2>{index + 1}</h2>
+                                              )}
                                             </div>
                                           )}
                                         </Col>
@@ -3801,59 +3994,77 @@ const Dashboard = ({
                                               <span></span>
                                             ) : (
                                               <Row>
-                                                <Col>
-                                                  {' '}
-                                                  <Button
-                                                    className='btn-icon mgn-btm-10'
-                                                    color='success'
-                                                    href={`https://www.google.com/maps/dir/Current+Location/${customer.customer.serviceLat},${customer.customer.serviceLng}`}
-                                                    target='_blank'
-                                                  >
-                                                    <span className='btn-inner--icon'>
-                                                      <i className='ni ni-delivery-fast'></i>
-                                                    </span>
-                                                    <span className='btn-inner--text'>
-                                                      GPS To Stop
-                                                    </span>
-                                                  </Button>
-                                                </Col>
-                                                <Col>
-                                                  {' '}
-                                                  <Button
-                                                    className='btn-icon mgn-btm-10'
-                                                    color='primary'
-                                                    onClick={() => {
-                                                      getChecklist(
-                                                        customer.customer._id
-                                                      );
-                                                      getCustomerServiceNotes(
-                                                        customer.customer._id
-                                                      );
+                                                {customer.customer
+                                                  .unableService !==
+                                                  undefined &&
+                                                moment(
+                                                  customer.customer
+                                                    .unableService
+                                                ).isSame(Date.now(), 'day') ? (
+                                                  <Fragment></Fragment>
+                                                ) : (
+                                                  <Fragment>
+                                                    <Col>
+                                                      {' '}
+                                                      <Button
+                                                        className='btn-icon mgn-btm-10'
+                                                        color='success'
+                                                        href={`https://www.google.com/maps/dir/Current+Location/${customer.customer.serviceLat},${customer.customer.serviceLng}`}
+                                                        target='_blank'
+                                                      >
+                                                        <span className='btn-inner--icon'>
+                                                          <i className='ni ni-delivery-fast'></i>
+                                                        </span>
+                                                        <span className='btn-inner--text'>
+                                                          GPS To Stop
+                                                        </span>
+                                                      </Button>
+                                                    </Col>
+                                                    <Col>
+                                                      {' '}
+                                                      <Button
+                                                        className='btn-icon mgn-btm-10'
+                                                        color='primary'
+                                                        onClick={() => {
+                                                          getChecklist(
+                                                            customer.customer
+                                                              ._id
+                                                          );
+                                                          getCustomerServiceNotes(
+                                                            customer.customer
+                                                              ._id
+                                                          );
 
-                                                      setLogModal({
-                                                        isServiceInfoOpen: true,
-                                                        active:
-                                                          customer.customer._id,
-                                                        activeName:
-                                                          customer.customer
-                                                            .firstName +
-                                                          ' ' +
-                                                          customer.customer
-                                                            .lastName,
-                                                        customerLock:
-                                                          customer.customer
-                                                            .gatecode
-                                                      });
-                                                    }}
-                                                  >
-                                                    <span className='btn-inner--icon'>
-                                                      <i className='ni ni-settings'></i>
-                                                    </span>
-                                                    <span className='btn-inner--text'>
-                                                      Start Service
-                                                    </span>
-                                                  </Button>
-                                                </Col>
+                                                          setLogModal({
+                                                            isServiceInfoOpen: true,
+                                                            active:
+                                                              customer.customer
+                                                                ._id,
+                                                            activeName:
+                                                              customer.customer
+                                                                .firstName +
+                                                              ' ' +
+                                                              customer.customer
+                                                                .lastName,
+                                                            customerLock:
+                                                              customer.customer
+                                                                .gatecode,
+                                                            equipment:
+                                                              customer.customer
+                                                                .poolEquipment
+                                                          });
+                                                        }}
+                                                      >
+                                                        <span className='btn-inner--icon'>
+                                                          <i className='ni ni-settings'></i>
+                                                        </span>
+                                                        <span className='btn-inner--text'>
+                                                          Start Service
+                                                        </span>
+                                                      </Button>
+                                                    </Col>
+                                                  </Fragment>
+                                                )}
                                               </Row>
                                             )}
                                           </div>
@@ -4226,7 +4437,8 @@ Dashboard.propTypes = {
   getChecklist: PropTypes.func.isRequired,
   getCustomerServiceNotes: PropTypes.func.isRequired,
   getEmployeeRoute: PropTypes.func.isRequired,
-  sendServiceReport: PropTypes.func.isRequired
+  sendServiceReport: PropTypes.func.isRequired,
+  unableService: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -4239,5 +4451,6 @@ export default connect(mapStateToProps, {
   getChecklist,
   getCustomerServiceNotes,
   getEmployeeRoute,
-  sendServiceReport
+  sendServiceReport,
+  unableService
 })(Dashboard);

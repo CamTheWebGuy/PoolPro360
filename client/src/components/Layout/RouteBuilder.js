@@ -329,7 +329,7 @@ const RouteBuilder = ({
                   {customers.length === 0 &&
                     mapCenterPointNC !== null &&
                     selectedTech && (
-                      <LoadScript googleMapsApiKey=''>
+                      <LoadScript googleMapsApiKey='AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag'>
                         <GoogleMap
                           mapContainerStyle={containerStyle}
                           center={mapCenterPointNC}
@@ -440,7 +440,7 @@ const RouteBuilder = ({
                   {customers.length >= 1 &&
                     routedCustomers !== null &&
                     mapCenterPoint !== null && (
-                      <LoadScript googleMapsApiKey=''>
+                      <LoadScript googleMapsApiKey='AIzaSyBPTZtirCX7Ar2bIandK2EZzj10V2bBUag'>
                         <GoogleMap
                           mapContainerStyle={containerStyle}
                           center={mapCenterPoint}
@@ -778,7 +778,7 @@ const RouteBuilder = ({
                                                         Weeks)
                                                       </option>
                                                       <option>
-                                                        Tri-Weekly (Every 2
+                                                        Tri-Weekly (Every 3
                                                         Weeks)
                                                       </option>
                                                       <option>

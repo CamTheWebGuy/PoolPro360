@@ -389,4 +389,100 @@ router.get('/businessInfo', auth, async (req, res) => {
   }
 });
 
+// @route    POST api/users/updateLogo
+// @desc     Update User Logo
+// @access   Private/User
+router.post('/updateLogo', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ errors: [{ msg: 'User not found or not authorized' }] });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+    }
+
+    let s3Object = null;
+
+    if (isOwner) {
+      s3Object = user.businessInfo.businessLogo.split(
+        'https://s3-us-west-2.amazonaws.com/poolpro360/'
+      );
+    } else {
+      s3Object = owner.businessInfo.businessLogo.split(
+        'https://s3-us-west-2.amazonaws.com/poolpro360/'
+      );
+    }
+
+    // return console.log(s3Object[1]);
+
+    await s3.deleteObject(
+      {
+        Bucket: 'poolpro360',
+        Key: `${s3Object[1]}`
+      },
+      async (err, data) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).send(err);
+        } else {
+          try {
+            const downloadUrl = await uploadToS3(req, res);
+
+            if (isOwner) {
+              user.businessInfo.businessLogo = downloadUrl;
+              await user.save();
+              return res.json(user.businessInfo.businessLogo);
+            } else {
+              owner.businessInfo.businessLogo = downloadUrl;
+              await owner.save();
+              return res.json(owner.businessInfo.businessLogo);
+            }
+          } catch (err) {
+            console.log(err);
+          }
+          return res.status(200).send('File deleted');
+        }
+      }
+    );
+
+    // const downloadUrl = await uploadToS3(req, res);
+
+    // if (isOwner) {
+    //   user.businessInfo.businessLogo = downloadUrl;
+    //   await user.save();
+    //   return res.json(user.businessInfo.businessLogo);
+    // } else {
+    //   owner.businessInfo.businessLogo = downloadUrl;
+    //   await owner.save();
+    //   return res.json(owner.businessInfo.businessLogo);
+    // }
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 module.exports = router;

@@ -983,3 +983,31 @@ export const getEmailSettings = () => async dispatch => {
     }
   }
 };
+
+// Mark Unable Service
+export const unableService = (customerId, message) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    message
+  });
+
+  try {
+    await axios.post(
+      `api/customers/route/unableservice/${customerId}`,
+      body,
+      config
+    );
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
