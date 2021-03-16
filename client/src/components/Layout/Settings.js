@@ -398,6 +398,7 @@ const Settings = ({
                     {!emailLoading && emailSettings ? (
                       <Formik
                         initialValues={{
+                          emailSendUnable: emailSettings.emailSendUnable,
                           emailSendSummary: emailSettings.emailSendSummary,
                           emailSendChecklist: emailSettings.emailSendChecklist,
                           emailSendReadings: emailSettings.emailSendReadings,
@@ -430,6 +431,39 @@ const Settings = ({
                                 <Row>
                                   <Col>
                                     {' '}
+                                    <FormGroup>
+                                      <Label className='form-control-label'>
+                                        Send Email If Unable To Service? <br />
+                                        <small>
+                                          <em>
+                                            Default: Enabled - If enabled, a
+                                            email is sent to the customer any
+                                            time a technician marks a customer
+                                            as "Unable To Service" during their
+                                            route. This will also send the
+                                            customer the reason for being unable
+                                            to service the pool that the
+                                            technician enters when they mark it
+                                            as such.
+                                          </em>
+                                        </small>
+                                      </Label>
+
+                                      <br />
+                                      <Label className='custom-toggle'>
+                                        <Input
+                                          type='checkbox'
+                                          name='emailSendUnable'
+                                          onChange={handleChange}
+                                          checked={values.emailSendUnable}
+                                        />
+                                        <span
+                                          className='custom-toggle-slider rounded-circle'
+                                          data-label-off='No'
+                                          data-label-on='Yes'
+                                        ></span>
+                                      </Label>
+                                    </FormGroup>
                                     <FormGroup>
                                       <Label className='form-control-label'>
                                         Send Service Summary to Customer? <br />
@@ -980,8 +1014,8 @@ Settings.propTypes = {
   getBusinessInfo: PropTypes.func.isRequired,
   updateAccountEmailReadings: PropTypes.func.isRequired,
   getEmailSettings: PropTypes.func.isRequired,
-  businessInfo: PropTypes.object.isRequired,
-  emailSettings: PropTypes.object.isRequired
+  businessInfo: PropTypes.object.isRequired
+  // emailSettings: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({

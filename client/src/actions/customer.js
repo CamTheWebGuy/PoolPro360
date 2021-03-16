@@ -889,6 +889,7 @@ export const sendServiceReport = (customerId, activityId) => async dispatch => {
 
 // Update Account Customer Notification Settings
 export const updateAccountEmailSettings = ({
+  emailSendUnable,
   emailSendSummary,
   emailSendChecklist,
   emailSendReadings,
@@ -903,6 +904,7 @@ export const updateAccountEmailSettings = ({
   };
 
   const body = JSON.stringify({
+    emailSendUnable,
     emailSendSummary,
     emailSendChecklist,
     emailSendReadings,

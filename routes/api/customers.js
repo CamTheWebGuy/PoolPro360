@@ -1829,49 +1829,54 @@ router.post('/route/unableservice/:customerId', auth, async (req, res) => {
       owner = await User.findOne({ _id: user.owner, role: 'Owner' });
     }
 
-    // Nodemailer Transporter
-    let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+    if (
+      (isOwner && user.emailSettings.emailSendUnable) ||
+      (!isOwner && owner.emailSettings.emailSendUnable)
+    ) {
+      // Nodemailer Transporter
+      let transporter = nodemailer.createTransport(nodemailMailgun(auth));
 
-    // Mail Options
-    const mailOptions = {
-      from: `${
-        isOwner
-          ? user.businessInfo.businessName
-          : owner.businessInfo.businessName
-      } <no-reply@poolpro360.com>`,
-      to: 'cameronanchondo@gmail.com',
-      replyTo: isOwner ? user.email : owner.email,
-      subject: `Unable To Service Your Pool`,
-      template: 'unableservice',
-      'h:X-Mailgun-Variables': JSON.stringify({
-        firstName: customer.firstName,
-        businessName: isOwner
-          ? user.businessInfo.businessName
-          : owner.businessInfo.businessName,
-        businessEmail: isOwner
-          ? user.businessInfo.businessEmail
-          : owner.businessInfo.businessEmail,
-        businessAddress: isOwner
-          ? user.businessInfo.businessAddress
-          : owner.businessInfo.businessAddress,
-        businessPhone: isOwner
-          ? user.businessInfo.businessPhone
-          : owner.businessInfo.businessPhone,
-        businessLogo: isOwner
-          ? user.businessInfo.businessLogo
-          : owner.businessInfo.businessLogo,
-        message: message
-      })
-    };
+      // Mail Options
+      const mailOptions = {
+        from: `${
+          isOwner
+            ? user.businessInfo.businessName
+            : owner.businessInfo.businessName
+        } <no-reply@poolpro360.com>`,
+        to: 'cameronanchondo@gmail.com',
+        replyTo: isOwner ? user.email : owner.email,
+        subject: `Unable To Service Your Pool`,
+        template: 'unableservice',
+        'h:X-Mailgun-Variables': JSON.stringify({
+          firstName: customer.firstName,
+          businessName: isOwner
+            ? user.businessInfo.businessName
+            : owner.businessInfo.businessName,
+          businessEmail: isOwner
+            ? user.businessInfo.businessEmail
+            : owner.businessInfo.businessEmail,
+          businessAddress: isOwner
+            ? user.businessInfo.businessAddress
+            : owner.businessInfo.businessAddress,
+          businessPhone: isOwner
+            ? user.businessInfo.businessPhone
+            : owner.businessInfo.businessPhone,
+          businessLogo: isOwner
+            ? user.businessInfo.businessLogo
+            : owner.businessInfo.businessLogo,
+          message: message
+        })
+      };
 
-    // Send Email
-    transporter.sendMail(mailOptions, (err, data) => {
-      if (err) {
-        return console.log('Error: ', err);
-      } else {
-        console.log('Message has been sent');
-      }
-    });
+      // Send Email
+      transporter.sendMail(mailOptions, (err, data) => {
+        if (err) {
+          return console.log('Error: ', err);
+        } else {
+          console.log('Message has been sent');
+        }
+      });
+    }
 
     return res.status(200).json(activity);
   } catch (err) {
@@ -2264,6 +2269,12 @@ router.post(
   [
     auth,
     [
+      check('emailSendUnable')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
       check('emailSendSummary')
         .not()
         .isEmpty()
@@ -2310,6 +2321,7 @@ router.post(
     }
 
     const {
+      emailSendUnable,
       emailSendSummary,
       emailSendChecklist,
       emailSendReadings,
@@ -2349,6 +2361,7 @@ router.post(
           return res.status(404).json({ msg: 'User not found' });
         }
 
+        owner.emailSettings.emailSendUnable = emailSendUnable;
         owner.emailSettings.emailSendSummary = emailSendSummary;
         owner.emailSettings.emailSendChecklist = emailSendChecklist;
         owner.emailSettings.emailSendReadings = emailSendReadings;
@@ -2362,6 +2375,7 @@ router.post(
       }
 
       if (user.role === 'Owner') {
+        user.emailSettings.emailSendUnable = emailSendUnable;
         user.emailSettings.emailSendSummary = emailSendSummary;
         user.emailSettings.emailSendChecklist = emailSendChecklist;
         user.emailSettings.emailSendReadings = emailSendReadings;
