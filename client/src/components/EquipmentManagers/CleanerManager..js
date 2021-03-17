@@ -22,12 +22,11 @@ const CleanerManager = ({ handleChange, handleBlur, values }) => {
           <option>Aqua Products</option>
           <option>Hayward</option>
           <option>Jandy</option>
-          <option>Maytronics</option>
+
           <option>Paramount</option>
           <option>Pentair</option>
           <option>Polaris</option>
-          <option>SmartPool</option>
-          <option>Water Tech</option>
+
           <option>Other</option>
         </Input>
       </FormGroup>

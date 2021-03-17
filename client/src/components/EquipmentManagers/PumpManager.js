@@ -21,8 +21,7 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
         >
           <option>Anthony</option>
           <option>Aqua-Flo</option>
-          <option>Everbilt</option>
-          <option>Harris</option>
+
           <option>Hayward</option>
           <option>Jacuzzi</option>
           <option>Jandy</option>
@@ -30,9 +29,9 @@ const PumpManager = ({ handleChange, handleBlur, values }) => {
           <option>Polaris</option>
           <option>Premier</option>
           <option>Sta-Rite</option>
-          <option>Water Wizard</option>
+
           <option>Waterway</option>
-          <option>XtremepowerUS</option>
+
           <option>Other</option>
         </Input>
       </FormGroup>

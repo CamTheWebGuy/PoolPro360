@@ -20,7 +20,7 @@ const FilterManager = ({ handleChange, handleBlur, values }) => {
           value={values.filterMake}
         >
           <option>Anthony</option>
-          <option>Baker Hydro</option>
+
           <option>Harmsco</option>
           <option>Hayward</option>
           <option>Jacuzzi</option>

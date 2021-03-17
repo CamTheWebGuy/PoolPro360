@@ -20,8 +20,7 @@ const HeaterManager = ({ handleChange, handleBlur, values }) => {
           value={values.heaterMake}
         >
           <option>AquaCal</option>
-          <option>Built Right</option>
-          <option>GulfStream</option>
+
           <option>Hayward</option>
           <option>Jandy</option>
           <option>Pentair</option>

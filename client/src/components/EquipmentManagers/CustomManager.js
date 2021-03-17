@@ -36,7 +36,7 @@ const CustomManager = ({
                     <option>Infloor</option>
                     <option>Lights</option>
                     <option>Pumps</option>
-                    <option>Reels</option>
+                    {/* <option>Reels</option> */}
                     <option>Sanitizers</option>
                     <option>Valves</option>
                     <option>Water Features</option>
@@ -68,12 +68,11 @@ const CustomManager = ({
                         <option>Aqua Products</option>
                         <option>Hayward</option>
                         <option>Jandy</option>
-                        <option>Maytronics</option>
+
                         <option>Paramount</option>
                         <option>Pentair</option>
                         <option>Polaris</option>
-                        <option>SmartPool</option>
-                        <option>Water Tech</option>
+
                         <option>Other</option>
                       </Fragment>
                     )}
@@ -105,7 +104,6 @@ const CustomManager = ({
                           Choose One
                         </option>
                         <option>Anthony</option>
-                        <option>Baker Hydro</option>
                         <option>Harmsco</option>
                         <option>Hayward</option>
                         <option>Jacuzzi</option>
@@ -128,8 +126,7 @@ const CustomManager = ({
                           Choose One
                         </option>
                         <option>AquaCal</option>
-                        <option>Built Right</option>
-                        <option>GulfStream</option>
+
                         <option>Hayward</option>
                         <option>Jandy</option>
                         <option>Pentair</option>
@@ -185,7 +182,7 @@ const CustomManager = ({
                         <option>Anthony</option>
                         <option>Aqua-Flo</option>
                         <option>Everbilt</option>
-                        <option>Harris</option>
+
                         <option>Hayward</option>
                         <option>Jacuzzi</option>
                         <option>Jandy</option>
@@ -193,9 +190,9 @@ const CustomManager = ({
                         <option>Polaris</option>
                         <option>Premier</option>
                         <option>Sta-Rite</option>
-                        <option>Water Wizard</option>
+
                         <option>Waterway</option>
-                        <option>XtremepowerUS</option>
+
                         <option>Other</option>
                       </Fragment>
                     )}
@@ -302,9 +299,9 @@ const CustomManager = ({
                         </option>
                         <option>A & A</option>
                         <option>Aquastar</option>
-                        <option>Baker Hydro</option>
+
                         <option>Hayward</option>
-                        <option>Paralevel</option>
+
                         <option>Pentair</option>
                         <option>Super-Pro</option>
                         <option>Waterway</option>

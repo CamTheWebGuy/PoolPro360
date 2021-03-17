@@ -4013,7 +4013,7 @@ const Dashboard = ({
                                                         target='_blank'
                                                       >
                                                         <span className='btn-inner--icon'>
-                                                          <i className='ni ni-delivery-fast'></i>
+                                                          <i className='fas fa-directions'></i>
                                                         </span>
                                                         <span className='btn-inner--text'>
                                                           GPS To Stop
@@ -4056,7 +4056,7 @@ const Dashboard = ({
                                                         }}
                                                       >
                                                         <span className='btn-inner--icon'>
-                                                          <i className='ni ni-settings'></i>
+                                                          <i className='fas fa-tint'></i>
                                                         </span>
                                                         <span className='btn-inner--text'>
                                                           Start Service
