@@ -16,7 +16,11 @@ import {
   updateAccountEmailReadings,
   getEmailSettings
 } from '../../actions/customer';
-import { updateBusinessInfo, getBusinessInfo } from '../../actions/user';
+import {
+  updateBusinessInfo,
+  getBusinessInfo,
+  updateMyInfo
+} from '../../actions/user';
 
 import {
   Container,
@@ -49,6 +53,7 @@ import {
 } from 'reactstrap';
 
 import { Formik } from 'formik';
+import * as Yup from 'yup';
 import { SpinnerCircular } from 'spinners-react';
 import ImageUploader from 'react-images-upload';
 
@@ -64,7 +69,9 @@ const Settings = ({
   updateBusinessInfo,
   getBusinessInfo,
   getEmailSettings,
-  businessInfo: { businessInfo, emailSettings, loading, emailLoading }
+  updateMyInfo,
+  businessInfo: { businessInfo, emailSettings, loading, emailLoading },
+  auth: { user, isAuthenticated }
 }) => {
   const [activeTab, setActiveTab] = useState('1');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -111,10 +118,31 @@ const Settings = ({
 
   const [infoProcessing, setInfoProcessing] = useState(null);
 
+  const lowercaseRegex = /(?=.*[a-z])/;
+  const uppercaseRegex = /(?=.*[A-X])/;
+  const numericRegex = /(?=.*[0-9])/;
+
+  const passSchema = Yup.object().shape({
+    currentPassword: Yup.string().required(
+      'Please enter your current password'
+    ),
+    newPassword: Yup.string()
+      .required('Please enter a new password')
+      .matches(lowercaseRegex, 'Password must contain lowercase letter')
+      .matches(uppercaseRegex, 'Password must contain uppercase letter')
+      .matches(numericRegex, 'Password must contain a number')
+      .min(8, 'Password must be at least 8 characters long'),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('newPassword')], 'Passwords do not match')
+      .required('Please confirm your password')
+  });
+
   useEffect(() => {
-    getBusinessInfo();
-    getEmailSettings();
-  }, [getBusinessInfo, getEmailSettings]);
+    if (user && user.role !== 'Technician') {
+      getBusinessInfo();
+      getEmailSettings();
+    }
+  }, [getBusinessInfo, getEmailSettings, user]);
 
   return (
     <Fragment>
@@ -162,78 +190,20 @@ const Settings = ({
                 </Col>
               </div>
             </CardHeader>
-            <CardBody>
-              <div>
-                <Nav tabs>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '1' })}
-                      onClick={() => {
-                        toggle('1');
-                      }}
-                    >
-                      Business Information
-                    </NavLink>
-                  </NavItem>
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '2' })}
-                      onClick={() => {
-                        toggle('2');
-                      }}
-                    >
-                      Email Settings
-                    </NavLink>
-                  </NavItem>
-
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '3' })}
-                      onClick={() => {
-                        toggle('3');
-                      }}
-                    >
-                      Email Chemical Fields
-                    </NavLink>
-                  </NavItem>
-
-                  <NavItem>
-                    <NavLink
-                      className={classnames({ active: activeTab === '4' })}
-                      onClick={() => {
-                        toggle('4');
-                      }}
-                    >
-                      User Permissions
-                    </NavLink>
-                  </NavItem>
-                </Nav>
-              </div>
-
-              <TabContent activeTab={activeTab}>
-                <TabPane tabId='1'>
-                  <Row>
-                    <Col sm='12'>
-                      {!loading && businessInfo ? (
+            {user && isAuthenticated && (
+              <Fragment>
+                {user.role === 'Technician' ? (
+                  <CardBody>
+                    <Row>
+                      <Col>
                         <Formik
                           initialValues={{
-                            businessName: businessInfo
-                              ? businessInfo.businessName
-                              : '',
-                            businessPhone: businessInfo
-                              ? businessInfo.businessPhone
-                              : '',
-                            businessEmail: businessInfo
-                              ? businessInfo.businessEmail
-                              : '',
-                            businessAddress: businessInfo.businessAddress
+                            firstName: user.firstName ? user.firstName : '',
+                            lastName: user.lastName ? user.lastName : '',
+                            email: user.email ? user.email : ''
                           }}
                           onSubmit={async data => {
-                            setInfoProcessing(true);
-                            await uploadLogo();
-                            await updateBusinessInfo(data);
-                            // await getBusinessInfo();
-                            setInfoProcessing(false);
+                            updateMyInfo(data);
                           }}
                           render={({
                             handleSubmit,
@@ -241,106 +211,181 @@ const Settings = ({
                             handleBlur,
                             values
                           }) => (
-                            <Container>
+                            <Fragment>
                               <Form>
-                                <br />
-                                <h6 className='heading-small text-muted mb-4'>
-                                  Business Settings:
-                                </h6>
-
-                                <div className='pl-lg-4'>
-                                  <Row>
-                                    <Col>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Business Logo:
-                                        </Label>{' '}
-                                        <br />
-                                        {businessInfo.businessLogo && (
-                                          <img
-                                            width='50%'
-                                            src={businessInfo.businessLogo}
-                                            alt={businessInfo.businessName}
+                                <Row>
+                                  <Col>
+                                    <Row>
+                                      <Col>
+                                        <FormGroup>
+                                          <Label className='form-control-label'>
+                                            First Name:
+                                          </Label>
+                                          <Input
+                                            type='text'
+                                            name='firstName'
+                                            placeholder='John'
+                                            value={values.firstName}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
                                           />
-                                        )}
-                                        <ImageUploader
-                                          withIcon={true}
-                                          buttonText='Choose Image'
-                                          onChange={onDrop}
-                                          imgExtension={[
-                                            '.jpg',
-                                            '.gif',
-                                            '.png',
-                                            '.gif'
-                                          ]}
-                                          maxFileSize={5242880}
-                                          withPreview={true}
-                                          singleImage={true}
-                                        />
-                                      </FormGroup>
-                                    </Col>
-                                    <Col>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Business Name:
-                                        </Label>
-                                        <Input
-                                          type='text'
-                                          name='businessName'
-                                          value={values.businessName}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                        />
-                                      </FormGroup>
-
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Business Phone:
-                                        </Label>
-                                        <Input
-                                          type='tel'
-                                          name='businessPhone'
-                                          value={values.businessPhone}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                        />
-                                      </FormGroup>
-                                    </Col>
-                                  </Row>
-                                  <Row>
-                                    <Col>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Business Email:
-                                        </Label>
-                                        <Input
-                                          type='tel'
-                                          name='businessEmail'
-                                          value={values.businessEmail}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                        />
-                                      </FormGroup>
-
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Business Address:
-                                        </Label>
-                                        <Input
-                                          type='tel'
-                                          name='businessAddress'
-                                          value={values.businessAddress}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                        />
-                                      </FormGroup>
-                                    </Col>
-                                  </Row>
-                                </div>
+                                        </FormGroup>
+                                      </Col>
+                                      <Col>
+                                        <FormGroup>
+                                          <Label className='form-control-label'>
+                                            Last Name:
+                                          </Label>
+                                          <Input
+                                            type='text'
+                                            placeholder='Doe'
+                                            name='lastName'
+                                            value={values.lastName}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                          />
+                                        </FormGroup>
+                                      </Col>
+                                    </Row>
+                                    <Row>
+                                      <Col>
+                                        <FormGroup>
+                                          <Label className='form-control-label'>
+                                            Email:
+                                          </Label>
+                                          <Input
+                                            type='text'
+                                            name='email'
+                                            placeholder='john.doe@example.com'
+                                            value={values.email}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                          />
+                                          <small>
+                                            If email is changed, the email
+                                            linked to your account won't be
+                                            updated until you confirm it. We
+                                            will send a confirmation email to
+                                            your currently linked email account.
+                                          </small>
+                                        </FormGroup>
+                                      </Col>
+                                    </Row>
+                                  </Col>
+                                </Row>
+                                <Button
+                                  className='btn-icon'
+                                  color='success'
+                                  type='submit'
+                                  onClick={handleSubmit}
+                                  block
+                                >
+                                  <span className='btn-inner--icon'>
+                                    <i className='fas fa-save'></i>
+                                  </span>
+                                  {infoProcessing ? (
+                                    <span className='btn-inner--text'>
+                                      <SpinnerCircular
+                                        size={24}
+                                        thickness={180}
+                                        speed={100}
+                                        color='rgba(57, 125, 172, 1)'
+                                        secondaryColor='rgba(0, 0, 0, 0.44)'
+                                      />{' '}
+                                      Processing...
+                                    </span>
+                                  ) : (
+                                    <span className='btn-inner--text'>
+                                      Save Changes
+                                    </span>
+                                  )}
+                                </Button>
                               </Form>
+                            </Fragment>
+                          )}
+                        />
+                      </Col>
+                    </Row>
+                    <hr />
+                    <Row>
+                      <Col>
+                        <h3>Change Password:</h3>
+                        <Formik
+                          initialValues={{
+                            currentPassword: '',
+                            newPassword: '',
+                            confirmPassword: ''
+                          }}
+                          onSubmit={data => console.log(data)}
+                          validationSchema={passSchema}
+                          render={({
+                            handleSubmit,
+                            handleChange,
+                            handleBlur,
+                            values,
+                            errors,
+                            touched
+                          }) => (
+                            <Form onSubmit={handleSubmit}>
+                              <Row>
+                                <Col>
+                                  <FormGroup>
+                                    <Input
+                                      type='password'
+                                      name='currentPassword'
+                                      value={values.currentPassword}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      placeholder='Current Password'
+                                    />
+                                    {errors.currentPassword &&
+                                      touched.currentPassword && (
+                                        <p className='color-red'>
+                                          {errors.currentPassword}
+                                        </p>
+                                      )}
+                                  </FormGroup>
+                                </Col>
+                                <Col>
+                                  <FormGroup>
+                                    <Input
+                                      type='password'
+                                      name='newPassword'
+                                      value={values.newPassword}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      placeholder='New Password'
+                                    />
+                                    {errors.newPassword &&
+                                      touched.newPassword && (
+                                        <p className='color-red'>
+                                          {errors.newPassword}
+                                        </p>
+                                      )}
+                                  </FormGroup>
+                                </Col>
+                                <Col>
+                                  <FormGroup>
+                                    <Input
+                                      type='password'
+                                      name='confirmPassword'
+                                      value={values.confirmPassword}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      placeholder='Confirm Password'
+                                    />
+                                    {errors.confirmPassword &&
+                                      touched.confirmPassword && (
+                                        <p className='color-red'>
+                                          {errors.confirmPassword}
+                                        </p>
+                                      )}
+                                  </FormGroup>
+                                </Col>
+                              </Row>
                               <Button
                                 className='btn-icon'
-                                color='success'
+                                color='primary'
                                 type='submit'
                                 onClick={handleSubmit}
                                 block
@@ -361,645 +406,909 @@ const Settings = ({
                                   </span>
                                 ) : (
                                   <span className='btn-inner--text'>
-                                    Save Changes
+                                    Change Password
                                   </span>
                                 )}
                               </Button>
-                            </Container>
+                            </Form>
                           )}
                         />
-                      ) : (
-                        <Container>
-                          <div className='text-center mgn-top-50'>
-                            <Row>
-                              <Col sm='12'>
-                                <SpinnerCircular
-                                  size={40}
-                                  thickness={180}
-                                  speed={100}
-                                  color='rgba(57, 125, 172, 1)'
-                                  secondaryColor='rgba(0, 0, 0, 0.44)'
-                                />{' '}
-                              </Col>
-                            </Row>
-                            <Row>
-                              <Col sm='12'>
-                                <h4>Loading Data...</h4>
-                              </Col>
-                            </Row>
-                          </div>
-                        </Container>
-                      )}
-                    </Col>
-                  </Row>
-                </TabPane>
-                <TabPane tabId='2'>
-                  <Row>
-                    {!emailLoading && emailSettings ? (
-                      <Formik
-                        initialValues={{
-                          emailSendUnable: emailSettings.emailSendUnable,
-                          emailSendSummary: emailSettings.emailSendSummary,
-                          emailSendChecklist: emailSettings.emailSendChecklist,
-                          emailSendReadings: emailSettings.emailSendReadings,
-                          emailShowReadingNumbers:
-                            emailSettings.emailShowReadingNumbers,
-                          emailShowChemicalsUsed:
-                            emailSettings.emailShowChemicalsUsed,
-                          emailSendTechnician: emailSettings.emailShowTechnician
-                        }}
-                        onSubmit={async data => {
-                          setIsProcessing(true);
-                          await updateAccountEmailSettings(data);
-                          setIsProcessing(false);
-                        }}
-                        innerRef={emailRef}
-                        render={({
-                          handleSubmit,
-                          handleChange,
-                          handleBlur,
-                          values
-                        }) => (
-                          <Container>
-                            <Form onSubmit={handleSubmit}>
-                              <br />
-                              <h6 className='heading-small text-muted mb-4'>
-                                Service Emails:
-                              </h6>
+                      </Col>
+                    </Row>
+                  </CardBody>
+                ) : (
+                  <Fragment>
+                    <CardBody>
+                      <div>
+                        <Nav tabs>
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
+                                active: activeTab === '1'
+                              })}
+                              onClick={() => {
+                                toggle('1');
+                              }}
+                            >
+                              Business Information
+                            </NavLink>
+                          </NavItem>
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
+                                active: activeTab === '2'
+                              })}
+                              onClick={() => {
+                                toggle('2');
+                              }}
+                            >
+                              Email Settings
+                            </NavLink>
+                          </NavItem>
 
-                              <div className='pl-lg-4'>
-                                <Row>
-                                  <Col>
-                                    {' '}
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Send Email If Unable To Service? <br />
-                                        <small>
-                                          <em>
-                                            Default: Enabled - If enabled, a
-                                            email is sent to the customer any
-                                            time a technician marks a customer
-                                            as "Unable To Service" during their
-                                            route. This will also send the
-                                            customer the reason for being unable
-                                            to service the pool that the
-                                            technician enters when they mark it
-                                            as such.
-                                          </em>
-                                        </small>
-                                      </Label>
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
+                                active: activeTab === '3'
+                              })}
+                              onClick={() => {
+                                toggle('3');
+                              }}
+                            >
+                              Email Chemical Fields
+                            </NavLink>
+                          </NavItem>
 
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailSendUnable'
-                                          onChange={handleChange}
-                                          checked={values.emailSendUnable}
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                    </FormGroup>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Send Service Summary to Customer? <br />
-                                        <small>
-                                          <em>
-                                            Default: Enabled - If enabled, a
-                                            email summary will be emailed to the
-                                            customer each time a technician logs
-                                            a service visit for that customer.
-                                          </em>
-                                        </small>
-                                      </Label>
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
+                                active: activeTab === '4'
+                              })}
+                              onClick={() => {
+                                toggle('4');
+                              }}
+                            >
+                              User Permissions
+                            </NavLink>
+                          </NavItem>
+                        </Nav>
+                      </div>
 
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailSendSummary'
-                                          onChange={handleChange}
-                                          checked={values.emailSendSummary}
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                      <div
-                                        style={{
-                                          width: 10,
-                                          height: 10,
-                                          backgroundColor: 'red'
-                                        }}
-                                      ></div>
-                                    </FormGroup>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Send Technician Name? <br />
-                                        <small>
-                                          <em>
-                                            Default: Enabled - If enabled, will
-                                            attach technicians name to email
-                                            sent to customer.
-                                          </em>
-                                        </small>
-                                      </Label>
-
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailSendTechnician'
-                                          onChange={handleChange}
-                                          checked={values.emailSendTechnician}
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                    </FormGroup>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Send Service Checklist?
-                                        <br />
-                                        <small>
-                                          <em>
-                                            Default: Enabled - This will attach
-                                            a list of all completed services.
-                                          </em>
-                                        </small>
-                                      </Label>
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailSendChecklist'
-                                          onChange={handleChange}
-                                          checked={values.emailSendChecklist}
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                      <div
-                                        style={{
-                                          width: 10,
-                                          height: 10,
-                                          backgroundColor: 'orange'
-                                        }}
-                                      ></div>
-                                    </FormGroup>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Send Chemical Readings?
-                                        <br />
-                                        <small>
-                                          <em>
-                                            Default: Enabled - This will attach
-                                            a list of chemical readings.
-                                          </em>
-                                        </small>
-                                      </Label>
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailSendReadings'
-                                          onChange={handleChange}
-                                          checked={values.emailSendReadings}
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                      <div
-                                        style={{
-                                          width: 10,
-                                          height: 10,
-                                          backgroundColor: 'dodgerblue'
-                                        }}
-                                      ></div>
-                                    </FormGroup>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Show Chemical Reading Numbers?
-                                        <br />
-                                        <small>
-                                          <em>
-                                            Default: Disabled - By default the
-                                            chemical readings will be sent to
-                                            the customer as "Average", "Below
-                                            Average" or "Above Average". With
-                                            this option enabled the exact
-                                            reading numbers will be sent to the
-                                            customer.
-                                          </em>
-                                        </small>
-                                      </Label>
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailShowReadingNumbers'
-                                          onChange={handleChange}
-                                          checked={
-                                            values.emailShowReadingNumbers
-                                          }
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                      <div
-                                        style={{
-                                          width: 10,
-                                          height: 10,
-                                          backgroundColor: 'dodgerblue'
-                                        }}
-                                      ></div>
-                                    </FormGroup>
-                                    <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Send Chemicals Used?
-                                        <br />
-                                        <small>
-                                          <em>
-                                            Default: Enabled - Sends a list of
-                                            the chemicals added to the pool
-                                            during service visit.
-                                          </em>
-                                        </small>
-                                      </Label>
-                                      <br />
-                                      <Label className='custom-toggle'>
-                                        <Input
-                                          type='checkbox'
-                                          name='emailShowChemicalsUsed'
-                                          onChange={handleChange}
-                                          checked={
-                                            values.emailShowChemicalsUsed
-                                          }
-                                        />
-                                        <span
-                                          className='custom-toggle-slider rounded-circle'
-                                          data-label-off='No'
-                                          data-label-on='Yes'
-                                        ></span>
-                                      </Label>
-                                      <div
-                                        style={{
-                                          width: 10,
-                                          height: 10,
-                                          backgroundColor: 'purple'
-                                        }}
-                                      ></div>
-                                    </FormGroup>
-                                    <Button
-                                      className='btn-icon'
-                                      type='submit'
-                                      color='success'
-                                      onClick={handleSubmit}
-                                      block
-                                    >
-                                      <span className='btn-inner--icon'>
-                                        <i className='fas fa-save'></i>
-                                      </span>
-                                      {isProcessing ? (
-                                        <span className='btn-inner--text'>
-                                          <SpinnerCircular
-                                            size={24}
-                                            thickness={180}
-                                            speed={100}
-                                            color='rgba(57, 125, 172, 1)'
-                                            secondaryColor='rgba(0, 0, 0, 0.44)'
-                                          />{' '}
-                                          Processing...
-                                        </span>
-                                      ) : (
-                                        <span className='btn-inner--text'>
-                                          Save Changes
-                                        </span>
-                                      )}
-                                    </Button>
-                                  </Col>
-                                  <Col>
-                                    <Card>
-                                      <CardBody className='text-center'>
-                                        <img src={emailExample} />
-                                      </CardBody>
-                                    </Card>
-                                  </Col>
-                                </Row>
-                              </div>
-                            </Form>
-                          </Container>
-                        )}
-                      />
-                    ) : (
-                      <Container>
-                        <div className='text-center mgn-top-50'>
+                      <TabContent activeTab={activeTab}>
+                        <TabPane tabId='1'>
                           <Row>
                             <Col sm='12'>
-                              <SpinnerCircular
-                                size={40}
-                                thickness={180}
-                                speed={100}
-                                color='rgba(57, 125, 172, 1)'
-                                secondaryColor='rgba(0, 0, 0, 0.44)'
-                              />{' '}
-                            </Col>
-                          </Row>
-                          <Row>
-                            <Col sm='12'>
-                              <h4>Loading Data...</h4>
-                            </Col>
-                          </Row>
-                        </div>
-                      </Container>
-                    )}
-                  </Row>
-                </TabPane>
+                              {!loading && businessInfo ? (
+                                <Formik
+                                  initialValues={{
+                                    businessName: businessInfo
+                                      ? businessInfo.businessName
+                                      : '',
+                                    businessPhone: businessInfo
+                                      ? businessInfo.businessPhone
+                                      : '',
+                                    businessEmail: businessInfo
+                                      ? businessInfo.businessEmail
+                                      : '',
+                                    businessAddress:
+                                      businessInfo.businessAddress
+                                  }}
+                                  onSubmit={async data => {
+                                    setInfoProcessing(true);
+                                    await uploadLogo();
+                                    await updateBusinessInfo(data);
+                                    // await getBusinessInfo();
+                                    setInfoProcessing(false);
+                                  }}
+                                  render={({
+                                    handleSubmit,
+                                    handleChange,
+                                    handleBlur,
+                                    values
+                                  }) => (
+                                    <Container>
+                                      <Form>
+                                        <br />
+                                        <h6 className='heading-small text-muted mb-4'>
+                                          Business Settings:
+                                        </h6>
 
-                <TabPane tabId='3'>
-                  <Row>
-                    <Col sm='12'>
-                      {!emailLoading && emailSettings ? (
-                        <Formik
-                          initialValues={{
-                            freeChlorine: emailSettings.emailSendFreeChlorine,
-                            pHlevel: emailSettings.emailSendpHlevel,
-                            alkalinity: emailSettings.emailSendAlkalinity,
-                            conditionerLevel:
-                              emailSettings.emailSendConditioner,
-                            hardness: emailSettings.emailSendHardness,
-                            phosphateLevel:
-                              emailSettings.emailSendPhosphateLevel,
-                            saltLevel: emailSettings.emailSendSaltLevel
-                          }}
-                          onSubmit={async data => {
-                            setIsProcessing(true);
-                            await updateAccountEmailReadings(data);
+                                        <div className='pl-lg-4'>
+                                          <Row>
+                                            <Col>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Business Logo:
+                                                </Label>{' '}
+                                                <br />
+                                                {businessInfo.businessLogo && (
+                                                  <img
+                                                    width='50%'
+                                                    src={
+                                                      businessInfo.businessLogo
+                                                    }
+                                                    alt={
+                                                      businessInfo.businessName
+                                                    }
+                                                  />
+                                                )}
+                                                <ImageUploader
+                                                  withIcon={true}
+                                                  buttonText='Choose Image'
+                                                  onChange={onDrop}
+                                                  imgExtension={[
+                                                    '.jpg',
+                                                    '.gif',
+                                                    '.png',
+                                                    '.gif'
+                                                  ]}
+                                                  maxFileSize={5242880}
+                                                  withPreview={true}
+                                                  singleImage={true}
+                                                />
+                                              </FormGroup>
+                                            </Col>
+                                            <Col>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Business Name:
+                                                </Label>
+                                                <Input
+                                                  type='text'
+                                                  name='businessName'
+                                                  value={values.businessName}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                              </FormGroup>
 
-                            setIsProcessing(false);
-                          }}
-                          render={({
-                            handleSubmit,
-                            handleChange,
-                            handleBlur,
-                            values
-                          }) => (
-                            <Container>
-                              <Form>
-                                <br />
-                                <h6 className='heading-small text-muted mb-4'>
-                                  Email Chemical Field Settings: <br />
-                                  <small>
-                                    If the "Send Chemical Readings?" option is
-                                    enabled you can choose what readings to send
-                                    the customer here.
-                                  </small>
-                                </h6>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Business Phone:
+                                                </Label>
+                                                <Input
+                                                  type='tel'
+                                                  name='businessPhone'
+                                                  value={values.businessPhone}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+                                          <Row>
+                                            <Col>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Business Email:
+                                                </Label>
+                                                <Input
+                                                  type='tel'
+                                                  name='businessEmail'
+                                                  value={values.businessEmail}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                              </FormGroup>
 
-                                <div className='pl-lg-4'>
-                                  <Row>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send Free Chlorine Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='freeChlorine'
-                                            onChange={handleChange}
-                                            checked={values.freeChlorine}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send pH Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='pHlevel'
-                                            onChange={handleChange}
-                                            checked={values.pHlevel}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                  </Row>
-
-                                  <Row>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send Alkalinity Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='alkalinity'
-                                            onChange={handleChange}
-                                            checked={values.alkalinity}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send Conditioner Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='conditionerLevel'
-                                            onChange={handleChange}
-                                            checked={values.conditionerLevel}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                  </Row>
-
-                                  <Row>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send Hardness Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='hardness'
-                                            onChange={handleChange}
-                                            checked={values.hardness}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send Phosphate Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='phosphateLevel'
-                                            onChange={handleChange}
-                                            checked={values.phosphateLevel}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                  </Row>
-
-                                  <Row>
-                                    <Col sm='6'>
-                                      <FormGroup>
-                                        <Label className='form-control-label'>
-                                          Send Salt Level?
-                                        </Label>
-                                        <br />
-                                        <Label className='custom-toggle'>
-                                          <Input
-                                            type='checkbox'
-                                            name='saltLevel'
-                                            onChange={handleChange}
-                                            checked={values.saltLevel}
-                                          />
-                                          <span
-                                            className='custom-toggle-slider rounded-circle'
-                                            data-label-off='No'
-                                            data-label-on='Yes'
-                                          ></span>
-                                        </Label>
-                                      </FormGroup>
-                                    </Col>
-                                  </Row>
-                                  <Button
-                                    className='btn-icon'
-                                    type='submit'
-                                    color='success'
-                                    onClick={handleSubmit}
-                                    block
-                                  >
-                                    <span className='btn-inner--icon'>
-                                      <i className='fas fa-save'></i>
-                                    </span>
-                                    {isProcessing ? (
-                                      <span className='btn-inner--text'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Business Address:
+                                                </Label>
+                                                <Input
+                                                  type='tel'
+                                                  name='businessAddress'
+                                                  value={values.businessAddress}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+                                        </div>
+                                      </Form>
+                                      <Button
+                                        className='btn-icon'
+                                        color='success'
+                                        type='submit'
+                                        onClick={handleSubmit}
+                                        block
+                                      >
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-save'></i>
+                                        </span>
+                                        {infoProcessing ? (
+                                          <span className='btn-inner--text'>
+                                            <SpinnerCircular
+                                              size={24}
+                                              thickness={180}
+                                              speed={100}
+                                              color='rgba(57, 125, 172, 1)'
+                                              secondaryColor='rgba(0, 0, 0, 0.44)'
+                                            />{' '}
+                                            Processing...
+                                          </span>
+                                        ) : (
+                                          <span className='btn-inner--text'>
+                                            Save Changes
+                                          </span>
+                                        )}
+                                      </Button>
+                                    </Container>
+                                  )}
+                                />
+                              ) : (
+                                <Container>
+                                  <div className='text-center mgn-top-50'>
+                                    <Row>
+                                      <Col sm='12'>
                                         <SpinnerCircular
-                                          size={24}
+                                          size={40}
                                           thickness={180}
                                           speed={100}
                                           color='rgba(57, 125, 172, 1)'
                                           secondaryColor='rgba(0, 0, 0, 0.44)'
                                         />{' '}
-                                        Processing...
-                                      </span>
-                                    ) : (
-                                      <span className='btn-inner--text'>
-                                        Save Changes
-                                      </span>
-                                    )}
-                                  </Button>
-                                </div>
-                              </Form>
-                            </Container>
-                          )}
-                        />
-                      ) : (
-                        <Container>
-                          <div className='text-center mgn-top-50'>
-                            <Row>
-                              <Col sm='12'>
-                                <SpinnerCircular
-                                  size={40}
-                                  thickness={180}
-                                  speed={100}
-                                  color='rgba(57, 125, 172, 1)'
-                                  secondaryColor='rgba(0, 0, 0, 0.44)'
-                                />{' '}
-                              </Col>
-                            </Row>
-                            <Row>
-                              <Col sm='12'>
-                                <h4>Loading Data...</h4>
-                              </Col>
-                            </Row>
-                          </div>
-                        </Container>
-                      )}
-                    </Col>
-                  </Row>
-                </TabPane>
+                                      </Col>
+                                    </Row>
+                                    <Row>
+                                      <Col sm='12'>
+                                        <h4>Loading Data...</h4>
+                                      </Col>
+                                    </Row>
+                                  </div>
+                                </Container>
+                              )}
+                            </Col>
+                          </Row>
+                        </TabPane>
+                        <TabPane tabId='2'>
+                          <Row>
+                            {!emailLoading && emailSettings ? (
+                              <Formik
+                                initialValues={{
+                                  emailSendUnable:
+                                    emailSettings.emailSendUnable,
+                                  emailSendSummary:
+                                    emailSettings.emailSendSummary,
+                                  emailSendChecklist:
+                                    emailSettings.emailSendChecklist,
+                                  emailSendReadings:
+                                    emailSettings.emailSendReadings,
+                                  emailShowReadingNumbers:
+                                    emailSettings.emailShowReadingNumbers,
+                                  emailShowChemicalsUsed:
+                                    emailSettings.emailShowChemicalsUsed,
+                                  emailSendTechnician:
+                                    emailSettings.emailShowTechnician
+                                }}
+                                onSubmit={async data => {
+                                  setIsProcessing(true);
+                                  await updateAccountEmailSettings(data);
+                                  setIsProcessing(false);
+                                }}
+                                innerRef={emailRef}
+                                render={({
+                                  handleSubmit,
+                                  handleChange,
+                                  handleBlur,
+                                  values
+                                }) => (
+                                  <Container>
+                                    <Form onSubmit={handleSubmit}>
+                                      <br />
+                                      <h6 className='heading-small text-muted mb-4'>
+                                        Service Emails:
+                                      </h6>
 
-                <TabPane tabId='4'>
-                  <Row>
-                    <Col sm='12'>
-                      <h4>User Permissions</h4>
-                    </Col>
-                  </Row>
-                </TabPane>
-              </TabContent>
-            </CardBody>
+                                      <div className='pl-lg-4'>
+                                        <Row>
+                                          <Col>
+                                            {' '}
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Email If Unable To Service?{' '}
+                                                <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - If
+                                                    enabled, a email is sent to
+                                                    the customer any time a
+                                                    technician marks a customer
+                                                    as "Unable To Service"
+                                                    during their route. This
+                                                    will also send the customer
+                                                    the reason for being unable
+                                                    to service the pool that the
+                                                    technician enters when they
+                                                    mark it as such.
+                                                  </em>
+                                                </small>
+                                              </Label>
+
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailSendUnable'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailSendUnable
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                            </FormGroup>
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Service Summary to
+                                                Customer? <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - If
+                                                    enabled, a email summary
+                                                    will be emailed to the
+                                                    customer each time a
+                                                    technician logs a service
+                                                    visit for that customer.
+                                                  </em>
+                                                </small>
+                                              </Label>
+
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailSendSummary'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailSendSummary
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                              <div
+                                                style={{
+                                                  width: 10,
+                                                  height: 10,
+                                                  backgroundColor: 'red'
+                                                }}
+                                              ></div>
+                                            </FormGroup>
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Technician Name? <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - If
+                                                    enabled, will attach
+                                                    technicians name to email
+                                                    sent to customer.
+                                                  </em>
+                                                </small>
+                                              </Label>
+
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailSendTechnician'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailSendTechnician
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                            </FormGroup>
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Service Checklist?
+                                                <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - This will
+                                                    attach a list of all
+                                                    completed services.
+                                                  </em>
+                                                </small>
+                                              </Label>
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailSendChecklist'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailSendChecklist
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                              <div
+                                                style={{
+                                                  width: 10,
+                                                  height: 10,
+                                                  backgroundColor: 'orange'
+                                                }}
+                                              ></div>
+                                            </FormGroup>
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Chemical Readings?
+                                                <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - This will
+                                                    attach a list of chemical
+                                                    readings.
+                                                  </em>
+                                                </small>
+                                              </Label>
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailSendReadings'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailSendReadings
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                              <div
+                                                style={{
+                                                  width: 10,
+                                                  height: 10,
+                                                  backgroundColor: 'dodgerblue'
+                                                }}
+                                              ></div>
+                                            </FormGroup>
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Show Chemical Reading Numbers?
+                                                <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Disabled - By
+                                                    default the chemical
+                                                    readings will be sent to the
+                                                    customer as "Average",
+                                                    "Below Average" or "Above
+                                                    Average". With this option
+                                                    enabled the exact reading
+                                                    numbers will be sent to the
+                                                    customer.
+                                                  </em>
+                                                </small>
+                                              </Label>
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailShowReadingNumbers'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailShowReadingNumbers
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                              <div
+                                                style={{
+                                                  width: 10,
+                                                  height: 10,
+                                                  backgroundColor: 'dodgerblue'
+                                                }}
+                                              ></div>
+                                            </FormGroup>
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Chemicals Used?
+                                                <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - Sends a
+                                                    list of the chemicals added
+                                                    to the pool during service
+                                                    visit.
+                                                  </em>
+                                                </small>
+                                              </Label>
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailShowChemicalsUsed'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailShowChemicalsUsed
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                              <div
+                                                style={{
+                                                  width: 10,
+                                                  height: 10,
+                                                  backgroundColor: 'purple'
+                                                }}
+                                              ></div>
+                                            </FormGroup>
+                                            <Button
+                                              className='btn-icon'
+                                              type='submit'
+                                              color='success'
+                                              onClick={handleSubmit}
+                                              block
+                                            >
+                                              <span className='btn-inner--icon'>
+                                                <i className='fas fa-save'></i>
+                                              </span>
+                                              {isProcessing ? (
+                                                <span className='btn-inner--text'>
+                                                  <SpinnerCircular
+                                                    size={24}
+                                                    thickness={180}
+                                                    speed={100}
+                                                    color='rgba(57, 125, 172, 1)'
+                                                    secondaryColor='rgba(0, 0, 0, 0.44)'
+                                                  />{' '}
+                                                  Processing...
+                                                </span>
+                                              ) : (
+                                                <span className='btn-inner--text'>
+                                                  Save Changes
+                                                </span>
+                                              )}
+                                            </Button>
+                                          </Col>
+                                          <Col>
+                                            <Card>
+                                              <CardBody className='text-center'>
+                                                <img src={emailExample} />
+                                              </CardBody>
+                                            </Card>
+                                          </Col>
+                                        </Row>
+                                      </div>
+                                    </Form>
+                                  </Container>
+                                )}
+                              />
+                            ) : (
+                              <Container>
+                                <div className='text-center mgn-top-50'>
+                                  <Row>
+                                    <Col sm='12'>
+                                      <SpinnerCircular
+                                        size={40}
+                                        thickness={180}
+                                        speed={100}
+                                        color='rgba(57, 125, 172, 1)'
+                                        secondaryColor='rgba(0, 0, 0, 0.44)'
+                                      />{' '}
+                                    </Col>
+                                  </Row>
+                                  <Row>
+                                    <Col sm='12'>
+                                      <h4>Loading Data...</h4>
+                                    </Col>
+                                  </Row>
+                                </div>
+                              </Container>
+                            )}
+                          </Row>
+                        </TabPane>
+
+                        <TabPane tabId='3'>
+                          <Row>
+                            <Col sm='12'>
+                              {!emailLoading && emailSettings ? (
+                                <Formik
+                                  initialValues={{
+                                    freeChlorine:
+                                      emailSettings.emailSendFreeChlorine,
+                                    pHlevel: emailSettings.emailSendpHlevel,
+                                    alkalinity:
+                                      emailSettings.emailSendAlkalinity,
+                                    conditionerLevel:
+                                      emailSettings.emailSendConditioner,
+                                    hardness: emailSettings.emailSendHardness,
+                                    phosphateLevel:
+                                      emailSettings.emailSendPhosphateLevel,
+                                    saltLevel: emailSettings.emailSendSaltLevel
+                                  }}
+                                  onSubmit={async data => {
+                                    setIsProcessing(true);
+                                    await updateAccountEmailReadings(data);
+
+                                    setIsProcessing(false);
+                                  }}
+                                  render={({
+                                    handleSubmit,
+                                    handleChange,
+                                    handleBlur,
+                                    values
+                                  }) => (
+                                    <Container>
+                                      <Form>
+                                        <br />
+                                        <h6 className='heading-small text-muted mb-4'>
+                                          Email Chemical Field Settings: <br />
+                                          <small>
+                                            If the "Send Chemical Readings?"
+                                            option is enabled you can choose
+                                            what readings to send the customer
+                                            here.
+                                          </small>
+                                        </h6>
+
+                                        <div className='pl-lg-4'>
+                                          <Row>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send Free Chlorine Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='freeChlorine'
+                                                    onChange={handleChange}
+                                                    checked={
+                                                      values.freeChlorine
+                                                    }
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send pH Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='pHlevel'
+                                                    onChange={handleChange}
+                                                    checked={values.pHlevel}
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+
+                                          <Row>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send Alkalinity Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='alkalinity'
+                                                    onChange={handleChange}
+                                                    checked={values.alkalinity}
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send Conditioner Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='conditionerLevel'
+                                                    onChange={handleChange}
+                                                    checked={
+                                                      values.conditionerLevel
+                                                    }
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+
+                                          <Row>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send Hardness Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='hardness'
+                                                    onChange={handleChange}
+                                                    checked={values.hardness}
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send Phosphate Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='phosphateLevel'
+                                                    onChange={handleChange}
+                                                    checked={
+                                                      values.phosphateLevel
+                                                    }
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+
+                                          <Row>
+                                            <Col sm='6'>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Send Salt Level?
+                                                </Label>
+                                                <br />
+                                                <Label className='custom-toggle'>
+                                                  <Input
+                                                    type='checkbox'
+                                                    name='saltLevel'
+                                                    onChange={handleChange}
+                                                    checked={values.saltLevel}
+                                                  />
+                                                  <span
+                                                    className='custom-toggle-slider rounded-circle'
+                                                    data-label-off='No'
+                                                    data-label-on='Yes'
+                                                  ></span>
+                                                </Label>
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+                                          <Button
+                                            className='btn-icon'
+                                            type='submit'
+                                            color='success'
+                                            onClick={handleSubmit}
+                                            block
+                                          >
+                                            <span className='btn-inner--icon'>
+                                              <i className='fas fa-save'></i>
+                                            </span>
+                                            {isProcessing ? (
+                                              <span className='btn-inner--text'>
+                                                <SpinnerCircular
+                                                  size={24}
+                                                  thickness={180}
+                                                  speed={100}
+                                                  color='rgba(57, 125, 172, 1)'
+                                                  secondaryColor='rgba(0, 0, 0, 0.44)'
+                                                />{' '}
+                                                Processing...
+                                              </span>
+                                            ) : (
+                                              <span className='btn-inner--text'>
+                                                Save Changes
+                                              </span>
+                                            )}
+                                          </Button>
+                                        </div>
+                                      </Form>
+                                    </Container>
+                                  )}
+                                />
+                              ) : (
+                                <Container>
+                                  <div className='text-center mgn-top-50'>
+                                    <Row>
+                                      <Col sm='12'>
+                                        <SpinnerCircular
+                                          size={40}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />{' '}
+                                      </Col>
+                                    </Row>
+                                    <Row>
+                                      <Col sm='12'>
+                                        <h4>Loading Data...</h4>
+                                      </Col>
+                                    </Row>
+                                  </div>
+                                </Container>
+                              )}
+                            </Col>
+                          </Row>
+                        </TabPane>
+
+                        <TabPane tabId='4'>
+                          <Row>
+                            <Col sm='12'>
+                              <h4>User Permissions</h4>
+                            </Col>
+                          </Row>
+                        </TabPane>
+                      </TabContent>
+                    </CardBody>
+                  </Fragment>
+                )}
+              </Fragment>
+            )}
           </Card>
           <Footer />
         </Container>
@@ -1014,12 +1323,15 @@ Settings.propTypes = {
   getBusinessInfo: PropTypes.func.isRequired,
   updateAccountEmailReadings: PropTypes.func.isRequired,
   getEmailSettings: PropTypes.func.isRequired,
-  businessInfo: PropTypes.object.isRequired
+  updateMyInfo: PropTypes.func.isRequired,
+  businessInfo: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired
   // emailSettings: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
-  businessInfo: state.user
+  businessInfo: state.user,
+  auth: state.auth
 });
 
 export default connect(mapStateToProps, {
@@ -1027,5 +1339,6 @@ export default connect(mapStateToProps, {
   updateBusinessInfo,
   getBusinessInfo,
   updateAccountEmailReadings,
-  getEmailSettings
+  getEmailSettings,
+  updateMyInfo
 })(Settings);

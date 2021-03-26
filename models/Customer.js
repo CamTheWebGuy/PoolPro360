@@ -6,6 +6,14 @@ const CustomerSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: 'users'
   },
+  name: {
+    first: {
+      type: String
+    },
+    last: {
+      type: String
+    }
+  },
   firstName: {
     type: String,
     required: true

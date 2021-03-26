@@ -23,6 +23,8 @@ import ViewUser from './components/Layout/ViewUser';
 import Routing from './components/Layout/Routing';
 import RouteBuilder from './components/Layout/RouteBuilder';
 import ViewRoute from './components/Layout/ViewMyRoute';
+import ViewLogs from './components/Layout/ViewLogs';
+import ChangeEmail from './components/Layout/ChangeEmail';
 
 import Settings from './components/Layout/Settings';
 
@@ -65,7 +67,13 @@ function App() {
             <PrivateRoute exact path='/users/:id/view' component={ViewUser} />
             <PrivateRoute exact path='/users/add' component={AddUser} />
             <PrivateRoute exact path='/view-my-route' component={ViewRoute} />
+            <PrivateRoute exact path='/view-logs' component={ViewLogs} />
             <PrivateRoute exact path='/account-settings' component={Settings} />
+            <PrivateRoute
+              exact
+              path='/change-email/:token'
+              component={ChangeEmail}
+            />
             <PrivateRoute
               exact
               path='/customers/:id/manage/equipment'

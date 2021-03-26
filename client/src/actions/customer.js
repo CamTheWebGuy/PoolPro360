@@ -9,7 +9,8 @@ import {
   GET_CUSTOMER_CHECKLIST,
   GET_ALL_CUSTOMERS,
   CLEAR_CUSTOMERS,
-  GET_EMAIL_SETTINGS
+  GET_EMAIL_SETTINGS,
+  GET_SERVICE_LOGS
 } from './types';
 
 // Add Customer
@@ -867,12 +868,6 @@ export const addServiceLog = (
 
 // Send Service Report Email
 export const sendServiceReport = (customerId, activityId) => async dispatch => {
-  const config = {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
-
   try {
     await axios.post(
       `/api/customers/servicereport/${customerId}/${activityId}`
@@ -1004,6 +999,25 @@ export const unableService = (customerId, message) => async dispatch => {
       body,
       config
     );
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Service Logs
+export const getServiceLogs = techId => async dispatch => {
+  try {
+    const logs = await axios.get(`/api/customers/serviceLogs/${techId}`);
+
+    dispatch({
+      type: GET_SERVICE_LOGS,
+      payload: logs.data
+    });
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

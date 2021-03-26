@@ -8,7 +8,8 @@ import {
   GET_ROUTE,
   GET_ALL_CUSTOMERS,
   CLEAR_CUSTOMERS,
-  ROUTE_OPTIMIZED
+  ROUTE_OPTIMIZED,
+  GET_SERVICE_LOGS
 } from '../actions/types';
 
 const initialState = {
@@ -21,7 +22,8 @@ const initialState = {
   checklist: [],
   routeList: [],
   isRouteOptimized: false,
-  allCustomers: []
+  allCustomers: [],
+  serviceLogs: []
 };
 
 export default function(state = initialState, action) {
@@ -38,6 +40,11 @@ export default function(state = initialState, action) {
         ...state,
         isRouteOptimized: payload
       };
+    case GET_SERVICE_LOGS:
+      return {
+        ...state,
+        serviceLogs: payload
+      };
     case GET_ALL_CUSTOMERS:
       return {
         ...state,
@@ -53,7 +60,8 @@ export default function(state = initialState, action) {
         recentActivity: [],
         checklist: [],
         routeList: [],
-        allCustomers: []
+        allCustomers: [],
+        serviceLogs: []
       };
     case GET_ROUTE:
       return {

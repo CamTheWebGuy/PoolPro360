@@ -4081,6 +4081,7 @@ const Dashboard = ({
                 </Card>
               </Col>
             </Row>
+            <Footer />
           </Container>
         )}
 

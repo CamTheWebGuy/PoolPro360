@@ -218,9 +218,9 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                       <li className='nav-item nav-ctrl'>
                         <Link
                           className={`nav-link ${
-                            active === 'routing' ? 'active' : ''
+                            active === 'view-logs' ? 'active' : ''
                           }`}
-                          to='/view-my-route'
+                          to='/view-logs'
                         >
                           <i className='fas fa-clipboard-list text-green mgn-right-5'></i>{' '}
                           <span className='nav-link-text'>Service Logs</span>

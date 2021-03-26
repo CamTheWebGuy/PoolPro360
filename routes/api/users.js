@@ -6,12 +6,16 @@ const config = require('config');
 const { check, validationResult } = require('express-validator');
 const auth = require('../../middleware/auth');
 
+const nodemailer = require('nodemailer');
+const nodemailMailgun = require('nodemailer-mailgun-transport');
+
 const aws = require('aws-sdk');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const { v4: uuidv4 } = require('uuid');
 
 const User = require('../../models/User');
+const Reset = require('../../models/Reset');
 
 aws.config.update({
   secretAccessKey: config.get('aws_secret_key'),
@@ -464,18 +468,6 @@ router.post('/updateLogo', auth, async (req, res) => {
         }
       }
     );
-
-    // const downloadUrl = await uploadToS3(req, res);
-
-    // if (isOwner) {
-    //   user.businessInfo.businessLogo = downloadUrl;
-    //   await user.save();
-    //   return res.json(user.businessInfo.businessLogo);
-    // } else {
-    //   owner.businessInfo.businessLogo = downloadUrl;
-    //   await owner.save();
-    //   return res.json(owner.businessInfo.businessLogo);
-    // }
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {
@@ -484,5 +476,168 @@ router.post('/updateLogo', auth, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// @route    POST api/users/updateInfo
+// @desc     Update My Information
+// @access   Private/User
+router.post(
+  '/updateInfo',
+  [
+    auth,
+    [
+      check('firstName', 'a First Name is required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('lastName', 'a Last Name is required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('email')
+        .isEmail()
+        .normalizeEmail()
+        .trim()
+        .escape()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { firstName, lastName, email } = req.body;
+
+    try {
+      const user = await User.findById(req.user.id);
+
+      // If no user found, return error
+      if (!user) {
+        return res.status(404).json({ msg: 'User not found' });
+      }
+
+      const token = uuidv4();
+
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.name = { first: firstName, last: lastName };
+
+      if (user.email !== email) {
+        user.newEmail = email;
+      }
+
+      await user.save();
+
+      if (user.email !== email) {
+        const reset = new Reset({
+          email: user.email,
+          user: user._id,
+          token: token
+        });
+
+        await reset.save();
+
+        // Nodemailer Auth
+        const auth = {
+          auth: {
+            api_key: config.get('mailgun_api_key'),
+            domain: config.get('mailgun_domain')
+          }
+        };
+
+        // Nodemailer Transporter
+        let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+
+        // Mail Options
+        const mailOptions = {
+          from: `${'PoolPro360'} <no-reply@poolpro360.com>`,
+          to: 'cameronanchondo@gmail.com',
+          replyTo: 'support@poolpro360.com',
+          subject: `Confirm Email Change Request`,
+          template: 'changeemail',
+          'h:X-Mailgun-Variables': JSON.stringify({
+            resetToken: token
+          })
+        };
+
+        // Send Email
+        transporter.sendMail(mailOptions, (err, data) => {
+          if (err) {
+            return console.log('Error: ', err);
+          } else {
+            console.log('Reset Email Sent');
+          }
+        });
+      }
+
+      res.status(200).json(user);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    POST api/users/updateEmail/:token
+// @desc     Update My Email
+// @access   Private/User
+router.post(
+  '/updateEmail/:token',
+  [
+    auth,
+    [
+      check('email')
+        .isEmail()
+        .normalizeEmail()
+        .trim()
+        .escape()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+
+    try {
+      const user = await User.findById(req.user.id);
+
+      // If no user found, return error
+      if (!user) {
+        return res.status(404).json({ msg: 'User not found' });
+      }
+
+      const reset = await Reset.findOne({
+        email: user.email,
+        user: user._id,
+        token: req.params.token
+      });
+
+      // If no reset found, return error
+      if (!reset) {
+        return res
+          .status(404)
+          .json({ msg: 'Reset token not found or not authorized' });
+      }
+
+      user.email = email;
+
+      await user.save();
+
+      await Reset.findOneAndDelete({ user: user._id, token: req.params.token });
+
+      res.status(200).json(user);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
 
 module.exports = router;

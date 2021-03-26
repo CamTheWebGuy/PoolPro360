@@ -196,6 +196,7 @@ router.post(
 
       let customer = new Customer({
         user: req.user.id,
+        name: { first: firstName, last: lastName },
         firstName,
         lastName,
         email,
@@ -2526,5 +2527,60 @@ router.post(
     }
   }
 );
+
+// @route    GET api/customers/serviceLogs/:techId
+// @desc     Get Technicians Service Logs by Tech ID
+// @access   Private/User
+router.get('/serviceLogs/:techId', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    // Make sure the user making request exists
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Check that we have permission to get this technicians service logs.
+
+    if (
+      user.role === 'Technician' &&
+      user._id.toString() === req.params.techId.toString()
+    ) {
+      const activities = await Activity.find({
+        creator: user._id,
+        log: 'Service'
+      }).populate('customer');
+      if (!activities) return res.status(404).send('No Logs Found');
+      return res.status(200).json(activities);
+    }
+
+    if (user.role === 'Admin') {
+      const tech = User.findById(req.params.techId);
+      if (user.owner === tech.owner) {
+        const activities = await Activity.find({
+          creator: user._id,
+          log: 'Service'
+        }).populate('customer');
+        if (!activities) return res.status(404).send('No Logs Found');
+        return res.status(200).json(activities);
+      }
+    }
+
+    if (user.role === 'Owner') {
+      const activities = await Activity.find({
+        user: user._id,
+        log: 'Service'
+      }).populate('customer');
+      if (!activities) return res.status(404).send('No Logs Found');
+      return res.status(200).json(activities);
+    }
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
 
 module.exports = router;

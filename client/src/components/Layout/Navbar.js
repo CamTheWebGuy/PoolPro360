@@ -1,14 +1,17 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 import { Row, Col, Container, Button, Nav } from 'react-bootstrap';
+
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 
 import '../../../node_modules/jquery/dist/jquery.min.js';
 import '../../../node_modules/bootstrap/dist/js/bootstrap.min.js';
 
-import logo from '../../img/brand/white.png';
+import logo from '../../img/brand/Logo_Light.svg';
 import mlogo from '../../img/brand/blue.png';
 import { Link } from 'react-router-dom';
 
-const Navbar = () => {
+const Navbar = ({ auth: { user, isAuthenticated, loading } }) => {
   return (
     <Fragment>
       <nav
@@ -134,18 +137,34 @@ const Navbar = () => {
                   <span className='nav-link-inner--text d-lg-none'>Github</span>
                 </a>
               </li>
-              <li className='nav-item d-none d-lg-block ml-lg-4'>
-                <a
-                  href='https://www.creative-tim.com/product/argon-dashboard-pro'
-                  target='_blank'
-                  className='btn btn-neutral btn-icon'
-                >
-                  <span className='btn-inner--icon'>
-                    <i className='fas fa-user-plus mr-2'></i>
-                  </span>
-                  <span className='nav-link-inner--text'>Sign Up</span>
-                </a>
-              </li>
+              {!loading && isAuthenticated && (
+                <li className='nav-item d-none d-lg-block ml-lg-4'>
+                  <Link to='/dashboard' className='btn btn-neutral btn-icon'>
+                    <span className='btn-inner--icon'>
+                      <i className='fas fa-user-plus mr-2'></i>
+                    </span>
+                    <span className='nav-link-inner--text'>
+                      Go To Dashboard
+                    </span>
+                  </Link>
+                </li>
+              )}
+
+              {loading ||
+                (!isAuthenticated && (
+                  <li className='nav-item d-none d-lg-block ml-lg-4'>
+                    <Link
+                      to='/login'
+                      target='_blank'
+                      className='btn btn-neutral btn-icon'
+                    >
+                      <span className='btn-inner--icon'>
+                        <i className='fas fa-user-plus mr-2'></i>
+                      </span>
+                      <span className='nav-link-inner--text'>Login</span>
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
         </div>
@@ -154,4 +173,12 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+Navbar.propTypes = {
+  auth: PropTypes.object.isRequired
+};
+
+const mapStateToProps = state => ({
+  auth: state.auth
+});
+
+export default connect(mapStateToProps, null)(Navbar);
