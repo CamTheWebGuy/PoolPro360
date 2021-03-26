@@ -878,10 +878,10 @@ const Dashboard = ({
                         color='default'
                         block
                       >
-                        <span class='btn-inner--icon'>
-                          <i class='fas fa-chevron-left'></i>
+                        <span className='btn-inner--icon'>
+                          <i className='fas fa-chevron-left'></i>
                         </span>
-                        <span class='btn-inner--text'>Go Back</span>
+                        <span className='btn-inner--text'>Go Back</span>
                       </Button>
                     </Row>
                   </ModalBody>
@@ -4009,7 +4009,7 @@ const Dashboard = ({
                                                       <Button
                                                         className='btn-icon mgn-btm-10'
                                                         color='success'
-                                                        href={`https://www.google.com/maps/dir/Current+Location/${customer.customer.serviceLat},${customer.customer.serviceLng}`}
+                                                        href={`https://www.google.com/maps/dir/?api=1&origin=Your+Location&destination=${customer.customer.serviceLat},${customer.customer.serviceLng}`}
                                                         target='_blank'
                                                       >
                                                         <span className='btn-inner--icon'>

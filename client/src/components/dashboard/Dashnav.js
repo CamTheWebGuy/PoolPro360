@@ -355,18 +355,12 @@ const Dashnav = ({ logout, auth: { user, isAuthenticated, loading } }) => {
                   <div className='dropdown-header noti-title'>
                     <h6 className='text-overflow m-0'>Welcome!</h6>
                   </div>
-                  <a href='#!' className='dropdown-item'>
-                    <i className='ni ni-single-02' />
-                    <span>My profile</span>
-                  </a>
-                  <a href='#!' className='dropdown-item'>
+
+                  <Link to='/account-settings' className='dropdown-item'>
                     <i className='ni ni-settings-gear-65' />
                     <span>Settings</span>
-                  </a>
-                  <a href='#!' className='dropdown-item'>
-                    <i className='ni ni-calendar-grid-58' />
-                    <span>Activity</span>
-                  </a>
+                  </Link>
+
                   <a href='#!' className='dropdown-item'>
                     <i className='ni ni-support-16' />
                     <span>Support</span>

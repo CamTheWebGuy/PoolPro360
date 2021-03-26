@@ -19,7 +19,8 @@ import {
 import {
   updateBusinessInfo,
   getBusinessInfo,
-  updateMyInfo
+  updateMyInfo,
+  updateMyPassword
 } from '../../actions/user';
 
 import {
@@ -70,6 +71,7 @@ const Settings = ({
   getBusinessInfo,
   getEmailSettings,
   updateMyInfo,
+  updateMyPassword,
   businessInfo: { businessInfo, emailSettings, loading, emailLoading },
   auth: { user, isAuthenticated }
 }) => {
@@ -316,7 +318,9 @@ const Settings = ({
                             newPassword: '',
                             confirmPassword: ''
                           }}
-                          onSubmit={data => console.log(data)}
+                          onSubmit={data => {
+                            updateMyPassword(data);
+                          }}
                           validationSchema={passSchema}
                           render={({
                             handleSubmit,
@@ -1324,6 +1328,7 @@ Settings.propTypes = {
   updateAccountEmailReadings: PropTypes.func.isRequired,
   getEmailSettings: PropTypes.func.isRequired,
   updateMyInfo: PropTypes.func.isRequired,
+  updateMyPassword: PropTypes.func.isRequired,
   businessInfo: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired
   // emailSettings: PropTypes.object.isRequired
@@ -1340,5 +1345,6 @@ export default connect(mapStateToProps, {
   getBusinessInfo,
   updateAccountEmailReadings,
   getEmailSettings,
-  updateMyInfo
+  updateMyInfo,
+  updateMyPassword
 })(Settings);

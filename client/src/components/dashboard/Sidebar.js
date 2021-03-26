@@ -200,7 +200,7 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                             </Link>
                           </li>
                           <li className='nav-item nav-ctrl'>
-                            <Link to='/routing' className='nav-link'>
+                            <Link to='/view-my-route' className='nav-link'>
                               <span className='sidenav-normal'>
                                 {' '}
                                 <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
@@ -224,18 +224,6 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                         >
                           <i className='fas fa-clipboard-list text-green mgn-right-5'></i>{' '}
                           <span className='nav-link-text'>Service Logs</span>
-                        </Link>
-                      </li>
-
-                      <li className='nav-item nav-ctrl'>
-                        <Link
-                          className={`nav-link ${
-                            active === 'routing' ? 'active' : ''
-                          }`}
-                          to='/view-my-route'
-                        >
-                          <i className='fas fa-map-signs text-purple mgn-right-5'></i>{' '}
-                          <span className='nav-link-text'>View Route</span>
                         </Link>
                       </li>
                     </Fragment>

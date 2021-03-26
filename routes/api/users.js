@@ -640,4 +640,65 @@ router.post(
   }
 );
 
+// @route    POST api/users/updatePassword
+// @desc     Update My Password
+// @access   Private/User
+router.post(
+  '/updatePassword',
+  [
+    auth,
+    [
+      check('currentPassword', 'Current password is required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('newPassword', 'New password is required')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+    ]
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    try {
+      const user = await User.findById(req.user.id);
+
+      // If no user found, return error
+      if (!user) {
+        return res.status(404).json({ msg: 'User not found' });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+      if (!isMatch) {
+        return res
+          .status(400)
+          .json({ errors: [{ msg: 'Invalid credentials' }] });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+
+      user.password = await bcrypt.hash(newPassword, salt);
+
+      user.passwordUpdated = Date.now();
+
+      await user.save();
+
+      res.status(200).json(user);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
 module.exports = router;

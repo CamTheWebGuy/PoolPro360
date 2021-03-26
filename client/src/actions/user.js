@@ -105,3 +105,29 @@ export const updateMyEmail = ({ newEmail }, token) => async dispatch => {
     dispatch(setAlert('Invalid Reset Token or User', 'danger'));
   }
 };
+
+// Update My Email
+export const updateMyPassword = ({
+  currentPassword,
+  newPassword
+}) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    currentPassword,
+    newPassword
+  });
+  try {
+    await axios.post(`/api/users/updatePassword`, body, config);
+    dispatch(setAlert('Password Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    dispatch(setAlert('User not found or not authorized', 'danger'));
+  }
+};

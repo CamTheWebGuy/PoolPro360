@@ -1463,11 +1463,11 @@ router.patch('/:customerId/tech/:techId', auth, async (req, res) => {
       return res.status(401).json({ msg: 'User not found or not authorized' });
     }
     if (user.role === 'Admin') {
-      if (customer.user !== user.owner) {
+      if (customer.user.toString() !== user.owner.toString()) {
         return res.status(401).json({ msg: 'User not authorized' });
       }
     } else if (user.role === 'Owner') {
-      if (user._id !== customer.user) {
+      if (user._id.toString() !== customer.user.toString()) {
         return res.status(401).json({ msg: 'User not authorized' });
       }
     }
@@ -1485,13 +1485,15 @@ router.patch('/:customerId/tech/:techId', auth, async (req, res) => {
     }
 
     if (tech.role === 'Owner') {
-      if (customer.user !== tech._id) {
+      if (customer.user.toString() !== tech._id.toString()) {
         return res.status(401).json({ msg: 'User not authorized' });
       }
     }
 
     customer.technician = tech._id;
     customer.technicianName = tech.firstName + ' ' + tech.lastName;
+    customer.isScheduled = false;
+    customer.scheduledDay = null;
 
     await customer.save();
 
