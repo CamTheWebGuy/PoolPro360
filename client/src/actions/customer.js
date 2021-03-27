@@ -10,7 +10,8 @@ import {
   GET_ALL_CUSTOMERS,
   CLEAR_CUSTOMERS,
   GET_EMAIL_SETTINGS,
-  GET_SERVICE_LOGS
+  GET_SERVICE_LOGS,
+  GET_WORK_ORDERS
 } from './types';
 
 // Add Customer
@@ -1018,6 +1019,72 @@ export const getServiceLogs = techId => async dispatch => {
       type: GET_SERVICE_LOGS,
       payload: logs.data
     });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Work Orders
+export const getWorkOrders = () => async dispatch => {
+  try {
+    const orders = await axios.post(`/api/customers/workOrders`);
+    dispatch({
+      type: GET_WORK_ORDERS,
+      payload: orders.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Create a Work Order
+export const createWorkOrder = ({
+  orderType,
+  customer,
+  description,
+  officeNote,
+  estimatedMinutes,
+  technician,
+  notifyCustomer,
+  scheduledDate,
+  status,
+  laborCost,
+  price
+}) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    orderType,
+    customer,
+    description,
+    officeNote,
+    estimatedMinutes,
+    technician,
+    notifyCustomer,
+    scheduledDate,
+    status,
+    laborCost,
+    price
+  });
+
+  try {
+    await axios.post(`/api/customers/add/workOrder`, body, config);
+
+    dispatch(setAlert('Work Order Created', 'success'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

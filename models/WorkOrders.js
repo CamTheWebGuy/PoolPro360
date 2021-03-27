@@ -13,10 +13,10 @@ const WorkOrderSchema = new mongoose.Schema({
   },
   status: {
     type: String
-    // Unassigned, Assigned, Completed, Closed
+    // Unassigned, Approval Needed, Assigned, Completed, Closed
   },
   notifyCustomer: {
-    type: String
+    type: Boolean
   },
   description: {
     type: String
@@ -27,6 +27,15 @@ const WorkOrderSchema = new mongoose.Schema({
   active: {
     type: Boolean,
     default: true
+  },
+  estimatedMinutes: {
+    type: String
+  },
+  laborCost: {
+    type: String
+  },
+  price: {
+    type: String
   },
   technicianName: {
     type: String
@@ -39,9 +48,20 @@ const WorkOrderSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: 'users'
   },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'users'
+  },
+  customer: {
+    type: Schema.Types.ObjectId,
+    ref: 'customer'
+  },
   dateCreated: {
     type: Date,
     default: Date.now()
+  },
+  scheduledDate: {
+    type: Date
   }
 });
 

@@ -25,7 +25,7 @@ import RouteBuilder from './components/Layout/RouteBuilder';
 import ViewRoute from './components/Layout/ViewMyRoute';
 import ViewLogs from './components/Layout/ViewLogs';
 import ChangeEmail from './components/Layout/ChangeEmail';
-
+import WorkOrders from './components/Layout/WorkOrders';
 import Settings from './components/Layout/Settings';
 
 import PrivateRoute from './components/routing/PrivateRoute';
@@ -69,6 +69,7 @@ function App() {
             <PrivateRoute exact path='/view-my-route' component={ViewRoute} />
             <PrivateRoute exact path='/view-logs' component={ViewLogs} />
             <PrivateRoute exact path='/account-settings' component={Settings} />
+            <PrivateRoute exact path='/work-orders' component={WorkOrders} />
             <PrivateRoute
               exact
               path='/change-email/:token'

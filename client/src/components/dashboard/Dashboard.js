@@ -3719,6 +3719,10 @@ const Dashboard = ({
                                           Repair Request (Submit a Order for
                                           Future Repair)
                                         </option>
+                                        <option>
+                                          Repair Request (Requires Part Purchase
+                                          / Office Approval)
+                                        </option>
                                         <option>Repair Completed</option>
                                       </Input>
                                     </FormGroup>
@@ -3747,7 +3751,7 @@ const Dashboard = ({
                                     <FormGroup>
                                       <Label className='form-control-label'>
                                         Enter Description of Repair (Sent to
-                                        Customer)
+                                        Customer if "Notify Customer" enabled.)
                                       </Label>
                                       <Input
                                         type='textarea'
@@ -3758,7 +3762,7 @@ const Dashboard = ({
                                       />
                                     </FormGroup>
 
-                                    {/* <FormGroup>
+                                    <FormGroup>
                                       <Label className='form-control-label'>
                                         Note for Office (Company Only)
                                       </Label>
@@ -3769,7 +3773,7 @@ const Dashboard = ({
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                       />
-                                    </FormGroup> */}
+                                    </FormGroup>
                                     {/* <Label className='form-control-label'>
                                       Add Picture(s) of Item(s) That Need Repair
                                     </Label>

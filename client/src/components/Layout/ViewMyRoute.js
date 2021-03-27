@@ -3409,6 +3409,10 @@ const ViewMyRoute = ({
                                         Repair Request (Submit a Order for
                                         Future Repair)
                                       </option>
+                                      <option>
+                                        Repair Request (Requires Part Purchase /
+                                        Office Approval)
+                                      </option>
                                       <option>Repair Completed</option>
                                     </Input>
                                   </FormGroup>
@@ -3436,8 +3440,8 @@ const ViewMyRoute = ({
 
                                   <FormGroup>
                                     <Label className='form-control-label'>
-                                      Enter Description of Repair (Sent to
-                                      Customer)
+                                      Enter Description of Repair (May be sent
+                                      to customer)
                                     </Label>
                                     <Input
                                       type='textarea'
@@ -3448,18 +3452,18 @@ const ViewMyRoute = ({
                                     />
                                   </FormGroup>
 
-                                  {/* <FormGroup>
-                                      <Label className='form-control-label'>
-                                        Note for Office (Company Only)
-                                      </Label>
-                                      <Input
-                                        type='textarea'
-                                        name='repairOfficeNote'
-                                        value={values.repairOfficeNote}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                      />
-                                    </FormGroup> */}
+                                  <FormGroup>
+                                    <Label className='form-control-label'>
+                                      Note for Office (Company Only)
+                                    </Label>
+                                    <Input
+                                      type='textarea'
+                                      name='repairOfficeNote'
+                                      value={values.repairOfficeNote}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                    />
+                                  </FormGroup>
                                   {/* <Label className='form-control-label'>
                                       Add Picture(s) of Item(s) That Need Repair
                                     </Label>

@@ -44,7 +44,6 @@ import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
 import Alert from '../Layout/Alert';
 import Footer from '../Layout/Footer';
-import { setIn } from 'formik';
 
 const pagination = paginationFactory({
   page: 1,
@@ -68,39 +67,6 @@ const pagination = paginationFactory({
     </div>
   )
 });
-
-const dataTable = [
-  {
-    _id: 1,
-    property: '3810 Cronin Skyway',
-    date: 'Aug 1, 2021',
-    status: 'Serviced'
-  },
-  {
-    _id: 2,
-    property: '991 Delphine Stream',
-    date: 'Aug 3, 2021',
-    status: 'Serviced'
-  },
-  {
-    _id: 3,
-    property: '76767 Oklahoma Lane',
-    date: 'Aug 1, 2021',
-    status: 'Serviced'
-  },
-  {
-    _id: 4,
-    property: '7652 Dogwood Ave',
-    date: 'Aug 7, 2021',
-    status: 'Serviced'
-  },
-  {
-    _id: 5,
-    property: '658 Adams St',
-    date: 'Aug 2, 2021',
-    status: 'Unable To Service'
-  }
-];
 
 const statusFormatter = cell => {
   if (cell === 'Service Stop Completed') {

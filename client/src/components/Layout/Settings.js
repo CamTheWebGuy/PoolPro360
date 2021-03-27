@@ -173,8 +173,8 @@ const Settings = ({
                       <li className='breadcrumb-item'>
                         <Link to='/dashboard'>Dashboard</Link>
                       </li>
-                      <li className='breadcrumb-item'>
-                        <Link to='/customers'>Settings</Link>
+                      <li className='breadcrumb-item active'>
+                        <Link to='/account-settings'>Settings</Link>
                       </li>
                     </ol>
                   </nav>

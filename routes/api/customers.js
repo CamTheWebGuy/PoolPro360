@@ -1652,19 +1652,37 @@ router.post('/route/complete/:customerId', auth, async (req, res) => {
       await serviceNote.save();
     }
 
+    let repairStatus = null;
+    if (repairType.includes('Requires Part Purchase')) {
+      repairStatus = 'Approval Needed';
+    } else if (repairType.includes('Future Repair')) {
+      repairStatus = 'Assigned';
+    } else if (repairType.includes('Repair Completed')) {
+      repairStatus = 'Completed';
+    } else {
+      return;
+    }
+
     if (repairOrder) {
       let workOrder = new WorkOrders({
         method: 'Manual',
-        orderType: 'Repair Request',
-        status: repairType === 'Repair Completed' ? 'Completed' : 'Unassigned',
+        orderType: 'Equipment Repair',
+        status: repairStatus,
         description: repairDescription,
         creator: user._id,
+        customer: req.params.customerId,
+        officeNote: repairOfficeNote,
+        technicianName: user.firstName + ' ' + user.lastName,
+        owner:
+          user.role === 'Admin' || user.role === 'Technician'
+            ? user.owner
+            : user._id,
         notifyCustomer: repairNotify
       });
 
       await workOrder.save();
 
-      if (repairNotify) {
+      if (repairNotify === true) {
         let isOwner = null;
 
         if (user.role !== 'Owner') {
@@ -2584,5 +2602,154 @@ router.get('/serviceLogs/:techId', auth, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+// @route    POST api/customers/workOrders
+// @desc     Get All Work Orders For Account
+// @access   Private/Admin
+router.post('/workOrders/', auth, async (req, res) => {
+  // GET wasnt working so made it a 'POST' request instead. Will investigate in the future.
+  try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // Make sure the user making request exists
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found or Not Authorized' });
+    }
+
+    const orders = await WorkOrders.find({
+      $or: [{ owner: user._id }, { owner: user.owner }]
+    })
+      .sort({
+        dateCreated: -1
+      })
+      .populate('customer');
+
+    return res.status(200).json(orders);
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/add/workOrder
+// @desc     Add Work Order
+// @access   Private/Admin
+router.post(
+  '/add/workOrder',
+  [
+    auth,
+    [
+      check('orderType')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('customer')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('description')
+        .trim()
+        .escape(),
+      check('officeNote')
+        .trim()
+        .escape(),
+      check('estimatedMinutes')
+        .trim()
+        .escape()
+        .toInt(),
+      check('notifyCustomer')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .isBoolean(),
+      check('scheduledDate')
+        .trim()
+        .escape()
+        .toDate(),
+      check('status')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('laborCost')
+        .trim()
+        .escape()
+        .toInt(),
+      check('price')
+        .trim()
+        .escape()
+        .toInt()
+    ]
+  ],
+  async (req, res) => {
+    const {
+      orderType,
+      customer,
+      description,
+      officeNote,
+      estimatedMinutes,
+      technician,
+      notifyCustomer,
+      scheduledDate,
+      status,
+      laborCost,
+      price
+    } = req.body;
+
+    try {
+      // Find user making request as long as they are Admin or Owner role.
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      // Make sure the user making request exists
+      if (!user) {
+        return res
+          .status(404)
+          .json({ msg: 'User not found or Not Authorized' });
+      }
+
+      let workOrder = new WorkOrders({
+        method: 'Manual',
+        orderType,
+        status,
+        description,
+        creator: user._id,
+        customer,
+        estimatedMinutes,
+        laborCost,
+        price,
+        scheduledDate: new Date(scheduledDate),
+        officeNote,
+        technicianName: technician,
+        owner:
+          user.role === 'Admin' || user.role === 'Technician'
+            ? user.owner
+            : user._id,
+        notifyCustomer
+      });
+
+      await workOrder.save();
+
+      return res.status(200).json(workOrder);
+    } catch (err) {
+      console.log(err.message);
+
+      res.status(500).send('Server Error');
+    }
+  }
+);
 
 module.exports = router;
