@@ -685,7 +685,7 @@ export const optimizeRoute = (routeList, techId, day) => async dispatch => {
       body,
       config
     );
-    // dispatch(setAlert('Customer Added', 'success'));
+    dispatch(setAlert('Route Optimized', 'success'));
   } catch (err) {
     console.log(err);
 
@@ -1180,22 +1180,6 @@ export const updateActivityComment = ({ comments }, id) => async dispatch => {
     );
 
     dispatch(setAlert('Activity Updated', 'success'));
-  } catch (err) {
-    console.log(err);
-    const errors = err.response.data.errors;
-
-    if (errors) {
-      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
-    }
-  }
-};
-
-// Delete Recent Activity Comment
-export const deleteActivityComment = id => async dispatch => {
-  try {
-    await axios.delete(`/api/customers/recentActivity/${id}`);
-
-    dispatch(setAlert('Activity Log Deleted', 'danger'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

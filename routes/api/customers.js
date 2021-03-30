@@ -1331,12 +1331,13 @@ router.post('/route/optimize/:techId/:day', auth, async (req, res) => {
         vehicle_id: 'my_vehicle',
         start_address: {
           location_id: 'Start Location',
-          lon: parseInt(routeList[0].serviceLng),
-          lat: parseInt(routeList[0].serviceLat)
-        }
+          lon: parseFloat(routeList[0].serviceLng),
+          lat: parseFloat(routeList[0].serviceLat)
+        },
+        return_to_depot: false
       }
     ],
-    services: routeList.map(customer => ({
+    services: routeList.map((customer, index) => ({
       id: customer._id,
       name: customer.firstName + '_' + customer.lastName,
       address: {
@@ -3064,53 +3065,5 @@ router.patch(
     }
   }
 );
-
-// @route    DELETE api/customers/recentActivity/:id/
-// @desc     Delete Recent Activity By ID
-// @access   Private/Admin
-router.delete('/recentActivity/:id/', auth, async (req, res) => {
-  try {
-    // Find user making request as long as they are Admin or Owner role.
-    const user = await User.findOne({
-      $or: [
-        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
-        { _id: req.user.id, role: 'Owner' }
-      ]
-    });
-
-    // Make sure the user making request exists
-    if (!user) {
-      return res.status(404).json({ msg: 'User not found or Not Authorized' });
-    }
-
-    const recentActivity = await Activity.findById(req.params.id);
-
-    if (!recentActivity) {
-      return res.status(404).json({ msg: 'Work Order not found' });
-    }
-
-    // Checking to see if work order belows to user
-    if (user.role === 'Owner') {
-      if (user._id.toString() !== recentActivity.user.toString()) {
-        return res.status(401).json({ msg: 'User Not Authorized' });
-      }
-    }
-
-    // Checking to see if work order belows to the same owner
-    if (user.role === 'Admin') {
-      if (user.owner.toString !== recentActivity.user.toString()) {
-        return res.status(401).json({ msg: 'User Not Authorized' });
-      }
-    }
-
-    await recentActivity.remove();
-
-    return res.status(200).json({ msg: 'Deleted Activity' });
-  } catch (err) {
-    console.log(err.message);
-
-    res.status(500).send('Server Error');
-  }
-});
 
 module.exports = router;

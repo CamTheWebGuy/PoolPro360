@@ -295,7 +295,6 @@ const RouteBuilder = ({
                   <Button
                     color='primary'
                     onClick={async () => {
-                      // console.log(routedCustomers);
                       setIsProcessing(true);
                       await optimizeRoute(
                         routedCustomers,
