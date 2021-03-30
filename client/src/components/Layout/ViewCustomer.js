@@ -9,6 +9,7 @@ import Carousel from 'react-elastic-carousel';
 import ModalImage from 'react-modal-image';
 
 import Moment from 'react-moment';
+import moment from 'moment';
 
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -23,7 +24,8 @@ import {
   getRecentActivity,
   deleteRecentActivity,
   getChecklist,
-  updateBilling
+  updateBilling,
+  updateActivityComment
 } from '../../actions/customer';
 
 import { SpinnerCircular } from 'spinners-react';
@@ -50,7 +52,10 @@ import {
   Label,
   Input,
   FormGroup,
-  Badge
+  Badge,
+  ListGroup,
+  ListGroupItem,
+  Collapse
 } from 'reactstrap';
 
 import Sidebar from '../dashboard/Sidebar';
@@ -78,6 +83,7 @@ const ViewCustomer = ({
   serviceNotes,
   recentActivity,
   serviceChecklist,
+  updateActivityComment,
   match
 }) => {
   useEffect(() => {
@@ -122,6 +128,16 @@ const ViewCustomer = ({
   const [editNoteModal, setEditNoteModal] = useState({
     activeNote: '',
     isOpen: false
+  });
+
+  const [recentModal, setRecentModal] = useState({
+    isViewOpen: false,
+    isEditOpen: false,
+    isDeleteOpen: false,
+    active: null,
+    index: null,
+    isChemsOpen: false,
+    isReadingsOpen: false
   });
 
   const [editBillingModal, setEditBillingModal] = useState(false);
@@ -320,12 +336,12 @@ const ViewCustomer = ({
                       {/* <a href='#!' className='btn btn-success'>
                         Start Service
                       </a> */}
-                      <a href='#!' className='btn btn-primary'>
+                      {/* <a href='#!' className='btn btn-primary'>
                         Add Expense
-                      </a>
-                      <a href='#!' className='btn btn-success'>
+                      </a> */}
+                      <Link to='/work-orders' className='btn btn-success'>
                         Add Work Order
-                      </a>
+                      </Link>
                     </div>
                     <div className='col-4 text-right'>
                       <UncontrolledDropdown>
@@ -842,6 +858,868 @@ const ViewCustomer = ({
             />
           </Modal>
 
+          {recentModal.isEditOpen && recentModal.active && (
+            <Modal
+              isOpen={recentModal.isEditOpen}
+              toggle={() => {
+                setRecentModal({ ...recentModal, isEditOpen: false });
+              }}
+            >
+              <ModalHeader
+                toggle={() => {
+                  setRecentModal({ ...recentModal, isEditOpen: false });
+                }}
+              >
+                Edit Activity Log:
+              </ModalHeader>
+              <ModalBody>
+                <Formik
+                  initialValues={{
+                    comments: recentActivity[recentModal.index].comments
+                      ? recentActivity[recentModal.index].comments
+                      : ''
+                  }}
+                  onSubmit={async data => {
+                    setRecentModal({ ...recentModal, isLoading: true });
+                    await updateActivityComment(data, recentModal.active);
+                    await getRecentActivity(match.params.id);
+                    setRecentModal({
+                      ...recentModal,
+                      isLoading: false,
+                      isEditOpen: false
+                    });
+                  }}
+                  render={({
+                    handleSubmit,
+                    handleChange,
+                    handleBlur,
+                    values,
+                    errors,
+                    touched
+                  }) => (
+                    <Form onSubmit={handleSubmit}>
+                      <Row>
+                        <Col>
+                          <FormGroup>
+                            <Label className='form-control-label'>
+                              Comments:
+                            </Label>
+                            <Input
+                              type='textarea'
+                              placeholder='Comments'
+                              value={values.comments}
+                              name='comments'
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                            />
+                          </FormGroup>
+                        </Col>
+                      </Row>
+                      <Button color='success' block type='submit'>
+                        {recentModal.isLoading ? (
+                          <span>
+                            <SpinnerCircular
+                              size={24}
+                              thickness={180}
+                              speed={100}
+                              color='rgba(57, 125, 172, 1)'
+                              secondaryColor='rgba(0, 0, 0, 0.44)'
+                            />{' '}
+                            Processing...
+                          </span>
+                        ) : (
+                          <span>Save Changes</span>
+                        )}
+                      </Button>
+                    </Form>
+                  )}
+                />
+              </ModalBody>
+            </Modal>
+          )}
+
+          {recentModal.isViewOpen && recentModal.active && (
+            <Modal
+              isOpen={recentModal.isViewOpen}
+              toggle={() => {
+                setRecentModal({ ...recentModal, isViewOpen: false });
+              }}
+            >
+              <ModalHeader
+                toggle={() => {
+                  setRecentModal({ ...recentModal, isViewOpen: false });
+                }}
+              >
+                View Activity Report:
+              </ModalHeader>
+              <ModalBody>
+                <Row>
+                  <Col>
+                    <Label className='form-control-label'>Customer Name:</Label>
+                    <p>
+                      {recentActivity[recentModal.index].customer.name.first}{' '}
+                      {recentActivity[recentModal.index].customer.name.last}
+                    </p>
+                  </Col>
+                  <Col>
+                    <Label className='form-control-label'>
+                      Customer Address:
+                    </Label>
+                    <p>
+                      {
+                        recentActivity[recentModal.index].customer
+                          .serviceAddress
+                      }
+                      , {recentActivity[recentModal.index].customer.serviceCity}{' '}
+                      {recentActivity[recentModal.index].customer.serviceState},{' '}
+                      {recentActivity[recentModal.index].customer.serviceZip}
+                    </p>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <Label className='form-control-label'>Logged on:</Label>
+                    <p>
+                      {moment(
+                        recentActivity[recentModal.index].dateAdded
+                      ).format('MMMM Do YYYY h:mm a')}
+                    </p>
+                  </Col>
+                  <Col>
+                    <Label className='form-control-label'>Status:</Label>
+                    <br />
+                    {recentActivity[recentModal.index].comments ===
+                      'Service Stop Completed' && (
+                      <Badge color='success'>Serviced</Badge>
+                    )}
+                    {recentActivity[recentModal.index].comments.includes(
+                      'Unable to Service '
+                    ) && <Badge color='danger'>Unable To Service</Badge>}
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <Label className='form-control-label'>Comments:</Label>
+                    {recentActivity[recentModal.index].comments ? (
+                      <p>{recentActivity[recentModal.index].comments}</p>
+                    ) : (
+                      <p>N/A</p>
+                    )}
+                  </Col>
+                  <Col>
+                    <Label className='form-control-label'>
+                      Note To Customer:
+                    </Label>
+
+                    {recentActivity[recentModal.index].noteToCustomer ? (
+                      <p>{recentActivity[recentModal.index].noteToCustomer}</p>
+                    ) : (
+                      <p>N/A</p>
+                    )}
+                  </Col>
+                </Row>
+                {recentActivity[recentModal.index].serviceLog.checkList
+                  .length >= 1 && (
+                  <Row>
+                    <Col>
+                      <Label className='form-control-label'>
+                        Service Checklist:
+                      </Label>
+                      <ListGroup>
+                        {recentActivity[
+                          recentModal.index
+                        ].serviceLog.checkList.map(item => (
+                          <ListGroupItem key={item}>
+                            <i className='fas fa-check-circle'></i> {item}
+                          </ListGroupItem>
+                        ))}
+                      </ListGroup>
+                    </Col>
+                  </Row>
+                )}
+                <br />
+                <Row>
+                  <hr />
+                  <Col>
+                    <Button
+                      color='success'
+                      block
+                      onClick={() => {
+                        setRecentModal({
+                          ...recentModal,
+                          isReadingsOpen: !recentModal.isReadingsOpen
+                        });
+                      }}
+                    >
+                      View Chemical Readings
+                    </Button>
+                    <br />
+                    <Collapse isOpen={recentModal.isReadingsOpen}>
+                      <Card>
+                        <CardBody>
+                          <Row>
+                            {recentActivity[recentModal.index].serviceLog
+                              .totalChlorine && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Total Chlorine:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .totalChlorine
+                                  }
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .freeChlorine && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Free Chlorine:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.freeChlorine
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .pHlevel && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  PH Level:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .pHlevel
+                                  }
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .alkalinity && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Alkalinity Level:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .alkalinity
+                                  }
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .conditionerLevel && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Conditioner Level:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .conditionerLevel
+                                  }
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .hardness && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Hardness:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .hardness
+                                  }
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .phosphateLevel && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Phosphate Level:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .phosphateLevel
+                                  }
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .saltLevel && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Salt Level:
+                                </Label>
+                                <br />
+                                <p>
+                                  {
+                                    recentActivity[recentModal.index].serviceLog
+                                      .saltLevel
+                                  }
+                                </p>
+                              </Col>
+                            )}
+                          </Row>
+                        </CardBody>
+                      </Card>
+                    </Collapse>
+                    <Button
+                      color='primary'
+                      block
+                      onClick={() => {
+                        setRecentModal({
+                          ...recentModal,
+                          isChemsOpen: !recentModal.isChemsOpen
+                        });
+                      }}
+                    >
+                      View Chemicals Added
+                    </Button>
+                    <br />
+                    <Collapse isOpen={recentModal.isChemsOpen}>
+                      <Card>
+                        <CardBody>
+                          <Row>
+                            {recentActivity[recentModal.index].serviceLog
+                              .chlorineTablets && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Chlorine Tablets:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.chlorineTablets
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .liquidChlorine && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Liquid Chlorine:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.liquidChlorine
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .liquidAcid && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Liquid Acid:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.liquidAcid
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .triChlor && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  TriChlor Shock:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.triChlor
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .diChlor && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  DiChlor Shock:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.diChlor
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .calHypo && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  CalHypo Shock:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.calHypo
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .potassiumMono && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Potassium Monopersulfate:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.potassiumMono
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .ammonia && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Ammonia Based Liquid Algacide:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.ammonia
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .copperBased && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Copper Based Liquid Algacide:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.copperBased
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .polyQuat && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  PolyQuat Based Liquid Algacide:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.polyQuat
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .copperBlend && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Copper/PolyQuat Blend Algacide:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.copperBlend
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .sodaAsh && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Soda Ash (Sodium Carbonate):
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.sodaAsh
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .CalciumChloride && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Calcium Chloride (Hardness+):
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.CalciumChloride
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .conditioner && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Conditioner (Cyanuric Acid):
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.conditioner
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .sodiumBicar && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Sodium Bicarbonate (baking soda):
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.sodiumBicar
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .diatomaceous && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Diatomaceous Earth:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.diatomaceous
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .diatomaceousAlt && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Diatomaceous Earth Alternative:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.diatomaceousAlt
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .sodiumBro && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Sodium Bromide:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.sodiumBro
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .dryAcid && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Dry Acid:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.dryAcid
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .Clarifier && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Clarifier:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.Clarifier
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .phosphateRemover && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Phosphate Remover:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.phosphateRemover
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .salt && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Salt:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.salt
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .enzymes && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Pool Enzymes:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.enzymes
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .metalSequester && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Metal Sequestering Agent:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.metalSequester
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .bromineGran && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Bromine Granular:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.bromineGran
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .bromineTab && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Bromine Tablets:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.bromineTab
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .poolFlocc && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Pool Flocculant:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.poolFlocc
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+
+                            {recentActivity[recentModal.index].serviceLog
+                              .borate && (
+                              <Col>
+                                <Label className='form-control-label'>
+                                  Pool Flocculant:
+                                </Label>
+                                <br />
+                                <p>
+                                  <strong>
+                                    {
+                                      recentActivity[recentModal.index]
+                                        .serviceLog.Borate
+                                    }
+                                  </strong>
+                                </p>
+                              </Col>
+                            )}
+                          </Row>
+                        </CardBody>
+                      </Card>
+                    </Collapse>
+                  </Col>
+                </Row>
+              </ModalBody>
+            </Modal>
+          )}
           <Row>
             <Col lg='6'>
               <Card>
@@ -884,7 +1762,7 @@ const ViewCustomer = ({
                         <div className='text-center'>No Activity Found...</div>
                       ) : (
                         <Fragment>
-                          {recentActivity.map(item => (
+                          {recentActivity.slice(0, 4).map(item => (
                             <Fragment key={item._id}>
                               <Row className='mb-4'>
                                 <Col xs={{ size: 'auto' }}>
@@ -919,7 +1797,36 @@ const ViewCustomer = ({
                                       {item.dateAdded}
                                     </Moment>
                                   </small>{' '}
-                                  <Button size='sm' color='primary'>
+                                  <Button
+                                    size='sm'
+                                    color='primary'
+                                    onClick={() => {
+                                      setRecentModal({
+                                        isViewOpen: true,
+                                        active: item._id,
+                                        index: recentActivity.findIndex(
+                                          x => x._id === item._id
+                                        )
+                                      });
+                                    }}
+                                  >
+                                    View
+                                  </Button>
+                                  <Button
+                                    size='sm'
+                                    color='success'
+                                    onClick={() => {
+                                      setRecentModal({
+                                        ...recentModal,
+                                        isEditOpen: true,
+                                        isViewOpen: false,
+                                        active: item._id,
+                                        index: recentActivity.findIndex(
+                                          x => x._id === item._id
+                                        )
+                                      });
+                                    }}
+                                  >
                                     Edit
                                   </Button>
                                   <Button
@@ -990,6 +1897,9 @@ const ViewCustomer = ({
                       )}
                     </Fragment>
                   )}
+                  <Button color='primary' block>
+                    View All
+                  </Button>
                 </CardBody>
               </Card>
             </Col>
@@ -1618,5 +2528,6 @@ export default connect(mapStateToProps, {
   getRecentActivity,
   deleteRecentActivity,
   getChecklist,
-  updateBilling
+  updateBilling,
+  updateActivityComment
 })(ViewCustomer);

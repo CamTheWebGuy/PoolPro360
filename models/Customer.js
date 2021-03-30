@@ -65,7 +65,7 @@ const CustomerSchema = new mongoose.Schema({
   },
   poolType: {
     type: String,
-    default: 'NA'
+    default: 'Residential'
   },
   technician: {
     type: Schema.Types.ObjectId,
@@ -173,6 +173,10 @@ const CustomerSchema = new mongoose.Schema({
   },
   unableService: {
     type: Date
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   }
 });
 

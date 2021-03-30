@@ -33,7 +33,7 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'Logistics'
+    default: 'Technician'
   },
   isOwner: {
     type: Boolean,
@@ -50,7 +50,7 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: String
   },
-  date: {
+  dateCreated: {
     type: Date,
     default: Date.now()
   },

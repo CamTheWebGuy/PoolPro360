@@ -1,183 +1,187 @@
-.fsize-12{
+.fsize-12 {
   font-size: 12px;
 }
 
-.fweight-normal{
+.fweight-normal {
   font-weight: normal;
 }
 
-.width-100{
-  width: 100%
+.width-100 {
+  width: 100%;
 }
 
-.footer-dark{
-  background: #172b4d
+.footer-dark {
+  background: #172b4d;
 }
 
-.pr-0{
+.pr-0 {
   padding-right: 0;
 }
 
-.mgn-top-10{
+.mgn-top-10 {
   margin-top: 10px;
 }
 
-.mgn-top-50{
-  margin-top:50px
+.mgn-top-50 {
+  margin-top: 50px;
 }
 
-.mgn-ng-top-28{
-  margin-top: -28px
+.mgn-ng-top-28 {
+  margin-top: -28px;
 }
 
-.mgn-ng-top-60{
-  margin-top: -60px
+.mgn-ng-top-60 {
+  margin-top: -60px;
 }
 
-.mgn-btm-10{
+.mgn-btm-10 {
   margin-bottom: 10px;
 }
 
-.mgn-left-8{margin-left: 8px}
-
-.mgn-left-30{
-  margin-left: 30px
+.mgn-left-8 {
+  margin-left: 8px;
 }
 
-.mgn-left-50p{margin-left:50%}
-
-.mgn-right-5{
-  margin-right: 5px
+.mgn-left-30 {
+  margin-left: 30px;
 }
 
-.mgn-btm-50{
+.mgn-left-50p {
+  margin-left: 50%;
+}
+
+.mgn-right-5 {
+  margin-right: 5px;
+}
+
+.mgn-btm-50 {
   margin-bottom: 50px;
 }
 
-.mh-330{
+.mh-330 {
   min-height: 330px;
 }
 
-.of-hidden{
+.of-hidden {
   overflow: hidden;
 }
 
-.color-red{
+.color-red {
   color: red;
 }
 
-.color-yellow{
-  color: #F2C94C
+.color-yellow {
+  color: #f2c94c;
 }
 
-.color-purple{
-  color: #9B51E0
+.color-purple {
+  color: #9b51e0;
 }
 
-.color-orange{
-  color: #F2994A
+.color-orange {
+  color: #f2994a;
 }
 
-.color-green{
-  color: #6FCF97
+.color-green {
+  color: #6fcf97;
 }
 
 .carousel-container {
   width: 100%;
- }
+}
 
-.max-width-250{
+.max-width-250 {
   max-width: 250px;
   width: 250px;
 }
 
-.max-height-127{
-  max-height: 127px
+.max-height-127 {
+  max-height: 127px;
 }
 
 .react-bootstrap-table table {
   table-layout: auto;
 }
 
-.builder__sidebar{
-  background: #192A3E!important;
+.builder__sidebar {
+  background: #192a3e !important;
 }
 
 /* .g-sidenav-pinned .sidenav.builder__sidebar{
   max-width: 264px!important
 } */
 
-.creator__block{
-  background: #101E2F!important;
-  border: none!important;
+.creator__block {
+  background: #101e2f !important;
+  border: none !important;
   color: #304257;
   font-size: 28px;
 }
 
 .overlay {
   position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 15px;
-    right: 0;
-    height: 95%;
-    width: 81%;
-    opacity: 0.5;
-    transition: .5s ease;
-    background-color: #000;
+  top: 0;
+  bottom: 0;
+  left: 15px;
+  right: 0;
+  height: 95%;
+  width: 81%;
+  opacity: 0.5;
+  transition: 0.5s ease;
+  background-color: #000;
 }
 
-[data-notify="container"] {
+[data-notify='container'] {
   max-width: 30%;
-  width: 400px!important;
+  width: 400px !important;
   text-align: center;
 }
 
-.modal-image-thumb{
-  max-height: 200px!important;
+.modal-image-thumb {
+  max-height: 200px !important;
 }
 
-.leaflet-container{
+.leaflet-container {
   height: 600px;
   width: 100%;
 }
 
-.route-builder-box{
+.route-builder-box {
   background: white;
   border-radius: 10px;
   min-height: 100px;
   padding: 30px;
   text-align: center;
-  border: 2px dashed #f2f2f2
+  border: 2px dashed #f2f2f2;
 }
 
-.sidenav-normal{
-  padding-left: 20px!important;
+.sidenav-normal {
+  padding-left: 20px !important;
 }
 
-.route-box{
+.route-box {
   background: #fb6340;
 }
 
-.route-box h2{
-  color: white
+.route-box h2 {
+  color: white;
 }
 
-.bg-green{
-  background: #2dce89!important;
+.bg-green {
+  background: #2dce89 !important;
 }
 
-.bg-green-wf{
+.bg-green-wf {
   background: #2dce89;
   color: white;
 }
 
-.bg-red{
+.bg-red {
   background: #fb6340;
   color: white;
 }
 
-.option-heading{
+.option-heading {
   font-weight: bold;
 }
 
@@ -185,11 +189,38 @@
   cursor: pointer;
 }
 
-.color-white{
-  color: #fff
+.color-white {
+  color: #fff;
 }
 
+.bg-primary {
+  background-color: #32aae4 !important;
+}
 
+.btn-primary {
+  border-color: #32aae4;
+  background-color: #32aae4;
+}
+
+.bg-gradient-default {
+  background: linear-gradient(87deg, #386abf 0, #1a407d 100%) !important;
+  opacity: 0.5 !important;
+}
+
+.btn-neutral {
+  color: #32aae4;
+}
+
+.btn-primary:hover {
+  color: #fff;
+  border-color: #219bea;
+  background-color: #219bea;
+}
+
+.page-item.active .page-link {
+  border-color: #219bea;
+  background-color: #219bea;
+}
 
 /* .builder__dropzone{
   height: 100px;
@@ -197,4 +228,3 @@
   background: white;
   border: 2px dashed #D5D5D5;
 } */
-

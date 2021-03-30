@@ -62,6 +62,9 @@ const WorkOrderSchema = new mongoose.Schema({
   },
   scheduledDate: {
     type: Date
+  },
+  lastUpdated: {
+    type: Date
   }
 });
 

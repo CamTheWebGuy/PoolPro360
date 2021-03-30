@@ -1094,3 +1094,114 @@ export const createWorkOrder = ({
     }
   }
 };
+
+// Create a Work Order
+export const updateWorkOrder = (
+  {
+    orderType,
+    customer,
+    description,
+    officeNote,
+    estimatedMinutes,
+    technician,
+    scheduledDate,
+    status,
+    laborCost,
+    price
+  },
+  orderId
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    orderType,
+    customer,
+    description,
+    officeNote,
+    estimatedMinutes,
+    technician,
+    scheduledDate,
+    status,
+    laborCost,
+    price
+  });
+
+  try {
+    await axios.patch(`/api/customers/workOrder/${orderId}`, body, config);
+
+    dispatch(setAlert('Work Order Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Set Work order to Approved
+export const approveWorkOrder = orderId => async dispatch => {
+  try {
+    await axios.patch(`/api/customers/workOrder/${orderId}/approve`);
+
+    dispatch(setAlert('Work Order Approved', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Recent Activity Comment
+export const updateActivityComment = ({ comments }, id) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    comments
+  });
+
+  try {
+    await axios.patch(
+      `/api/customers/recentActivity/${id}/edit/comment`,
+      body,
+      config
+    );
+
+    dispatch(setAlert('Activity Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Delete Recent Activity Comment
+export const deleteActivityComment = id => async dispatch => {
+  try {
+    await axios.delete(`/api/customers/recentActivity/${id}`);
+
+    dispatch(setAlert('Activity Log Deleted', 'danger'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

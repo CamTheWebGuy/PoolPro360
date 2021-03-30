@@ -55,7 +55,9 @@ import ToolkitProvider, {
 import {
   getWorkOrders,
   getCustomers,
-  createWorkOrder
+  createWorkOrder,
+  updateWorkOrder,
+  approveWorkOrder
 } from '../../actions/customer';
 
 import { getEmployees } from '../../actions/employee';
@@ -102,6 +104,10 @@ const statusFormatter = cell => {
     return <Badge color='warning'>Approval Needed</Badge>;
   } else if (cell.includes('Assigned')) {
     return <Badge color='info'>Assigned</Badge>;
+  } else if (cell.includes('Approved')) {
+    return <Badge color='primary'>Approved</Badge>;
+  } else if (cell.includes('Closed')) {
+    return <Badge color='danger'>Closed</Badge>;
   } else {
     return <Badge color='danger'>N/A</Badge>;
   }
@@ -129,6 +135,8 @@ const WorkOrders = ({
   getCustomers,
   getEmployees,
   createWorkOrder,
+  updateWorkOrder,
+  approveWorkOrder,
   customers: { customers, workOrders },
   employees: { employees }
 }) => {
@@ -149,8 +157,10 @@ const WorkOrders = ({
 
   const [infoModal, setInfoModal] = useState({
     isOpen: false,
+    isEditOpen: false,
     active: '',
-    order: null
+    order: null,
+    isLoading: false
   });
 
   const [addModal, setAddModal] = useState({
@@ -180,10 +190,22 @@ const WorkOrders = ({
               });
             }}
           >
-            View Order
+            View
           </DropdownItem>
-          <DropdownItem>Assign Order</DropdownItem>
-          <DropdownItem>Edit Status</DropdownItem>
+          <DropdownItem
+            onClick={() => {
+              setInfoModal({
+                ...infoModal,
+                isEditOpen: true,
+                isOpen: false,
+                isLoading: false,
+                active: cell,
+                order: workOrders.findIndex(x => x._id === cell)
+              });
+            }}
+          >
+            Edit
+          </DropdownItem>
         </DropdownMenu>
       </UncontrolledDropdown>
     );
@@ -212,7 +234,11 @@ const WorkOrders = ({
       text: 'Customer',
       sort: true,
       formatter: nameFormatter,
-      filterValue: filterFunction
+      filterValue: filterFunction,
+      csvFormatter: cell => {
+        const string = `${cell.first} ${cell.last}`;
+        return string;
+      }
     },
     {
       dataField: '_id',
@@ -259,16 +285,355 @@ const WorkOrders = ({
           </div>
         </div>
         <Container className='mgn-ng-top-60'>
+          <Modal
+            isOpen={infoModal.isEditOpen}
+            toggle={() =>
+              setInfoModal({
+                ...infoModal,
+                isEditOpen: !infoModal.isEditOpen,
+                isOpen: false,
+                isLoading: false
+              })
+            }
+          >
+            <ModalHeader
+              toggle={() =>
+                setInfoModal({
+                  ...infoModal,
+                  isEditOpen: !infoModal.isEditOpen,
+                  isOpen: false,
+                  isLoading: false
+                })
+              }
+            >
+              Edit Work Order:
+            </ModalHeader>
+            <ModalBody>
+              <Formik
+                initialValues={{
+                  orderType: infoModal.active
+                    ? workOrders[infoModal.order].orderType
+                    : '',
+                  customer: infoModal.active
+                    ? workOrders[infoModal.order].customer._id
+                    : '',
+                  description: infoModal.active
+                    ? workOrders[infoModal.order].description
+                    : '',
+                  officeNote: infoModal.active
+                    ? workOrders[infoModal.order].officeNote
+                    : '',
+                  estimatedMinutes: infoModal.active
+                    ? workOrders[infoModal.order].estimatedMinutes
+                    : '',
+                  technician: infoModal.active
+                    ? workOrders[infoModal.order].technician
+                    : '',
+                  showDate: true,
+
+                  notifyCustomer: infoModal.active
+                    ? workOrders[infoModal.order].notifyCustomer
+                    : '',
+                  scheduledDate: infoModal.active
+                    ? workOrders[infoModal.order].scheduledDate
+                    : '',
+                  status: infoModal.active
+                    ? workOrders[infoModal.order].status
+                    : '',
+                  laborCost: infoModal.active
+                    ? workOrders[infoModal.order].laborCost
+                    : '',
+                  price: infoModal.active
+                    ? workOrders[infoModal.order].price
+                    : ''
+                }}
+                validationSchema={formSchema}
+                onSubmit={async data => {
+                  setInfoModal({ ...infoModal, isLoading: true });
+                  await updateWorkOrder(data, infoModal.active);
+                  await getWorkOrders();
+                  setInfoModal({
+                    ...infoModal,
+                    isLoading: false,
+                    isEditOpen: false,
+                    isOpen: false
+                  });
+                }}
+                render={({
+                  handleSubmit,
+                  handleChange,
+                  handleBlur,
+                  values,
+                  setFieldValue,
+                  errors,
+                  touched
+                }) => (
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Order Type:
+                          </Label>
+                          <Input
+                            type='select'
+                            name='orderType'
+                            value={values.orderType}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          >
+                            <option>Service Call</option>
+                            <option>Equipment Repair</option>
+                            <option>Filter Clean</option>
+                            <option>Pool Opening</option>
+                            <option>Pool Closing</option>
+                          </Input>
+                          {errors.orderType && touched.orderType && (
+                            <p className='color-red'>{errors.orderType}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Customer:
+                          </Label>
+                          <Input
+                            type='select'
+                            name='customer'
+                            value={values.customer}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          >
+                            <option value={'Select Customer'}>
+                              Select Customer
+                            </option>
+                            {customers &&
+                              customers.map(customer => (
+                                <option value={customer._id}>
+                                  {customer.firstName} {customer.lastName}
+                                </option>
+                              ))}
+                          </Input>
+                          {errors.customer && touched.customer && (
+                            <p className='color-red'>{errors.customer}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Order Status:
+                          </Label>
+                          <Input
+                            type='select'
+                            name='status'
+                            value={values.status}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          >
+                            <option>Approval Needed</option>
+                            <option>Approved</option>
+                            <option>Completed</option>
+                            <option>Closed</option>
+                          </Input>
+                          {errors.status && touched.status && (
+                            <p className='color-red'>{errors.status}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Order Description:
+                          </Label>
+                          <Input
+                            type='textarea'
+                            name='description'
+                            value={values.description}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          />
+                          {errors.description && touched.description && (
+                            <p className='color-red'>{errors.description}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                    </Row>
+
+                    <Row>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Technician:
+                          </Label>
+                          <Input
+                            type='select'
+                            name='technician'
+                            value={values.technician}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          >
+                            <option value={'Select Technician'}>
+                              Select Technician
+                            </option>
+                            {employees &&
+                              employees.map(em => (
+                                <option value={em._id}>
+                                  {em.firstName} {em.lastName}
+                                </option>
+                              ))}
+                          </Input>
+                          {errors.technician && touched.technician && (
+                            <p className='color-red'>{errors.technician}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    {values.scheduledDate && (
+                      <Row>
+                        <Col>
+                          <FormGroup>
+                            <Label className='form-control-label'>
+                              Date to Complete:
+                            </Label>
+                            <DatePicker
+                              value={values.scheduledDate}
+                              onChange={value => {
+                                setFieldValue('scheduledDate', value);
+                              }}
+                            />
+                          </FormGroup>
+                        </Col>
+                      </Row>
+                    )}
+                    <Row>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Est. Minutes to Complete:
+                          </Label>
+                          <Input
+                            type='number'
+                            name='estimatedMinutes'
+                            value={values.estimatedMinutes}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          />
+                          {errors.estimatedMinutes &&
+                            touched.estimatedMinutes && (
+                              <p className='color-red'>
+                                {errors.estimatedMinutes}
+                              </p>
+                            )}
+                        </FormGroup>
+                      </Col>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Labor Cost:
+                          </Label>
+                          <Input
+                            type='number'
+                            name='laborCost'
+                            value={values.laborCost}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          />
+                          {errors.laborCost && touched.laborCost && (
+                            <p className='color-red'>{errors.laborCost}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>Price:</Label>
+                          <Input
+                            type='number'
+                            name='price'
+                            value={values.price}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          />
+                          {errors.price && touched.price && (
+                            <p className='color-red'>{errors.price}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            Office Note:
+                          </Label>
+                          <Input
+                            type='textarea'
+                            name='officeNote'
+                            value={values.officeNote}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          />
+                          {errors.officeNote && touched.officeNote && (
+                            <p className='color-red'>{errors.officeNote}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
+                    </Row>
+                    <Button
+                      color='success'
+                      type='submit'
+                      block
+                      className='btn-icon'
+                    >
+                      <span className='btn-inner--icon'>
+                        <i className='fas fa-save'></i>
+                      </span>
+                      {infoModal.isLoading === true ? (
+                        <span className='btn-inner--text'>
+                          <SpinnerCircular
+                            size={24}
+                            thickness={180}
+                            speed={100}
+                            color='rgba(57, 125, 172, 1)'
+                            secondaryColor='rgba(0, 0, 0, 0.44)'
+                          />{' '}
+                          Processing...
+                        </span>
+                      ) : (
+                        <span className='btn-inner--text'>Save Changes</span>
+                      )}
+                    </Button>
+                  </Form>
+                )}
+              />
+            </ModalBody>
+          </Modal>
+
           {workOrders && infoModal.active && (
             <Modal
               isOpen={infoModal.isOpen}
               toggle={() => {
-                setInfoModal({ ...infoModal, isOpen: false });
+                setInfoModal({
+                  ...infoModal,
+                  isOpen: false,
+                  isEditOpen: false,
+                  isLoading: false
+                });
               }}
             >
               <ModalHeader
                 toggle={() => {
-                  setInfoModal({ ...infoModal, isOpen: false });
+                  setInfoModal({
+                    ...infoModal,
+                    isOpen: false,
+                    isEditOpen: false,
+                    isLoading: false
+                  });
                 }}
               >
                 View Work Order: {workOrders[infoModal.order].orderType}
@@ -306,9 +671,13 @@ const WorkOrders = ({
                       ) : workOrders[infoModal.order].status ===
                         'Unassigned' ? (
                         <Badge color='danger'>Unassigned</Badge>
+                      ) : workOrders[infoModal.order].status === 'Approved' ? (
+                        <Badge color='primary'>Approved</Badge>
                       ) : workOrders[infoModal.order].status ===
                         'Approval Needed' ? (
                         <Badge color='warning'>Approval Needed</Badge>
+                      ) : workOrders[infoModal.order].status === 'Closed' ? (
+                        <Badge color='danger'>Closed</Badge>
                       ) : (
                         <Badge color='danger'>N/A</Badge>
                       )}
@@ -318,7 +687,7 @@ const WorkOrders = ({
                     <Label className='form-control-label'>
                       Notified Customer:
                     </Label>
-                    {workOrders[infoModal.order].orderType === true ? (
+                    {workOrders[infoModal.order].notifyCustomer === true ? (
                       <p>Yes</p>
                     ) : (
                       <p>No</p>
@@ -369,22 +738,99 @@ const WorkOrders = ({
                 </Row>
                 <Row>
                   <Col>
-                    <Button className='btn-icon' color='primary' block>
-                      <span className='btn-inner--icon'>
-                        <i className='fas fa-thumbs-up'></i>
-                      </span>
-                      <span className='btn-inner--text'>
-                        Approve Work Order
-                      </span>
-                    </Button>
-                    <Button className='btn-icon' color='success' block>
+                    <Label className='form-control-label'>
+                      Estimated Minutes:
+                    </Label>
+                    {workOrders[infoModal.order].estimatedMinutes ? (
+                      <p>{workOrders[infoModal.order].estimatedMinutes}</p>
+                    ) : (
+                      <p>0</p>
+                    )}
+                  </Col>
+                  <Col>
+                    <Label className='form-control-label'>Labor Cost:</Label>
+                    {workOrders[infoModal.order].laborCost ? (
+                      <p>{workOrders[infoModal.order].laborCost}</p>
+                    ) : (
+                      <p>0</p>
+                    )}
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <Label className='form-control-label'>Price:</Label>
+                    {workOrders[infoModal.order].price ? (
+                      <p>{workOrders[infoModal.order].price}</p>
+                    ) : (
+                      <p>0</p>
+                    )}
+                  </Col>
+                  <Col>
+                    <Label className='form-control-label'>
+                      Scheduled Date:
+                    </Label>
+                    {workOrders[infoModal.order].scheduledDate ? (
+                      <p>
+                        {moment(
+                          workOrders[infoModal.order].scheduledDate
+                        ).format('MMMM Do, YYYY')}
+                      </p>
+                    ) : (
+                      <p>N/A</p>
+                    )}
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    {workOrders[infoModal.order].status ===
+                      'Approval Needed' && (
+                      <Button
+                        className='btn-icon'
+                        color='primary'
+                        block
+                        onClick={async e => {
+                          e.preventDefault();
+                          setInfoModal({ ...infoModal, isLoading: true });
+                          await approveWorkOrder(infoModal.active);
+                          await getWorkOrders();
+                          setInfoModal({
+                            ...infoModal,
+                            isLoading: false,
+                            isOpen: false,
+                            isEditOpen: false
+                          });
+                        }}
+                      >
+                        <span className='btn-inner--icon'>
+                          <i className='fas fa-thumbs-up'></i>
+                        </span>
+                        {infoModal.isLoading ? (
+                          <span className='btn-inner--text'>
+                            <SpinnerCircular
+                              size={24}
+                              thickness={180}
+                              speed={100}
+                              color='rgba(57, 125, 172, 1)'
+                              secondaryColor='rgba(0, 0, 0, 0.44)'
+                            />{' '}
+                            Processing...
+                          </span>
+                        ) : (
+                          <span className='btn-inner--text'>
+                            Approve Work Order
+                          </span>
+                        )}
+                      </Button>
+                    )}
+
+                    {/* <Button className='btn-icon' color='info' block>
                       <span className='btn-inner--icon'>
                         <i className='fas fa-user-alt'></i>
                       </span>
                       <span className='btn-inner--text'>
                         Change Assigned Technician
                       </span>
-                    </Button>
+                    </Button> */}
                   </Col>
                 </Row>
               </ModalBody>
@@ -803,6 +1249,8 @@ WorkOrders.propTypes = {
   getWorkOrders: PropTypes.func.isRequired,
   getEmployees: PropTypes.func.isRequired,
   createWorkOrder: PropTypes.func.isRequired,
+  updateWorkOrder: PropTypes.func.isRequired,
+  approveWorkOrder: PropTypes.func.isRequired,
   customers: PropTypes.object.isRequired
 };
 
@@ -815,5 +1263,7 @@ export default connect(mapStateToProps, {
   getWorkOrders,
   getCustomers,
   getEmployees,
-  createWorkOrder
+  createWorkOrder,
+  updateWorkOrder,
+  approveWorkOrder
 })(WorkOrders);

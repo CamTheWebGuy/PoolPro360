@@ -440,6 +440,18 @@ const Settings = ({
                           <NavItem>
                             <NavLink
                               className={classnames({
+                                active: activeTab === '5'
+                              })}
+                              onClick={() => {
+                                toggle('5');
+                              }}
+                            >
+                              My Information
+                            </NavLink>
+                          </NavItem>
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
                                 active: activeTab === '2'
                               })}
                               onClick={() => {
@@ -1304,6 +1316,237 @@ const Settings = ({
                           <Row>
                             <Col sm='12'>
                               <h4>User Permissions</h4>
+                            </Col>
+                          </Row>
+                        </TabPane>
+
+                        <TabPane tabId='5'>
+                          <br />
+                          <Row>
+                            <Col>
+                              <Formik
+                                initialValues={{
+                                  firstName: user.firstName
+                                    ? user.firstName
+                                    : '',
+                                  lastName: user.lastName ? user.lastName : '',
+                                  email: user.email ? user.email : ''
+                                }}
+                                onSubmit={async data => {
+                                  updateMyInfo(data);
+                                }}
+                                render={({
+                                  handleSubmit,
+                                  handleChange,
+                                  handleBlur,
+                                  values
+                                }) => (
+                                  <Fragment>
+                                    <Form>
+                                      <Row>
+                                        <Col>
+                                          <Row>
+                                            <Col>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  First Name:
+                                                </Label>
+                                                <Input
+                                                  type='text'
+                                                  name='firstName'
+                                                  placeholder='John'
+                                                  value={values.firstName}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                              </FormGroup>
+                                            </Col>
+                                            <Col>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Last Name:
+                                                </Label>
+                                                <Input
+                                                  type='text'
+                                                  placeholder='Doe'
+                                                  name='lastName'
+                                                  value={values.lastName}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+                                          <Row>
+                                            <Col>
+                                              <FormGroup>
+                                                <Label className='form-control-label'>
+                                                  Email:
+                                                </Label>
+                                                <Input
+                                                  type='text'
+                                                  name='email'
+                                                  placeholder='john.doe@example.com'
+                                                  value={values.email}
+                                                  onChange={handleChange}
+                                                  onBlur={handleBlur}
+                                                />
+                                                <small>
+                                                  If email is changed, the email
+                                                  linked to your account won't
+                                                  be updated until you confirm
+                                                  it. We will send a
+                                                  confirmation email to your
+                                                  currently linked email
+                                                  account.
+                                                </small>
+                                              </FormGroup>
+                                            </Col>
+                                          </Row>
+                                        </Col>
+                                      </Row>
+                                      <Button
+                                        className='btn-icon'
+                                        color='success'
+                                        type='submit'
+                                        onClick={handleSubmit}
+                                        block
+                                      >
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-save'></i>
+                                        </span>
+                                        {infoProcessing ? (
+                                          <span className='btn-inner--text'>
+                                            <SpinnerCircular
+                                              size={24}
+                                              thickness={180}
+                                              speed={100}
+                                              color='rgba(57, 125, 172, 1)'
+                                              secondaryColor='rgba(0, 0, 0, 0.44)'
+                                            />{' '}
+                                            Processing...
+                                          </span>
+                                        ) : (
+                                          <span className='btn-inner--text'>
+                                            Save Changes
+                                          </span>
+                                        )}
+                                      </Button>
+                                    </Form>
+                                  </Fragment>
+                                )}
+                              />
+                            </Col>
+                          </Row>
+                          <hr />
+                          <Row>
+                            <Col>
+                              <h3>Change Password:</h3>
+                              <Formik
+                                initialValues={{
+                                  currentPassword: '',
+                                  newPassword: '',
+                                  confirmPassword: ''
+                                }}
+                                onSubmit={data => {
+                                  updateMyPassword(data);
+                                }}
+                                validationSchema={passSchema}
+                                render={({
+                                  handleSubmit,
+                                  handleChange,
+                                  handleBlur,
+                                  values,
+                                  errors,
+                                  touched
+                                }) => (
+                                  <Form onSubmit={handleSubmit}>
+                                    <Row>
+                                      <Col>
+                                        <FormGroup>
+                                          <Input
+                                            type='password'
+                                            name='currentPassword'
+                                            value={values.currentPassword}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            placeholder='Current Password'
+                                          />
+                                          {errors.currentPassword &&
+                                            touched.currentPassword && (
+                                              <p className='color-red'>
+                                                {errors.currentPassword}
+                                              </p>
+                                            )}
+                                        </FormGroup>
+                                      </Col>
+                                      <Col>
+                                        <FormGroup>
+                                          <Input
+                                            type='password'
+                                            name='newPassword'
+                                            value={values.newPassword}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            placeholder='New Password'
+                                          />
+                                          {errors.newPassword &&
+                                            touched.newPassword && (
+                                              <p className='color-red'>
+                                                {errors.newPassword}
+                                              </p>
+                                            )}
+                                        </FormGroup>
+                                      </Col>
+                                      <Col>
+                                        <FormGroup>
+                                          <Input
+                                            type='password'
+                                            name='confirmPassword'
+                                            value={values.confirmPassword}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            placeholder='Confirm Password'
+                                          />
+                                          {errors.confirmPassword &&
+                                            touched.confirmPassword && (
+                                              <p className='color-red'>
+                                                {errors.confirmPassword}
+                                              </p>
+                                            )}
+                                        </FormGroup>
+                                      </Col>
+                                    </Row>
+                                    <Button
+                                      className='btn-icon'
+                                      color='primary'
+                                      type='submit'
+                                      onClick={handleSubmit}
+                                      block
+                                    >
+                                      <span className='btn-inner--icon'>
+                                        <i className='fas fa-save'></i>
+                                      </span>
+                                      {infoProcessing ? (
+                                        <span className='btn-inner--text'>
+                                          <SpinnerCircular
+                                            size={24}
+                                            thickness={180}
+                                            speed={100}
+                                            color='rgba(57, 125, 172, 1)'
+                                            secondaryColor='rgba(0, 0, 0, 0.44)'
+                                          />{' '}
+                                          Processing...
+                                        </span>
+                                      ) : (
+                                        <span className='btn-inner--text'>
+                                          Change Password
+                                        </span>
+                                      )}
+                                    </Button>
+                                  </Form>
+                                )}
+                              />
                             </Col>
                           </Row>
                         </TabPane>

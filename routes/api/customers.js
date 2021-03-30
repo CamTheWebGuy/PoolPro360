@@ -660,7 +660,7 @@ router.post(
 );
 
 // @route    PATCH api/customers/recentActivity/edit/:activityId
-// @desc     Update Activity by ID
+// @desc     Update Activity Images by ID
 // @access   Private/User
 router.patch('/recentActivity/edit/:activityId', auth, async (req, res) => {
   const user = await User.findById(req.user.id);
@@ -724,7 +724,9 @@ router.get('/:customerId/recentActivity', auth, async (req, res) => {
 
     const activities = await Activity.find({
       customer: req.params.customerId
-    }).sort({ dateAdded: -1 });
+    })
+      .sort({ dateAdded: -1 })
+      .populate('customer');
 
     res.status(200).json(activities);
   } catch (err) {
@@ -2721,6 +2723,8 @@ router.post(
           .json({ msg: 'User not found or Not Authorized' });
       }
 
+      const tech = await User.findById(technician);
+
       let workOrder = new WorkOrders({
         method: 'Manual',
         orderType,
@@ -2731,15 +2735,205 @@ router.post(
         estimatedMinutes,
         laborCost,
         price,
-        scheduledDate: new Date(scheduledDate),
+        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
         officeNote,
-        technicianName: technician,
+        technician,
+        technicianName: tech.firstName + ' ' + tech.lastName,
         owner:
           user.role === 'Admin' || user.role === 'Technician'
             ? user.owner
             : user._id,
         notifyCustomer
       });
+
+      await workOrder.save();
+
+      if (notifyCustomer) {
+        const customerInfo = await Customer.findById(customer);
+        console.log(customer);
+
+        let isOwner = null;
+
+        if (user.role !== 'Owner') {
+          isOwner = false;
+        } else {
+          isOwner = true;
+        }
+
+        let owner = null;
+
+        if (isOwner === false) {
+          owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+        }
+
+        // Nodemailer Auth
+        const auth = {
+          auth: {
+            api_key: config.get('mailgun_api_key'),
+            domain: config.get('mailgun_domain')
+          }
+        };
+
+        // Nodemailer Transporter
+        let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+
+        // Mail Options
+        const mailOptions = {
+          from: `${
+            isOwner
+              ? user.businessInfo.businessName
+              : owner.businessInfo.businessName
+          } <no-reply@poolpro360.com>`,
+          to: 'cameronanchondo@gmail.com',
+          replyTo: isOwner ? user.email : owner.email,
+          subject: `A Work Order Has Been Created For You`,
+          template: 'workorder',
+          'h:X-Mailgun-Variables': JSON.stringify({
+            firstName: customer.firstName,
+            businessName: isOwner
+              ? user.businessInfo.businessName
+              : owner.businessInfo.businessName,
+            businessEmail: isOwner
+              ? user.businessInfo.businessEmail
+              : owner.businessInfo.businessEmail,
+            businessAddress: isOwner
+              ? user.businessInfo.businessAddress
+              : owner.businessInfo.businessAddress,
+            businessPhone: isOwner
+              ? user.businessInfo.businessPhone
+              : owner.businessInfo.businessPhone,
+            businessLogo: isOwner
+              ? user.businessInfo.businessLogo
+              : owner.businessInfo.businessLogo,
+            description: description,
+            serviceAddress: customerInfo.serviceAddress,
+            scheduledDate: scheduledDate
+              ? moment(scheduledDate).format('MMMM Do, YYYY')
+              : null
+          })
+        };
+
+        // Send Email
+        transporter.sendMail(mailOptions, (err, data) => {
+          if (err) {
+            return console.log('Error: ', err);
+          } else {
+            console.log('Message has been sent');
+          }
+        });
+      }
+
+      return res.status(200).json(workOrder);
+    } catch (err) {
+      console.log(err.message);
+
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    PATCH api/customers/workOrder
+// @desc     Edit Work Order
+// @access   Private/Admin
+router.patch(
+  '/workOrder/:id',
+  [
+    auth,
+    [
+      check('orderType')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('customer')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('description')
+        .trim()
+        .escape(),
+      check('officeNote')
+        .trim()
+        .escape(),
+      check('estimatedMinutes')
+        .trim()
+        .escape()
+        .toInt(),
+      check('scheduledDate')
+        .trim()
+        .escape()
+        .toDate(),
+      check('status')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape(),
+      check('laborCost')
+        .trim()
+        .escape()
+        .toInt(),
+      check('price')
+        .trim()
+        .escape()
+        .toInt()
+    ]
+  ],
+  async (req, res) => {
+    const {
+      orderType,
+      customer,
+      description,
+      officeNote,
+      estimatedMinutes,
+      technician,
+      scheduledDate,
+      status,
+      laborCost,
+      price
+    } = req.body;
+
+    try {
+      // Find user making request as long as they are Admin or Owner role.
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      // Make sure the user making request exists
+      if (!user) {
+        return res
+          .status(404)
+          .json({ msg: 'User not found or Not Authorized' });
+      }
+
+      const workOrder = await WorkOrders.findById(req.params.id);
+
+      if (!workOrder) {
+        return res.status(404).json({ msg: 'Work Order not found' });
+      }
+
+      if (
+        !workOrder.technician ||
+        workOrder.technician.toString() !== technician.toString()
+      ) {
+        const tech = await User.findById(technician);
+        workOrder.technicianName = tech.firstName + ' ' + tech.lastName;
+        workOrder.technician = technician;
+      }
+
+      workOrder.orderType = orderType;
+      workOrder.customer = customer;
+      workOrder.description = description;
+      workOrder.officeNote = officeNote;
+      workOrder.estimatedMinutes = estimatedMinutes;
+      workOrder.scheduledDate = scheduledDate ? new Date(scheduledDate) : null;
+      workOrder.status = status;
+      workOrder.laborCost = laborCost;
+      workOrder.price = price;
+      workOrder.lastUpdate = Date.now();
 
       await workOrder.save();
 
@@ -2751,5 +2945,172 @@ router.post(
     }
   }
 );
+
+// @route    PATCH api/customers/workOrder/:id/approve
+// @desc     Edit Work Order
+// @access   Private/Admin
+router.patch('/workOrder/:id/approve', auth, async (req, res) => {
+  try {
+    // Find user making request as long as they are Admin or Owner role.
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // Make sure the user making request exists
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found or Not Authorized' });
+    }
+    console.log(req.params.id);
+
+    const workOrder = await WorkOrders.findById(req.params.id);
+
+    if (!workOrder) {
+      return res.status(404).json({ msg: 'Work Order not found' });
+    }
+
+    // Checking to see if work order belows to user
+    if (user.role === 'Owner') {
+      if (user._id.toString() !== workOrder.owner.toString()) {
+        return res.status(401).json({ msg: 'User Not Authorized' });
+      }
+    }
+
+    // Checking to see if work order belows to the same owner
+    if (user.role === 'Admin') {
+      if (user.owner.toString !== workOrder.owner.toString()) {
+        return res.status(401).json({ msg: 'User Not Authorized' });
+      }
+    }
+
+    workOrder.status = 'Approved';
+    workOrder.lastUpdate = Date.now();
+
+    await workOrder.save();
+
+    return res.status(200).json(workOrder);
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/recentActivity/:id/edit/comment
+// @desc     Edit Recent Activity Comment
+// @access   Private/Admin
+router.patch(
+  '/recentActivity/:id/edit/comment',
+  [
+    auth,
+    [
+      check('comments')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+    ]
+  ],
+  async (req, res) => {
+    const { comments } = req.body;
+    try {
+      // Find user making request as long as they are Admin or Owner role.
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      // Make sure the user making request exists
+      if (!user) {
+        return res
+          .status(404)
+          .json({ msg: 'User not found or Not Authorized' });
+      }
+
+      const recentActivity = await Activity.findById(req.params.id);
+
+      if (!recentActivity) {
+        return res.status(404).json({ msg: 'Work Order not found' });
+      }
+
+      // Checking to see if work order belows to user
+      if (user.role === 'Owner') {
+        if (user._id.toString() !== recentActivity.user.toString()) {
+          return res.status(401).json({ msg: 'User Not Authorized' });
+        }
+      }
+
+      // Checking to see if work order belows to the same owner
+      if (user.role === 'Admin') {
+        if (user.owner.toString !== recentActivity.user.toString()) {
+          return res.status(401).json({ msg: 'User Not Authorized' });
+        }
+      }
+
+      recentActivity.comments = comments;
+      recentActivity.lastUpdate = Date.now();
+
+      await recentActivity.save();
+
+      return res.status(200).json(recentActivity);
+    } catch (err) {
+      console.log(err.message);
+
+      res.status(500).send('Server Error');
+    }
+  }
+);
+
+// @route    DELETE api/customers/recentActivity/:id/
+// @desc     Delete Recent Activity By ID
+// @access   Private/Admin
+router.delete('/recentActivity/:id/', auth, async (req, res) => {
+  try {
+    // Find user making request as long as they are Admin or Owner role.
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // Make sure the user making request exists
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found or Not Authorized' });
+    }
+
+    const recentActivity = await Activity.findById(req.params.id);
+
+    if (!recentActivity) {
+      return res.status(404).json({ msg: 'Work Order not found' });
+    }
+
+    // Checking to see if work order belows to user
+    if (user.role === 'Owner') {
+      if (user._id.toString() !== recentActivity.user.toString()) {
+        return res.status(401).json({ msg: 'User Not Authorized' });
+      }
+    }
+
+    // Checking to see if work order belows to the same owner
+    if (user.role === 'Admin') {
+      if (user.owner.toString !== recentActivity.user.toString()) {
+        return res.status(401).json({ msg: 'User Not Authorized' });
+      }
+    }
+
+    await recentActivity.remove();
+
+    return res.status(200).json({ msg: 'Deleted Activity' });
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(500).send('Server Error');
+  }
+});
 
 module.exports = router;

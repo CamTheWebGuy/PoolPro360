@@ -8,6 +8,7 @@ import Dashnav from '../dashboard/Dashnav';
 import { Formik } from 'formik';
 
 import axios from 'axios';
+import DatePicker from 'reactstrap-date-picker';
 
 import * as Yup from 'yup';
 
@@ -61,13 +62,17 @@ import {
   ModalFooter
 } from 'reactstrap';
 
-import { getEmployeeRoute } from '../../actions/employee';
+import { getEmployeeRoute, getEmployees } from '../../actions/employee';
 import {
   addServiceLog,
   getChecklist,
   getCustomerServiceNotes,
   sendServiceReport,
-  unableService
+  unableService,
+  getWorkOrders,
+  approveWorkOrder,
+  updateWorkOrder,
+  getCustomers
 } from '../../actions/customer';
 
 import Chart from 'chart.js';
@@ -75,6 +80,7 @@ import { Bar, Line } from 'react-chartjs-2';
 import { SpinnerCircular } from 'spinners-react';
 
 import Footer from '../Layout/Footer';
+import { Link } from 'react-router-dom';
 
 // import { Container } from 'reactstrap';
 
@@ -108,16 +114,44 @@ const Dashboard = ({
   getEmployeeRoute,
   sendServiceReport,
   unableService,
-  customers: { checklist, serviceNotes, routeList }
+  getWorkOrders,
+  approveWorkOrder,
+  updateWorkOrder,
+  getCustomers,
+  getEmployees,
+  customers: { customers, checklist, serviceNotes, routeList, workOrders },
+  employees: { employees }
 }) => {
   useEffect(() => {
-    let options = {
-      valueNames: ['date', 'service', 'rate', 'status'],
-      listClass: 'list'
-    };
-
-    let newList = new List('list-container', options);
+    // let options = {
+    //   valueNames: ['date', 'service', 'rate', 'status'],
+    //   listClass: 'list'
+    // };
+    // let newList = new List('list-container', options);
   }, []);
+
+  const formSchema = Yup.object().shape({
+    customer: Yup.string()
+      .required('Must Select a Customer')
+      .notOneOf(['Select Customer'], 'Must Select a Customer'),
+    technician: Yup.string()
+      .required('Must Select a Technician')
+      .notOneOf(['Select Technician'], 'Must Select a Technician')
+  });
+
+  useEffect(() => {
+    getWorkOrders();
+    getCustomers();
+    getEmployees();
+  }, [getWorkOrders, getCustomers, getEmployees]);
+
+  const [infoModal, setInfoModal] = useState({
+    isOpen: false,
+    isEditOpen: false,
+    active: '',
+    order: null,
+    isLoading: false
+  });
 
   useEffect(() => {
     if (user) {
@@ -188,43 +222,22 @@ const Dashboard = ({
     )
   });
 
-  const dataTable = [
-    {
-      property: '3810 Cronin Skyway',
-      package: 'Weekly Pool Maintenance | $69/wk',
-      type: 'Residential',
-      technician: 'Lindsey Stroud',
-      gatecode: '#2368'
-    },
-    {
-      property: '991 Delphine Stream',
-      package: 'Weekly Pool Maintenance | $66/bwk',
-      type: 'Residential',
-      technician: 'Nicci Troiani',
-      gatecode: 'N/A'
-    },
-    {
-      property: '76767 Oklahoma Lane',
-      package: 'Weekly Pool Maintenance | $129/wk',
-      type: 'Residential',
-      technician: 'George Fields',
-      gatecode: '#463'
-    },
-    {
-      property: '7652 Dogwood Ave',
-      package: 'Weekly Pool Maintenance | $129/wk',
-      type: 'Commercial',
-      technician: 'Gavin Byrd',
-      gatecode: '#7948'
-    },
-    {
-      property: '658 Adams St',
-      package: 'Weekly Pool Maintenance | $69/wk',
-      type: 'Commercial',
-      technician: 'Gavin Byrd',
-      gatecode: '#9077'
+  const nameFormatter = cell => {
+    if (cell === undefined) {
+      return <span></span>;
+    } else {
+      return (
+        <span>
+          {cell.first} {cell.last}
+        </span>
+      );
     }
-  ];
+  };
+
+  const filterFunction = (cell, row) => {
+    const string = `${cell.first} ${cell.last}`;
+    return string;
+  };
 
   const typeFormatter = cell => {
     if (cell === 'Residential') {
@@ -240,31 +253,77 @@ const Dashboard = ({
         </span>
       );
     } else {
-      return { cell };
+      return <span>N/A</span>;
+    }
+  };
+
+  const actionFormatter = cell => {
+    return (
+      <UncontrolledDropdown>
+        <DropdownToggle
+          className='btn-icon-only text-light'
+          color=''
+          role='button'
+          size='sm'
+        >
+          <i className='fas fa-ellipsis-v' />
+        </DropdownToggle>
+        <DropdownMenu className='dropdown-menu-arrow' right>
+          <DropdownItem tag={Link} to={`/customers/${cell}`}>
+            View
+          </DropdownItem>
+          <DropdownItem tag={Link} to={`/customers/${cell}/manage/info`}>
+            Edit
+          </DropdownItem>
+          <DropdownItem tag={Link} to={`/customers/${cell}/inactive`}>
+            Mark Inactive
+          </DropdownItem>
+        </DropdownMenu>
+      </UncontrolledDropdown>
+    );
+  };
+
+  const statusFormatter = cell => {
+    if (cell === true) {
+      return <Badge color='success'>Active</Badge>;
+    } else {
+      return <Badge color='warning'>Inactive</Badge>;
     }
   };
 
   const columns = [
     {
-      dataField: 'property',
-      text: 'Property'
+      dataField: 'isActive',
+      text: 'Status',
+      formatter: statusFormatter
     },
     {
-      dataField: 'package',
-      text: 'Package'
+      dataField: 'name',
+      text: 'Name',
+      formatter: nameFormatter,
+      filterValue: filterFunction,
+      csvFormatter: cell => {
+        const string = `${cell.first} ${cell.last}`;
+        return string;
+      }
     },
     {
-      dataField: 'type',
+      dataField: 'poolType',
       text: 'Type',
       formatter: typeFormatter
     },
     {
-      dataField: 'technician',
-      text: 'Technician'
+      dataField: 'serviceAddress',
+      text: 'Property'
     },
     {
-      dataField: 'gatecode',
-      text: 'Gate/Lock Code'
+      dataField: 'email',
+      text: 'Email'
+    },
+    {
+      dataField: '_id',
+      text: 'Actions',
+      formatter: actionFormatter
     }
   ];
 
@@ -396,6 +455,532 @@ const Dashboard = ({
 
   return (
     <Fragment>
+      <Modal
+        isOpen={infoModal.isEditOpen}
+        toggle={() =>
+          setInfoModal({
+            ...infoModal,
+            isEditOpen: !infoModal.isEditOpen,
+            isOpen: false,
+            isLoading: false
+          })
+        }
+      >
+        <ModalHeader
+          toggle={() =>
+            setInfoModal({
+              ...infoModal,
+              isEditOpen: !infoModal.isEditOpen,
+              isOpen: false,
+              isLoading: false
+            })
+          }
+        >
+          Edit Work Order:
+        </ModalHeader>
+        <ModalBody>
+          <Formik
+            initialValues={{
+              orderType: infoModal.active
+                ? workOrders[infoModal.order].orderType
+                : '',
+              customer: infoModal.active
+                ? workOrders[infoModal.order].customer._id
+                : '',
+              description: infoModal.active
+                ? workOrders[infoModal.order].description
+                : '',
+              officeNote: infoModal.active
+                ? workOrders[infoModal.order].officeNote
+                : '',
+              estimatedMinutes: infoModal.active
+                ? workOrders[infoModal.order].estimatedMinutes
+                : '',
+              technician: infoModal.active
+                ? workOrders[infoModal.order].technician
+                : '',
+              showDate: true,
+
+              notifyCustomer: infoModal.active
+                ? workOrders[infoModal.order].notifyCustomer
+                : '',
+              scheduledDate: infoModal.active
+                ? workOrders[infoModal.order].scheduledDate
+                : '',
+              status: infoModal.active
+                ? workOrders[infoModal.order].status
+                : '',
+              laborCost: infoModal.active
+                ? workOrders[infoModal.order].laborCost
+                : '',
+              price: infoModal.active ? workOrders[infoModal.order].price : ''
+            }}
+            validationSchema={formSchema}
+            onSubmit={async data => {
+              setInfoModal({ ...infoModal, isLoading: true });
+              await updateWorkOrder(data, infoModal.active);
+              await getWorkOrders();
+              setInfoModal({
+                ...infoModal,
+                isLoading: false,
+                isEditOpen: false,
+                isOpen: false
+              });
+            }}
+            render={({
+              handleSubmit,
+              handleChange,
+              handleBlur,
+              values,
+              setFieldValue,
+              errors,
+              touched
+            }) => (
+              <Form onSubmit={handleSubmit}>
+                <Row>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>Order Type:</Label>
+                      <Input
+                        type='select'
+                        name='orderType'
+                        value={values.orderType}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      >
+                        <option>Service Call</option>
+                        <option>Equipment Repair</option>
+                        <option>Filter Clean</option>
+                        <option>Pool Opening</option>
+                        <option>Pool Closing</option>
+                      </Input>
+                      {errors.orderType && touched.orderType && (
+                        <p className='color-red'>{errors.orderType}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>Customer:</Label>
+                      <Input
+                        type='select'
+                        name='customer'
+                        value={values.customer}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      >
+                        <option value={'Select Customer'}>
+                          Select Customer
+                        </option>
+                        {customers &&
+                          customers.map(customer => (
+                            <option value={customer._id}>
+                              {customer.firstName} {customer.lastName}
+                            </option>
+                          ))}
+                      </Input>
+                      {errors.customer && touched.customer && (
+                        <p className='color-red'>{errors.customer}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>
+                        Order Status:
+                      </Label>
+                      <Input
+                        type='select'
+                        name='status'
+                        value={values.status}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      >
+                        <option>Approval Needed</option>
+                        <option>Approved</option>
+                        <option>Completed</option>
+                        <option>Closed</option>
+                      </Input>
+                      {errors.status && touched.status && (
+                        <p className='color-red'>{errors.status}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>
+                        Order Description:
+                      </Label>
+                      <Input
+                        type='textarea'
+                        name='description'
+                        value={values.description}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.description && touched.description && (
+                        <p className='color-red'>{errors.description}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+
+                <Row>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>Technician:</Label>
+                      <Input
+                        type='select'
+                        name='technician'
+                        value={values.technician}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      >
+                        <option value={'Select Technician'}>
+                          Select Technician
+                        </option>
+                        {employees &&
+                          employees.map(em => (
+                            <option value={em._id}>
+                              {em.firstName} {em.lastName}
+                            </option>
+                          ))}
+                      </Input>
+                      {errors.technician && touched.technician && (
+                        <p className='color-red'>{errors.technician}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                {values.scheduledDate && (
+                  <Row>
+                    <Col>
+                      <FormGroup>
+                        <Label className='form-control-label'>
+                          Date to Complete:
+                        </Label>
+                        <DatePicker
+                          value={values.scheduledDate}
+                          onChange={value => {
+                            setFieldValue('scheduledDate', value);
+                          }}
+                        />
+                      </FormGroup>
+                    </Col>
+                  </Row>
+                )}
+                <Row>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>
+                        Est. Minutes to Complete:
+                      </Label>
+                      <Input
+                        type='number'
+                        name='estimatedMinutes'
+                        value={values.estimatedMinutes}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.estimatedMinutes && touched.estimatedMinutes && (
+                        <p className='color-red'>{errors.estimatedMinutes}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>Labor Cost:</Label>
+                      <Input
+                        type='number'
+                        name='laborCost'
+                        value={values.laborCost}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.laborCost && touched.laborCost && (
+                        <p className='color-red'>{errors.laborCost}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>Price:</Label>
+                      <Input
+                        type='number'
+                        name='price'
+                        value={values.price}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.price && touched.price && (
+                        <p className='color-red'>{errors.price}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                  <Col>
+                    <FormGroup>
+                      <Label className='form-control-label'>Office Note:</Label>
+                      <Input
+                        type='textarea'
+                        name='officeNote'
+                        value={values.officeNote}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                      />
+                      {errors.officeNote && touched.officeNote && (
+                        <p className='color-red'>{errors.officeNote}</p>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Button
+                  color='success'
+                  type='submit'
+                  block
+                  className='btn-icon'
+                >
+                  <span className='btn-inner--icon'>
+                    <i className='fas fa-save'></i>
+                  </span>
+                  {infoModal.isLoading === true ? (
+                    <span className='btn-inner--text'>
+                      <SpinnerCircular
+                        size={24}
+                        thickness={180}
+                        speed={100}
+                        color='rgba(57, 125, 172, 1)'
+                        secondaryColor='rgba(0, 0, 0, 0.44)'
+                      />{' '}
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className='btn-inner--text'>Save Changes</span>
+                  )}
+                </Button>
+              </Form>
+            )}
+          />
+        </ModalBody>
+      </Modal>
+
+      {workOrders && infoModal.active && (
+        <Modal
+          isOpen={infoModal.isOpen}
+          toggle={() => {
+            setInfoModal({
+              ...infoModal,
+              isOpen: false,
+              isEditOpen: false,
+              isLoading: false
+            });
+          }}
+        >
+          <ModalHeader
+            toggle={() => {
+              setInfoModal({
+                ...infoModal,
+                isOpen: false,
+                isEditOpen: false,
+                isLoading: false
+              });
+            }}
+          >
+            View Work Order: {workOrders[infoModal.order].orderType}
+          </ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col>
+                <Label className='form-control-label'>Creation Method:</Label>
+                {workOrders[infoModal.order].method ? (
+                  <p>{workOrders[infoModal.order].method}</p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+              <Col>
+                <Label className='form-control-label'>Order Type:</Label>
+                {workOrders[infoModal.order].orderType ? (
+                  <p>{workOrders[infoModal.order].orderType}</p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <Label className='form-control-label'>Status:</Label>
+                <p>
+                  {workOrders[infoModal.order].status === 'Completed' ? (
+                    <Badge color='success'>Completed</Badge>
+                  ) : workOrders[infoModal.order].status === 'Assigned' ? (
+                    <Badge color='info'>Assigned</Badge>
+                  ) : workOrders[infoModal.order].status === 'Unassigned' ? (
+                    <Badge color='danger'>Unassigned</Badge>
+                  ) : workOrders[infoModal.order].status === 'Approved' ? (
+                    <Badge color='primary'>Approved</Badge>
+                  ) : workOrders[infoModal.order].status ===
+                    'Approval Needed' ? (
+                    <Badge color='warning'>Approval Needed</Badge>
+                  ) : workOrders[infoModal.order].status === 'Closed' ? (
+                    <Badge color='danger'>Closed</Badge>
+                  ) : (
+                    <Badge color='danger'>N/A</Badge>
+                  )}
+                </p>
+              </Col>
+              <Col>
+                <Label className='form-control-label'>Notified Customer:</Label>
+                {workOrders[infoModal.order].notifyCustomer === true ? (
+                  <p>Yes</p>
+                ) : (
+                  <p>No</p>
+                )}
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <Label className='form-control-label'>Description:</Label>
+                {workOrders[infoModal.order].description ? (
+                  <p>{workOrders[infoModal.order].description}</p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+              <Col>
+                <Label className='form-control-label'>Office Note:</Label>
+                {workOrders[infoModal.order].officeNote ? (
+                  <p>{workOrders[infoModal.order].officeNote}</p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+            </Row>
+
+            <Row>
+              <Col>
+                <Label className='form-control-label'>Technician:</Label>
+                {workOrders[infoModal.order].technicianName ? (
+                  <p>{workOrders[infoModal.order].technicianName}</p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+              <Col>
+                <Label className='form-control-label'>Date Of Order:</Label>
+                {workOrders[infoModal.order].dateCreated ? (
+                  <p>
+                    {moment(workOrders[infoModal.order].dateCreated).format(
+                      'MMMM Do, YYYY'
+                    )}
+                  </p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Label className='form-control-label'>Estimated Minutes:</Label>
+                {workOrders[infoModal.order].estimatedMinutes ? (
+                  <p>{workOrders[infoModal.order].estimatedMinutes}</p>
+                ) : (
+                  <p>0</p>
+                )}
+              </Col>
+              <Col>
+                <Label className='form-control-label'>Labor Cost:</Label>
+                {workOrders[infoModal.order].laborCost ? (
+                  <p>{workOrders[infoModal.order].laborCost}</p>
+                ) : (
+                  <p>0</p>
+                )}
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                <Label className='form-control-label'>Price:</Label>
+                {workOrders[infoModal.order].price ? (
+                  <p>{workOrders[infoModal.order].price}</p>
+                ) : (
+                  <p>0</p>
+                )}
+              </Col>
+              <Col>
+                <Label className='form-control-label'>Scheduled Date:</Label>
+                {workOrders[infoModal.order].scheduledDate ? (
+                  <p>
+                    {moment(workOrders[infoModal.order].scheduledDate).format(
+                      'MMMM Do, YYYY'
+                    )}
+                  </p>
+                ) : (
+                  <p>N/A</p>
+                )}
+              </Col>
+            </Row>
+            <Row>
+              <Col>
+                {workOrders[infoModal.order].status === 'Approval Needed' && (
+                  <Button
+                    className='btn-icon'
+                    color='primary'
+                    block
+                    onClick={async e => {
+                      e.preventDefault();
+                      setInfoModal({ ...infoModal, isLoading: true });
+                      await approveWorkOrder(infoModal.active);
+                      await getWorkOrders();
+                      setInfoModal({
+                        ...infoModal,
+                        isLoading: false,
+                        isOpen: false,
+                        isEditOpen: false
+                      });
+                    }}
+                  >
+                    <span className='btn-inner--icon'>
+                      <i className='fas fa-thumbs-up'></i>
+                    </span>
+                    {infoModal.isLoading ? (
+                      <span className='btn-inner--text'>
+                        <SpinnerCircular
+                          size={24}
+                          thickness={180}
+                          speed={100}
+                          color='rgba(57, 125, 172, 1)'
+                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                        />{' '}
+                        Processing...
+                      </span>
+                    ) : (
+                      <span className='btn-inner--text'>
+                        Approve Work Order
+                      </span>
+                    )}
+                  </Button>
+                )}
+
+                {/* <Button className='btn-icon' color='info' block>
+                      <span className='btn-inner--icon'>
+                        <i className='fas fa-user-alt'></i>
+                      </span>
+                      <span className='btn-inner--text'>
+                        Change Assigned Technician
+                      </span>
+                    </Button> */}
+              </Col>
+            </Row>
+          </ModalBody>
+        </Modal>
+      )}
       <Sidebar active='dashboard' />
       <div className='main-content' id='panel'>
         {/* Topnav */}
@@ -4102,7 +4687,7 @@ const Dashboard = ({
                         </h6>
                         <h5 className='h3 text-white mb-0'>Work Orders</h5>
                       </Col>
-                      <Col>
+                      {/* <Col>
                         <ul className='nav nav-pills justify-content-end'>
                           <li
                             className='nav-item mr-2 mr-md-0'
@@ -4143,7 +4728,7 @@ const Dashboard = ({
                             </a>
                           </li>
                         </ul>
-                      </Col>
+                      </Col> */}
                     </Row>
                   </CardHeader>
                   <div
@@ -4170,174 +4755,104 @@ const Dashboard = ({
                         </tr>
                       </thead>
                       <tbody className='list'>
-                        <tr>
-                          <th scope='row'>
-                            <Media className='align-items-center'>
-                              <span className='date mb-0 text-sm'>
-                                Aug 10, 2020
-                              </span>
-                            </Media>
-                          </th>
-                          <td className='service'>Weekly Pool Maintenance</td>
+                        {workOrders ? (
+                          workOrders.slice(0, 5).map(order => (
+                            <tr key={order._id}>
+                              <th scope='row'>
+                                <Media className='align-items-center'>
+                                  <span className='date mb-0 text-sm'>
+                                    {moment(order.dateCreated).format(
+                                      'MMM Do, YYYY'
+                                    )}
+                                  </span>
+                                </Media>
+                              </th>
+                              <td className='service'>{order.orderType}</td>
 
-                          <td className='rate'>$99/wk</td>
-                          <td>
-                            <Badge color='' className='badge-dot mr-4'>
-                              <i className='bg-danger' />
-                              <span className='status'>Unassigned</span>
-                            </Badge>
-                          </td>
+                              <td className='rate'>
+                                {order.rate ? (
+                                  <span>{order.price}</span>
+                                ) : (
+                                  <span>N/A</span>
+                                )}
+                              </td>
+                              <td>
+                                <Badge color='' className='badge-dot mr-4'>
+                                  {order.status === 'Closed' ? (
+                                    <i className='bg-danger' />
+                                  ) : order.status === 'Approved' ? (
+                                    <i className='bg-info' />
+                                  ) : order.status === 'Completed' ? (
+                                    <i className='bg-success' />
+                                  ) : order.status === 'Approval Needed' ? (
+                                    <i className='bg-warning' />
+                                  ) : (
+                                    <i className='bg-danger' />
+                                  )}
+                                  <span className='status'>{order.status}</span>
+                                </Badge>
+                              </td>
 
-                          <td className='text-right'>
-                            <UncontrolledDropdown>
-                              <DropdownToggle
-                                className='btn-icon-only text-light'
-                                color=''
-                                role='button'
-                                size='sm'
-                              >
-                                <i className='fas fa-ellipsis-v' />
-                              </DropdownToggle>
-                              <DropdownMenu
-                                className='dropdown-menu-arrow'
-                                right
-                              >
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  View
-                                </DropdownItem>
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  Edit
-                                </DropdownItem>
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  Mask As Closed
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </UncontrolledDropdown>
-                          </td>
-                        </tr>
-
-                        <tr>
-                          <th scope='row'>
-                            <Media className='align-items-center'>
-                              <span className='name mb-0 text-sm'>
-                                Aug 08, 2020
-                              </span>
-                            </Media>
-                          </th>
-                          <td className='budget'>Weekly Pool Maintenance</td>
-
-                          <td className='budget'>$69/wk</td>
-                          <td>
-                            <Badge color='' className='badge-dot mr-4'>
-                              <i className='bg-info' />
-                              <span className='status'>Assigned</span>
-                            </Badge>
-                          </td>
-
-                          <td className='text-right'>
-                            <UncontrolledDropdown>
-                              <DropdownToggle
-                                className='btn-icon-only text-light'
-                                color=''
-                                role='button'
-                                size='sm'
-                              >
-                                <i className='fas fa-ellipsis-v' />
-                              </DropdownToggle>
-                              <DropdownMenu
-                                className='dropdown-menu-arrow'
-                                right
-                              >
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  View
-                                </DropdownItem>
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  Edit
-                                </DropdownItem>
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  Mask As Closed
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </UncontrolledDropdown>
-                          </td>
-                        </tr>
-
-                        <tr>
-                          <th scope='row'>
-                            <Media className='align-items-center'>
-                              <span className='name mb-0 text-sm'>
-                                Aug 05, 2020
-                              </span>
-                            </Media>
-                          </th>
-                          <td className='budget'>Equipment Repair</td>
-
-                          <td className='budget'>$129.99</td>
-                          <td>
-                            <Badge color='' className='badge-dot mr-4'>
-                              <i className='bg-success' />
-                              <span className='status'>Complete</span>
-                            </Badge>
-                          </td>
-
-                          <td className='text-right'>
-                            <UncontrolledDropdown>
-                              <DropdownToggle
-                                className='btn-icon-only text-light'
-                                color=''
-                                role='button'
-                                size='sm'
-                              >
-                                <i className='fas fa-ellipsis-v' />
-                              </DropdownToggle>
-                              <DropdownMenu
-                                className='dropdown-menu-arrow'
-                                right
-                              >
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  View
-                                </DropdownItem>
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  Edit
-                                </DropdownItem>
-                                <DropdownItem
-                                  href='#pablo'
-                                  onClick={e => e.preventDefault()}
-                                >
-                                  Mask As Closed
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </UncontrolledDropdown>
-                          </td>
-                        </tr>
+                              <td className='text-right'>
+                                <UncontrolledDropdown>
+                                  <DropdownToggle
+                                    className='btn-icon-only text-light'
+                                    color=''
+                                    role='button'
+                                    size='sm'
+                                  >
+                                    <i className='fas fa-ellipsis-v' />
+                                  </DropdownToggle>
+                                  <DropdownMenu
+                                    className='dropdown-menu-arrow'
+                                    right
+                                  >
+                                    <DropdownItem
+                                      href='#pablo'
+                                      onClick={e => {
+                                        e.preventDefault();
+                                        setInfoModal({
+                                          ...infoModal,
+                                          isOpen: true,
+                                          active: order._id,
+                                          order: workOrders.findIndex(
+                                            x => x._id === order._id
+                                          )
+                                        });
+                                      }}
+                                    >
+                                      View
+                                    </DropdownItem>
+                                    <DropdownItem
+                                      href='#pablo'
+                                      onClick={e => {
+                                        e.preventDefault();
+                                        setInfoModal({
+                                          ...infoModal,
+                                          isEditOpen: true,
+                                          active: order._id,
+                                          order: workOrders.findIndex(
+                                            x => x._id === order._id
+                                          )
+                                        });
+                                      }}
+                                    >
+                                      Edit
+                                    </DropdownItem>
+                                  </DropdownMenu>
+                                </UncontrolledDropdown>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <Fragment>Loading...</Fragment>
+                        )}
                       </tbody>
                     </Table>
                   </div>
-                  <Button color='primary'>View All</Button>
+                  <Button color='primary' href='/work-orders'>
+                    View All
+                  </Button>
                 </Card>
               </div>
               <div className='col-xl-4'>
@@ -4348,7 +4863,7 @@ const Dashboard = ({
                         <h6 className='text-uppercase text-muted ls-1 mb-1'>
                           Performance
                         </h6>
-                        <h5 className='h3 mb-0'>Income</h5>
+                        <h5 className='h3 mb-0'>Customer Activity</h5>
                       </div>
                     </div>
                   </div>
@@ -4374,6 +4889,7 @@ const Dashboard = ({
                     <Button
                       color='primary'
                       className='float-right mgn-ng-top-28'
+                      href='/customers/add'
                     >
                       <span className='btn-inner--icon'>
                         <i className='ni ni-fat-add' />
@@ -4382,49 +4898,67 @@ const Dashboard = ({
                     </Button>
                   </div>
 
-                  <ToolkitProvider
-                    data={dataTable}
-                    keyField='property'
-                    columns={columns}
-                    search
-                    exportCSV
-                  >
-                    {props => (
-                      <div
-                        className='py-4 table-responsive'
-                        style={{ padding: '25px' }}
-                      >
-                        <div id='datatable-basic_filter' className='px-4 pb-1'>
-                          <Row>
-                            <Col md='6'>
-                              <ExportCSVButton
-                                className='buttons-copy buttons-html5 btn-sm'
-                                {...props.csvProps}
-                              >
-                                <i className='ni ni-align-left-2'></i> Export
-                                CSV
-                              </ExportCSVButton>
-                            </Col>
-                            <Col md={{ size: 'auto', offset: 3 }}>
-                              <SearchBar
-                                className='form-control-sm'
-                                placeholder='Search Customers'
-                                {...props.searchProps}
-                              />
-                            </Col>
-                          </Row>
-                        </div>
-
-                        <BootstrapTable
-                          {...props.baseProps}
-                          bootstrap4={true}
-                          pagination={pagination}
-                          bordered={false}
-                          wrapperClasses='table-responsive'
+                  {loading ? (
+                    <Fragment>
+                      <div className='text-center'>
+                        <h4>Loading Data...</h4>
+                        <SpinnerCircular
+                          size={54}
+                          thickness={180}
+                          speed={100}
+                          color='rgba(57, 125, 172, 1)'
+                          secondaryColor='rgba(0, 0, 0, 0.44)'
                         />
                       </div>
-                    )}
-                  </ToolkitProvider>
+                    </Fragment>
+                  ) : (
+                    <ToolkitProvider
+                      data={customers}
+                      keyField='_id'
+                      columns={columns}
+                      search
+                      exportCSV={{ fileName: 'PP360 | Customers.csv' }}
+                    >
+                      {props => (
+                        <div
+                          className='py-4 table-responsive'
+                          style={{ padding: '25px' }}
+                        >
+                          <div
+                            id='datatable-basic_filter'
+                            className='px-4 pb-1'
+                          >
+                            <Row>
+                              <Col md='6'>
+                                <ExportCSVButton
+                                  className='buttons-copy buttons-html5 btn-sm'
+                                  {...props.csvProps}
+                                >
+                                  <i className='ni ni-align-left-2'></i> Export
+                                  CSV
+                                </ExportCSVButton>
+                              </Col>
+                              <Col md={{ size: 'auto', offset: 3 }}>
+                                <SearchBar
+                                  className='form-control-sm'
+                                  placeholder='Search Customers'
+                                  {...props.searchProps}
+                                />
+                              </Col>
+                            </Row>
+                          </div>
+
+                          <BootstrapTable
+                            {...props.baseProps}
+                            bootstrap4={true}
+                            pagination={pagination}
+                            bordered={false}
+                            wrapperClasses='table-responsive mh-330'
+                          />
+                        </div>
+                      )}
+                    </ToolkitProvider>
+                  )}
                 </div>
               </div>
             </div>{' '}
@@ -4443,12 +4977,18 @@ Dashboard.propTypes = {
   getCustomerServiceNotes: PropTypes.func.isRequired,
   getEmployeeRoute: PropTypes.func.isRequired,
   sendServiceReport: PropTypes.func.isRequired,
-  unableService: PropTypes.func.isRequired
+  unableService: PropTypes.func.isRequired,
+  getWorkOrders: PropTypes.func.isRequired,
+  approveWorkOrder: PropTypes.func.isRequired,
+  getEmployees: PropTypes.func.isRequired,
+  updateWorkOrder: PropTypes.func.isRequired,
+  customers: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
   auth: state.auth,
-  customers: state.customer
+  customers: state.customer,
+  employees: state.employee
 });
 
 export default connect(mapStateToProps, {
@@ -4457,5 +4997,10 @@ export default connect(mapStateToProps, {
   getCustomerServiceNotes,
   getEmployeeRoute,
   sendServiceReport,
-  unableService
+  unableService,
+  getWorkOrders,
+  approveWorkOrder,
+  updateWorkOrder,
+  getEmployees,
+  getCustomers
 })(Dashboard);

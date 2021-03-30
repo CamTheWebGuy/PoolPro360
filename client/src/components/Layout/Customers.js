@@ -11,6 +11,7 @@ import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
 import {
   Button,
+  Badge,
   Col,
   Row,
   Container,
@@ -55,6 +56,23 @@ const pagination = paginationFactory({
   )
 });
 
+const nameFormatter = cell => {
+  if (cell === undefined) {
+    return <span></span>;
+  } else {
+    return (
+      <span>
+        {cell.first} {cell.last}
+      </span>
+    );
+  }
+};
+
+const filterFunction = (cell, row) => {
+  const string = `${cell.first} ${cell.last}`;
+  return string;
+};
+
 const typeFormatter = cell => {
   if (cell === 'Residential') {
     return (
@@ -88,7 +106,7 @@ const actionFormatter = cell => {
         <DropdownItem tag={Link} to={`/customers/${cell}`}>
           View
         </DropdownItem>
-        <DropdownItem tag={Link} to={`/customers/${cell}/edit`}>
+        <DropdownItem tag={Link} to={`/customers/${cell}/manage/info`}>
           Edit
         </DropdownItem>
         <DropdownItem tag={Link} to={`/customers/${cell}/inactive`}>
@@ -99,14 +117,29 @@ const actionFormatter = cell => {
   );
 };
 
+const statusFormatter = cell => {
+  if (cell === true) {
+    return <Badge color='success'>Active</Badge>;
+  } else {
+    return <Badge color='warning'>Inactive</Badge>;
+  }
+};
+
 const columns = [
   {
-    dataField: 'firstName',
-    text: 'First Name'
+    dataField: 'isActive',
+    text: 'Status',
+    formatter: statusFormatter
   },
   {
-    dataField: 'lastName',
-    text: 'Last Name'
+    dataField: 'name',
+    text: 'Name',
+    formatter: nameFormatter,
+    filterValue: filterFunction,
+    csvFormatter: cell => {
+      const string = `${cell.first} ${cell.last}`;
+      return string;
+    }
   },
   {
     dataField: 'poolType',
@@ -217,7 +250,7 @@ const Customers = ({
                   keyField='_id'
                   columns={columns}
                   search
-                  exportCSV
+                  exportCSV={{ fileName: 'PP360 | Customers.csv' }}
                 >
                   {props => (
                     <div
