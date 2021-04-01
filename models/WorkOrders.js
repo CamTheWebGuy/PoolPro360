@@ -42,15 +42,15 @@ const WorkOrderSchema = new mongoose.Schema({
   },
   technician: {
     type: Schema.Types.ObjectId,
-    ref: 'users'
+    ref: 'user'
   },
   creator: {
     type: Schema.Types.ObjectId,
-    ref: 'users'
+    ref: 'user'
   },
   owner: {
     type: Schema.Types.ObjectId,
-    ref: 'users'
+    ref: 'user'
   },
   customer: {
     type: Schema.Types.ObjectId,

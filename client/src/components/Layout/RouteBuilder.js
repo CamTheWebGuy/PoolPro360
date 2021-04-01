@@ -27,7 +27,8 @@ import MapDirectionsRenderer from './MapDirectionsRenderer';
 import {
   getEmployees,
   getEmployeeCustomers,
-  getEmployeeRoute
+  getEmployeeRoute,
+  getEmployeeRouteRB
 } from '../../actions/employee';
 
 import {
@@ -75,6 +76,7 @@ const RouteBuilder = ({
   getCustomersRB,
   optimizeRoute,
   updateTech,
+  getEmployeeRouteRB,
   mapRedux: { legs },
   employees: { employees },
   customers: { customers, loading, routeList, allCustomers }
@@ -96,22 +98,24 @@ const RouteBuilder = ({
     setIsProcessing(true);
     setSelectedTech(e.target.value);
     await getEmployeeCustomers(e.target.value);
-    await getEmployeeRoute(e.target.value, dateSelected);
+    await getEmployeeRouteRB(e.target.value, dateSelected);
     setIsProcessing(false);
   };
 
   const onChangeDay = async e => {
     setIsProcessing(true);
     setDateSelected(e.target.value);
-    await getEmployeeRoute(selectedTech, e.target.value);
+    await getEmployeeRouteRB(selectedTech, e.target.value);
     setIsProcessing(false);
   };
+
+  const routeBuilder = true;
 
   const addToRoute = async e => {
     setIsProcessing(true);
     await setSchedule(e, selectedTech, dateSelected);
     await getEmployeeCustomers(selectedTech);
-    await getEmployeeRoute(selectedTech, dateSelected);
+    await getEmployeeRouteRB(selectedTech, dateSelected);
     setIsProcessing(false);
   };
 
@@ -119,7 +123,7 @@ const RouteBuilder = ({
     setIsProcessing(true);
     await unschedule(e);
     await getEmployeeCustomers(selectedTech);
-    await getEmployeeRoute(selectedTech, dateSelected);
+    await getEmployeeRouteRB(selectedTech, dateSelected);
     setIsProcessing(false);
   };
 
@@ -127,7 +131,7 @@ const RouteBuilder = ({
 
   useEffect(() => {
     if (!loading && customers[0]) {
-      getEmployeeRoute(selectedTech, dateSelected);
+      getEmployeeRouteRB(selectedTech, dateSelected);
       setMapCenterPoint({
         lat: parseFloat(customers[0].serviceLat),
         lng: parseFloat(customers[0].serviceLng)
@@ -164,7 +168,7 @@ const RouteBuilder = ({
     updateCustomerRouteList(items);
     setIsProcessing(true);
     await updateRouteOrder(selectedTech, dateSelected, items);
-    await getEmployeeRoute(selectedTech, dateSelected);
+    await getEmployeeRouteRB(selectedTech, dateSelected);
     setIsProcessing(false);
   };
 
@@ -301,7 +305,7 @@ const RouteBuilder = ({
                         selectedTech,
                         dateSelected
                       );
-                      await getEmployeeRoute(selectedTech, dateSelected);
+                      await getEmployeeRouteRB(selectedTech, dateSelected);
                       setIsProcessing(false);
                     }}
                   >
@@ -846,6 +850,7 @@ RouteBuilder.propTypes = {
   clearCustomers: PropTypes.func.isRequired,
   updateFrequency: PropTypes.func.isRequired,
   updateTech: PropTypes.func.isRequired,
+  getEmployeeRouteRB: PropTypes.func.isRequired,
   employees: PropTypes.object.isRequired,
   mapRedux: PropTypes.object.isRequired
 };
@@ -867,5 +872,6 @@ export default connect(mapStateToProps, {
   optimizeRoute,
   clearCustomers,
   updateFrequency,
-  updateTech
+  updateTech,
+  getEmployeeRouteRB
 })(RouteBuilder);

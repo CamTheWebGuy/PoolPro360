@@ -67,8 +67,10 @@ export default function(state = initialState, action) {
         recentActivity: [],
         checklist: [],
         routeList: [],
+        isRouteOptimized: false,
         allCustomers: [],
-        serviceLogs: []
+        serviceLogs: [],
+        workOrders: []
       };
     case GET_ROUTE:
       return {

@@ -177,7 +177,12 @@ const CustomerSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  activeWorkOrders: [
+    {
+      order: { type: Schema.Types.ObjectId, ref: 'workOrder' }
+    }
+  ]
 });
 
 module.exports = Customer = mongoose.model('customer', CustomerSchema);

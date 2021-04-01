@@ -57,7 +57,8 @@ import {
   getCustomers,
   createWorkOrder,
   updateWorkOrder,
-  approveWorkOrder
+  approveWorkOrder,
+  clearCustomers
 } from '../../actions/customer';
 
 import { getEmployees } from '../../actions/employee';
@@ -141,10 +142,11 @@ const WorkOrders = ({
   employees: { employees }
 }) => {
   useEffect(() => {
+    clearCustomers();
     getWorkOrders();
     getCustomers();
     getEmployees();
-  }, [getWorkOrders, getCustomers, getEmployees]);
+  }, [getWorkOrders, getCustomers, getEmployees, clearCustomers]);
 
   const formSchema = Yup.object().shape({
     customer: Yup.string()
@@ -185,6 +187,7 @@ const WorkOrders = ({
               setInfoModal({
                 ...infoModal,
                 isOpen: true,
+                isEditOpen: false,
                 active: cell,
                 order: workOrders.findIndex(x => x._id === cell)
               });
@@ -329,8 +332,14 @@ const WorkOrders = ({
                   technician: infoModal.active
                     ? workOrders[infoModal.order].technician
                     : '',
-                  showDate: true,
-
+                  showDate:
+                    infoModal.active &&
+                    workOrders[infoModal.order].scheduledDate
+                      ? true
+                      : '',
+                  scheduledDate: infoModal.active
+                    ? workOrders[infoModal.order].scheduledDate
+                    : '',
                   notifyCustomer: infoModal.active
                     ? workOrders[infoModal.order].notifyCustomer
                     : '',
@@ -493,8 +502,29 @@ const WorkOrders = ({
                           )}
                         </FormGroup>
                       </Col>
+                      <Col>
+                        <FormGroup>
+                          <Label className='form-control-label'>
+                            When To Complete?:
+                          </Label>
+                          <Input
+                            type='select'
+                            name='showDate'
+                            value={values.showDate}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                          >
+                            <option value={true}>Pick a Date</option>
+                            <option value=''>Next Scheduled Visit</option>
+                          </Input>
+                          {errors.showDate && touched.showDate && (
+                            <p className='color-red'>{errors.showDate}</p>
+                          )}
+                        </FormGroup>
+                      </Col>
                     </Row>
-                    {values.scheduledDate && (
+
+                    {values.showDate && (
                       <Row>
                         <Col>
                           <FormGroup>
@@ -636,7 +666,9 @@ const WorkOrders = ({
                   });
                 }}
               >
-                View Work Order: {workOrders[infoModal.order].orderType}
+                View Order: {workOrders[infoModal.order].orderType} for{' '}
+                {workOrders[infoModal.order].customer.firstName}{' '}
+                {workOrders[infoModal.order].customer.lastName}
               </ModalHeader>
               <ModalBody>
                 <Row>
@@ -775,11 +807,43 @@ const WorkOrders = ({
                           workOrders[infoModal.order].scheduledDate
                         ).format('MMMM Do, YYYY')}
                       </p>
+                    ) : workOrders[infoModal.order].scheduledDate === null ? (
+                      <p>Next Scheduled Visit</p>
                     ) : (
                       <p>N/A</p>
                     )}
                   </Col>
                 </Row>
+
+                <Row>
+                  <Col>
+                    <Label className='form-control-label'>Customer Name:</Label>
+                    {workOrders[infoModal.order].customer ? (
+                      <p>
+                        {workOrders[infoModal.order].customer.firstName}{' '}
+                        {workOrders[infoModal.order].customer.lastName}
+                      </p>
+                    ) : (
+                      <p>N/A</p>
+                    )}
+                  </Col>
+                  <Col>
+                    <Label className='form-control-label'>
+                      Customer Address:
+                    </Label>
+                    {workOrders[infoModal.order].customer ? (
+                      <p>
+                        {workOrders[infoModal.order].customer.serviceAddress},{' '}
+                        {workOrders[infoModal.order].customer.serviceCity}{' '}
+                        {workOrders[infoModal.order].customer.serviceState},{' '}
+                        {workOrders[infoModal.order].customer.serviceZip}
+                      </p>
+                    ) : (
+                      <p>N/A</p>
+                    )}
+                  </Col>
+                </Row>
+
                 <Row>
                   <Col>
                     {workOrders[infoModal.order].status ===
@@ -822,6 +886,21 @@ const WorkOrders = ({
                         )}
                       </Button>
                     )}
+
+                    <Button
+                      color='success'
+                      className='btn-icon'
+                      block
+                      href={`https://www.google.com/maps/dir/?api=1&origin=Your+Location&destination=${
+                        workOrders[infoModal.order].customer.serviceLat
+                      },${workOrders[infoModal.order].customer.serviceLng}`}
+                      target='_blank'
+                    >
+                      <span className='btn-inner--icon'>
+                        <i className='fas fa-directions'></i>
+                      </span>
+                      <span className='btn-inner--text'>GPS To Customer</span>
+                    </Button>
 
                     {/* <Button className='btn-icon' color='info' block>
                       <span className='btn-inner--icon'>
@@ -1251,6 +1330,7 @@ WorkOrders.propTypes = {
   createWorkOrder: PropTypes.func.isRequired,
   updateWorkOrder: PropTypes.func.isRequired,
   approveWorkOrder: PropTypes.func.isRequired,
+  clearCustomers: PropTypes.func.isRequired,
   customers: PropTypes.object.isRequired
 };
 
@@ -1265,5 +1345,6 @@ export default connect(mapStateToProps, {
   getEmployees,
   createWorkOrder,
   updateWorkOrder,
-  approveWorkOrder
+  approveWorkOrder,
+  clearCustomers
 })(WorkOrders);

@@ -36,7 +36,8 @@ import {
   getChecklist,
   getCustomerServiceNotes,
   sendServiceReport,
-  unableService
+  unableService,
+  getWorkOrders
 } from '../../actions/customer';
 
 import { SpinnerCircular } from 'spinners-react';
@@ -71,13 +72,18 @@ const ViewMyRoute = ({
   getEmployeeRoute,
   sendServiceReport,
   unableService,
-  customers: { checklist, serviceNotes, routeList }
+  getWorkOrders,
+  customers: { checklist, serviceNotes, routeList, workOrders }
 }) => {
   useEffect(() => {
     if (user) {
       getEmployeeRoute(user._id, moment(new Date()).format('dddd'));
     }
   }, [user]);
+
+  useEffect(() => {
+    getWorkOrders();
+  }, [getWorkOrders]);
 
   const pagination = paginationFactory({
     page: 1,
@@ -166,7 +172,9 @@ const ViewMyRoute = ({
     checkedItems: [],
     checkedNames: [],
     inProgress: false,
-    equipment: null
+    equipment: null,
+    type: null,
+    workOrders: null
   });
 
   const [routeDay, setRouteDay] = useState('Today');
@@ -379,7 +387,10 @@ const ViewMyRoute = ({
                                         (c.customer.lastServiced ===
                                           undefined &&
                                           c.customer.scheduledDay ===
-                                            moment(new Date()).format('dddd'))
+                                            moment(new Date()).format(
+                                              'dddd'
+                                            )) ||
+                                        c.type === 'Work Order'
                                     ).length
                                   }
                                 </span>
@@ -606,6 +617,137 @@ const ViewMyRoute = ({
                   <p>
                     {logModal.gatecode ? logModal.gatecode : <span>N/A</span>}
                   </p>
+
+                  {logModal.type === 'Work Order' && (
+                    <Fragment>
+                      <p>This is a work order</p>
+                      <ListGroup>
+                        {workOrders.map(wo => (
+                          <Fragment>
+                            {(wo.customer._id.toString() === logModal.active &&
+                              wo.status === 'Approved' &&
+                              wo.scheduledDate === null) ||
+                              (wo.customer._id.toString() === logModal.active &&
+                                wo.status === 'Approved' &&
+                                moment(wo.scheduledDate).isSame(
+                                  Date.now(),
+                                  'day'
+                                ) && (
+                                  <ListGroupItem>
+                                    <Row>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Order Type:
+                                        </h4>
+                                        <small>{wo.orderType}</small>
+                                      </Col>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Status:
+                                        </h4>
+                                        <Badge color='success'>
+                                          {wo.status}
+                                        </Badge>
+                                      </Col>
+                                    </Row>
+                                    <br />
+                                    <Row>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Description:
+                                        </h4>
+                                        <small>
+                                          {wo.description ? (
+                                            wo.description
+                                          ) : (
+                                            <span>N/A</span>
+                                          )}
+                                        </small>
+                                      </Col>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Scheduled Date:
+                                        </h4>
+                                        <small>{wo.scheduledDate}</small>
+                                      </Col>
+                                    </Row>
+                                  </ListGroupItem>
+                                ))}
+                          </Fragment>
+                        ))}
+                      </ListGroup>
+                    </Fragment>
+                  )}
+
+                  {logModal.workOrders !== null &&
+                    logModal.workOrders.length >= 1 &&
+                    logModal.type !== 'Work Order' && (
+                      <Fragment>
+                        <h4 className='form-control-label'>
+                          Open Work Orders:
+                        </h4>
+                        <ListGroup>
+                          {workOrders.map(wo => (
+                            <Fragment>
+                              {(wo.customer._id.toString() ===
+                                logModal.active &&
+                                wo.status === 'Approved' &&
+                                wo.scheduledDate === null) ||
+                                (wo.customer._id.toString() ===
+                                  logModal.active &&
+                                  wo.status === 'Approved' &&
+                                  moment(wo.scheduledDate).isSame(
+                                    Date.now(),
+                                    'day'
+                                  ) && (
+                                    <ListGroupItem>
+                                      <Row>
+                                        <Col>
+                                          <h4 className='form-control-label'>
+                                            Order Type:
+                                          </h4>
+                                          <small>{wo.orderType}</small>
+                                        </Col>
+                                        <Col>
+                                          <h4 className='form-control-label'>
+                                            Status:
+                                          </h4>
+                                          <Badge color='success'>
+                                            {wo.status}
+                                          </Badge>
+                                        </Col>
+                                      </Row>
+                                      <br />
+                                      <Row>
+                                        <Col>
+                                          <h4 className='form-control-label'>
+                                            Description:
+                                          </h4>
+                                          <small>
+                                            {wo.description ? (
+                                              wo.description
+                                            ) : (
+                                              <span>N/A</span>
+                                            )}
+                                          </small>
+                                        </Col>
+                                        <Col>
+                                          <h4 className='form-control-label'>
+                                            Scheduled Date:
+                                          </h4>
+                                          <small>{wo.scheduledDate}</small>
+                                        </Col>
+                                      </Row>
+                                    </ListGroupItem>
+                                  ))}
+                            </Fragment>
+                          ))}
+                        </ListGroup>
+                      </Fragment>
+                    )}
+
+                  <br />
+
                   {logModal.customerChecklist && logModal.customerNotes && (
                     <Fragment>
                       <h4 className='form-control-label'>Service Notes:</h4>
@@ -3663,7 +3805,16 @@ const ViewMyRoute = ({
                                         <div className='text-center'>
                                           <h3>
                                             {customer.customer.firstName}{' '}
-                                            {customer.customer.lastName}
+                                            {customer.customer.lastName}{' '}
+                                            {customer.type === 'Work Order' ? (
+                                              <Badge color='warning'>
+                                                Work Order
+                                              </Badge>
+                                            ) : (
+                                              <Badge color='success'>
+                                                Service Call
+                                              </Badge>
+                                            )}
                                           </h3>
                                           <p>
                                             {customer.customer.serviceAddress}
@@ -3734,7 +3885,11 @@ const ViewMyRoute = ({
                                                               .gatecode,
                                                           equipment:
                                                             customer.customer
-                                                              .poolEquipment
+                                                              .poolEquipment,
+                                                          type: customer.type,
+                                                          workOrders:
+                                                            customer.customer
+                                                              .activeWorkOrders
                                                         });
                                                       }}
                                                     >
@@ -3779,7 +3934,8 @@ ViewMyRoute.propTypes = {
   getCustomerServiceNotes: PropTypes.func.isRequired,
   getEmployeeRoute: PropTypes.func.isRequired,
   sendServiceReport: PropTypes.func.isRequired,
-  unableService: PropTypes.func.isRequired
+  unableService: PropTypes.func.isRequired,
+  getWorkOrders: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -3793,5 +3949,6 @@ export default connect(mapStateToProps, {
   getCustomerServiceNotes,
   getEmployeeRoute,
   sendServiceReport,
-  unableService
+  unableService,
+  getWorkOrders
 })(ViewMyRoute);

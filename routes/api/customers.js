@@ -1236,16 +1236,25 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
     let route = await Route.findOne({
       technician: req.params.techId,
       day: req.params.day
-    }).populate({ path: 'customers.customer' });
+    })
+      .populate({ path: 'customers.customer' })
+      .populate('technician');
 
-    const user = await User.find({
+    const orders = await WorkOrders.find({
+      technician: req.params.techId,
+      status: 'Approved'
+      // $or: [{ scheduledDate: null }, { scheduledDate: undefined }]
+    }).populate('customer');
+
+    const user = await User.findOne({
       $or: [
         { _id: req.user.id, role: 'Admin', owner: req.user.owner },
-        { _id: req.user.id, role: 'Owner' }
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
       ]
     });
 
-    if (!user) {
+    if (!user || user === undefined || user.length === 0) {
       return res.status(401).json({ msg: 'User not found or not authorized' });
     }
 
@@ -1259,6 +1268,149 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
       await route.save();
 
       return res.status(201).json(route.customers);
+    }
+
+    if (user.role === 'Technician' || user.role === 'Admin') {
+      if (
+        route.technician._id.toString() !== user._id.toString() &&
+        route.technician._id.toString() !== user.owner
+      ) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+    } else {
+      if (route.technician._id.toString() !== user._id.toString()) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+    }
+
+    let filteredCustomers = route.customers.filter(e => {
+      const frequency = e.customer.frequency;
+
+      if (
+        frequency === 'Weekly' ||
+        frequency === '' ||
+        frequency === undefined ||
+        frequency === null
+      ) {
+        return e;
+      } else if (frequency === 'Bi-Weekly (Every 2 Weeks)') {
+        const difference = moment(Date.now()).diff(
+          moment(e.customer.lastServiced),
+          'days'
+        );
+
+        if (difference >= 14 || difference === 0) {
+          return e;
+        }
+      }
+
+      if (frequency === 'Tri-Weekly (Every 3 Weeks)') {
+        const difference = moment(Date.now()).diff(
+          moment(e.customer.lastServiced),
+          'days'
+        );
+
+        if (difference >= 21 || difference === 0) {
+          return e;
+        }
+      }
+
+      if (frequency === 'Monthly (Every 4 Weeks)') {
+        const difference = moment(Date.now()).diff(
+          moment(e.customer.lastServiced),
+          'days'
+        );
+
+        if (difference >= 28 || difference === 0) {
+          return e;
+        }
+      }
+    });
+
+    // console.log(filteredCustomers);
+
+    orders.map(e => {
+      if (
+        filteredCustomers.find(customer => customer._id === e._id) ||
+        e.technician.toString() === e.customer.technician.toString()
+      ) {
+        return;
+      } else {
+        if (moment(e.scheduledDate).isSame(Date.now(), 'day')) {
+          const newCustomer = {
+            customer: e.customer,
+            type: 'Work Order'
+          };
+          filteredCustomers.push(newCustomer);
+        }
+      }
+    });
+
+    res.status(200).json(filteredCustomers);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    GET api/customers/route/builder/:techId/:day
+// @desc     Get a Employee's Route by Day (Route Builder)
+// @access   Private/User
+router.get('/route/builder/:techId/:day', auth, async (req, res) => {
+  try {
+    let route = await Route.findOne({
+      technician: req.params.techId,
+      day: req.params.day
+    })
+      .populate({ path: 'customers.customer' })
+      .populate('technician');
+
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+      ]
+    });
+
+    if (!user || user === undefined || user.length === 0) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    if (!route) {
+      route = new Route({
+        technician: req.params.techId,
+        day: req.params.day,
+        customers: []
+      });
+
+      await route.save();
+
+      return res.status(201).json(route.customers);
+    }
+
+    if (user.role === 'Technician' || user.role === 'Admin') {
+      if (
+        route.technician._id.toString() !== user._id.toString() &&
+        route.technician._id.toString() !== user.owner
+      ) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
+    } else {
+      if (route.technician._id.toString() !== user._id.toString()) {
+        return res
+          .status(401)
+          .json({ msg: 'User not found or not authorized' });
+      }
     }
 
     let filteredCustomers = route.customers.filter(e => {
@@ -2749,10 +2901,16 @@ router.post(
 
       await workOrder.save();
 
-      if (notifyCustomer) {
-        const customerInfo = await Customer.findById(customer);
-        console.log(customer);
+      const customerInfo = await Customer.findById(customer);
+      if (workOrder.status === 'Approved') {
+        const newOrder = {
+          order: workOrder._id
+        };
+        customerInfo.activeWorkOrders.push(newOrder);
+        customerInfo.save();
+      }
 
+      if (notifyCustomer === true || notifyCustomer === 'true') {
         let isOwner = null;
 
         if (user.role !== 'Owner') {
@@ -2888,6 +3046,7 @@ router.patch(
       officeNote,
       estimatedMinutes,
       technician,
+      showDate,
       scheduledDate,
       status,
       laborCost,
@@ -2925,18 +3084,44 @@ router.patch(
         workOrder.technician = technician;
       }
 
+      let statusChange = null;
+      if (status !== workOrder.status) {
+        statusChange = true;
+      } else {
+        statusChange = false;
+      }
+
       workOrder.orderType = orderType;
       workOrder.customer = customer;
       workOrder.description = description;
       workOrder.officeNote = officeNote;
       workOrder.estimatedMinutes = estimatedMinutes;
-      workOrder.scheduledDate = scheduledDate ? new Date(scheduledDate) : null;
-      workOrder.status = status;
+      workOrder.scheduledDate =
+        showDate === true || showDate === 'true'
+          ? new Date(scheduledDate)
+          : null;
+      statusChange === true && (workOrder.status = status);
       workOrder.laborCost = laborCost;
       workOrder.price = price;
       workOrder.lastUpdate = Date.now();
 
       await workOrder.save();
+
+      const customerInfo = await Customer.findById(customer);
+
+      if (statusChange === true && workOrder.status === 'Approved') {
+        const newOrder = {
+          order: workOrder._id
+        };
+        customerInfo.activeWorkOrders.push(newOrder);
+        customerInfo.save();
+      } else if (statusChange === true && workOrder.status !== 'Approved') {
+        const index = customerInfo.activeWorkOrders.findIndex(
+          e => e.order._id === workOrder._id
+        );
+        customerInfo.activeWorkOrders.splice(index, 1);
+        customerInfo.save();
+      }
 
       return res.status(200).json(workOrder);
     } catch (err) {
@@ -3065,5 +3250,67 @@ router.patch(
     }
   }
 );
+
+// // @route    GET api/customers/workOrders/:techId
+// // @desc     Get Technicians Work Orders by Tech ID
+// // @access   Private/User
+// router.get('/workOrders/:techId', auth, async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id);
+
+//     // Make sure the user making request exists
+//     if (!user) {
+//       return res.status(404).json({ msg: 'User not found' });
+//     }
+
+//     // Check that we have permission to get this technicians service logs.
+
+//     if (
+//       user.role === 'Technician' &&
+//       user._id.toString() === req.params.techId.toString()
+//     ) {
+//       const orders = await WorkOrders.find({
+//         technician: user._id
+//       }).populate('customer');
+
+//       if (!orders) return res.status(404).send('No Work Orders Found');
+//       return res.status(200).json(orders);
+//     }
+
+//     if (user.role === 'Admin') {
+//       const tech = User.findById(req.params.techId);
+//       if (user.owner.toString() === tech.owner.toString()) {
+//         const orders = await WorkOrders.find({
+//           technician: tech._id
+//         }).populate('orders');
+//         if (!activities) return res.status(404).send('No Work Orders Found');
+//         return res.status(200).json(orders);
+//       }
+//     }
+
+//     if (user.role === 'Owner') {
+//       const tech = User.findById(req.params.techId);
+//       if (tech._id !== user._id && tech._owner !== user._id) {
+//         return res
+//           .status(401)
+//           .json({ msg: 'User not found or not authorized' });
+//       }
+
+//       const orders = await WorkOrders.find({
+//         technician: user._id
+//       }).populate('customer');
+//       if (!orders) return res.status(404).send('No Work Orders Found');
+//       return res.status(200).json(orders);
+//     }
+
+//     return res.status(401).json({ msg: 'User not found or not authorized' });
+//   } catch (err) {
+//     console.log(err.message);
+//     if (err.kind === 'ObjectId') {
+//       return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+//     }
+//     res.status(500).send('Server Error');
+//   }
+// });
 
 module.exports = router;

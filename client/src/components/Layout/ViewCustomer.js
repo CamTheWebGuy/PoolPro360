@@ -55,6 +55,8 @@ import {
   Badge,
   ListGroup,
   ListGroupItem,
+  ListGroupItemHeading,
+  ListGroupItemText,
   Collapse
 } from 'reactstrap';
 
@@ -137,7 +139,8 @@ const ViewCustomer = ({
     active: null,
     index: null,
     isChemsOpen: false,
-    isReadingsOpen: false
+    isReadingsOpen: false,
+    isViewAllOpen: false
   });
 
   const [editBillingModal, setEditBillingModal] = useState(false);
@@ -282,7 +285,7 @@ const ViewCustomer = ({
                       </Fragment>
                     )}
                     <Badge color='success'>No Open Work Orders</Badge>{' '}
-                    <Badge color='secondary'>No Pending Expenses</Badge>{' '}
+                    {/* <Badge color='secondary'>No Pending Expenses</Badge>{' '} */}
                     <h1 className='display-2 text-white'>
                       {customer[0].serviceAddress}
                     </h1>
@@ -293,8 +296,41 @@ const ViewCustomer = ({
                       </strong>{' '}
                       <br />
                       <em>
-                        Last Serviced: Aug 01, 2020 <br /> Next Service: Aug 08,
-                        2020
+                        Last Serviced:{' '}
+                        {moment(customer[0].lastServiced).format(
+                          'MMM Do, YYYY'
+                        )}{' '}
+                        <br /> Next Service:{' '}
+                        {customer[0].frequency === 'Weekly' ? (
+                          <span>
+                            {moment(customer[0].lastServiced)
+                              .add(7, 'days')
+                              .format('MMM Do, YYYY')}
+                          </span>
+                        ) : customer[0].frequency ===
+                          'Bi-Weekly (Every 2 Weeks)' ? (
+                          <span>
+                            {moment(customer[0].lastServiced)
+                              .add(14, 'days')
+                              .format('MMM Do, YYYY')}
+                          </span>
+                        ) : customer[0].frequency ===
+                          'Tri-Weekly (Every 3 Weeks)' ? (
+                          <span>
+                            {moment(customer[0].lastServiced)
+                              .add(3, 'weeks')
+                              .format('MMM Do, YYYY')}
+                          </span>
+                        ) : customer[0].frequency ===
+                          'Monthly (Every 4 Weeks)' ? (
+                          <span>
+                            {moment(customer[0].lastServiced)
+                              .add(1, 'month')
+                              .format('MMM Do, YYYY')}
+                          </span>
+                        ) : (
+                          <span></span>
+                        )}
                       </em>
                     </p>
                   </Fragment>
@@ -319,6 +355,141 @@ const ViewCustomer = ({
             </div>
           </div>
         </div>
+
+        <Modal
+          isOpen={recentModal.isViewAllOpen}
+          toggle={() => {
+            setRecentModal({ ...recentModal, isViewAllOpen: false });
+          }}
+        >
+          <ModalHeader
+            toggle={() => {
+              setRecentModal({ ...recentModal, isViewAllOpen: false });
+            }}
+          >
+            View All Activity:
+          </ModalHeader>
+          <ModalBody>
+            {recentActivity.map(item => (
+              <Fragment key={item._id}>
+                <Row className='mb-4'>
+                  <Col xs={{ size: 'auto' }}>
+                    <i
+                      className={`fas fa-${item.icon} fa-2x color-${
+                        item.log === 'Phone Call'
+                          ? 'green'
+                          : item.log === 'Email'
+                          ? 'yellow'
+                          : item.log === 'Service'
+                          ? 'purple'
+                          : 'primary'
+                      }`}
+                    ></i>
+                  </Col>
+                  <Col xs={{ size: 'auto' }}>
+                    <h3>
+                      {item.type} {item.log}{' '}
+                      {item.type === 'Incoming' ? (
+                        <span>from</span>
+                      ) : (
+                        <span>to</span>
+                      )}{' '}
+                      {customer[0].firstName} {customer[0].lastName}
+                    </h3>
+                    <p>{item.comments}</p>
+                    <small>
+                      <Moment format='ddd, MMM DD, YYYY | LT'>
+                        {item.dateAdded}
+                      </Moment>
+                    </small>{' '}
+                    <Button
+                      size='sm'
+                      color='primary'
+                      onClick={() => {
+                        setRecentModal({
+                          isViewOpen: true,
+                          active: item._id,
+                          index: recentActivity.findIndex(
+                            x => x._id === item._id
+                          )
+                        });
+                      }}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      size='sm'
+                      color='success'
+                      onClick={() => {
+                        setRecentModal({
+                          ...recentModal,
+                          isEditOpen: true,
+                          isViewOpen: false,
+                          active: item._id,
+                          index: recentActivity.findIndex(
+                            x => x._id === item._id
+                          )
+                        });
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size='sm'
+                      color='warning'
+                      onClick={() => toggleActivityDeleteModal(item._id)}
+                    >
+                      Delete
+                    </Button>
+                  </Col>
+                </Row>
+
+                <Modal
+                  isOpen={deleteActivity.isOpen}
+                  toggle={() => setDeleteActivity({ isOpen: false })}
+                >
+                  <ModalHeader
+                    toggle={() => setDeleteActivity({ isOpen: false })}
+                  >
+                    Delete Service Note?
+                  </ModalHeader>
+                  <ModalBody>
+                    Are you sure you want to delete this activity? This action
+                    cannot be undone.
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button
+                      onClick={() => setDeleteActivity({ isOpen: false })}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      color='danger'
+                      onClick={() =>
+                        recentActivityDeleteHandler(deleteActivity.active)
+                      }
+                    >
+                      {deleteActivity.isLoading ? (
+                        <span>
+                          <SpinnerCircular
+                            size={24}
+                            thickness={180}
+                            speed={100}
+                            color='rgba(57, 125, 172, 1)'
+                            secondaryColor='rgba(0, 0, 0, 0.44)'
+                          />{' '}
+                          Processing...
+                        </span>
+                      ) : (
+                        <span>Delete Activity</span>
+                      )}
+                    </Button>
+                  </ModalFooter>
+                </Modal>
+              </Fragment>
+            ))}
+          </ModalBody>
+        </Modal>
 
         <Container className='mgn-ng-top-60' fluid>
           <Row>
@@ -1897,7 +2068,13 @@ const ViewCustomer = ({
                       )}
                     </Fragment>
                   )}
-                  <Button color='primary' block>
+                  <Button
+                    color='primary'
+                    block
+                    onClick={() => {
+                      setRecentModal({ ...recentModal, isViewAllOpen: true });
+                    }}
+                  >
                     View All
                   </Button>
                 </CardBody>

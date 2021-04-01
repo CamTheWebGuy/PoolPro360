@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const RouteSchema = new mongoose.Schema({
   technician: {
     type: Schema.Types.ObjectId,
-    ref: 'users'
+    ref: 'user'
   },
   day: {
     type: String

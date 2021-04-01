@@ -178,6 +178,21 @@ export const getEmployeeRoute = (id, day) => async dispatch => {
   }
 };
 
+// Get Employees Route (Route Builder)
+export const getEmployeeRouteRB = (id, day) => async dispatch => {
+  try {
+    const route = await axios.get(`/api/customers/route/builder/${id}/${day}`);
+
+    dispatch({
+      type: GET_ROUTE,
+      payload: route.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+  }
+};
+
 // Mark Employee Inactive
 export const markEmployeeInactive = id => async dispatch => {
   try {
