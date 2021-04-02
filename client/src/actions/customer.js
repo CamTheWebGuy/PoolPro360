@@ -1191,3 +1191,19 @@ export const updateActivityComment = ({ comments }, id) => async dispatch => {
     }
   }
 };
+
+// Mark Work Order Complete
+export const completeWorkOrder = orderId => async dispatch => {
+  try {
+    await axios.patch(`/api/customers/workOrder/${orderId}/completed`);
+
+    dispatch(setAlert('Activity Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

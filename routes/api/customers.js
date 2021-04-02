@@ -1240,9 +1240,23 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
       .populate({ path: 'customers.customer' })
       .populate('technician');
 
+    const today = moment().startOf('day');
+
     const orders = await WorkOrders.find({
       technician: req.params.techId,
-      status: 'Approved'
+      $or: [
+        { status: 'Approved' },
+        {
+          status: 'Completed',
+          completedOn: {
+            $gte: today.toDate(),
+            $lte: moment(today)
+              .endOf('day')
+              .toDate()
+          }
+        }
+      ]
+      // status: 'Approved'
       // $or: [{ scheduledDate: null }, { scheduledDate: undefined }]
     }).populate('customer');
 
@@ -1343,7 +1357,8 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
         if (moment(e.scheduledDate).isSame(Date.now(), 'day')) {
           const newCustomer = {
             customer: e.customer,
-            type: 'Work Order'
+            type: 'Work Order',
+            status: e.status
           };
           filteredCustomers.push(newCustomer);
         }
@@ -3133,7 +3148,7 @@ router.patch(
 );
 
 // @route    PATCH api/customers/workOrder/:id/approve
-// @desc     Edit Work Order
+// @desc     Approve Work Order
 // @access   Private/Admin
 router.patch('/workOrder/:id/approve', auth, async (req, res) => {
   try {
@@ -3149,7 +3164,6 @@ router.patch('/workOrder/:id/approve', auth, async (req, res) => {
     if (!user) {
       return res.status(404).json({ msg: 'User not found or Not Authorized' });
     }
-    console.log(req.params.id);
 
     const workOrder = await WorkOrders.findById(req.params.id);
 
@@ -3175,6 +3189,74 @@ router.patch('/workOrder/:id/approve', auth, async (req, res) => {
     workOrder.lastUpdate = Date.now();
 
     await workOrder.save();
+
+    const customerInfo = await Customer.findById(workOrder.customer);
+
+    const newOrder = {
+      order: workOrder._id
+    };
+    customerInfo.activeWorkOrders.push(newOrder);
+    customerInfo.save();
+
+    return res.status(200).json(workOrder);
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/workOrder/:id/completed
+// @desc     Complete Work Order
+// @access   Private/Admin
+router.patch('/workOrder/:id/completed', auth, async (req, res) => {
+  try {
+    // Find user making request as long as they are Admin or Owner role.
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // Make sure the user making request exists
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found or Not Authorized' });
+    }
+
+    const workOrder = await WorkOrders.findById(req.params.id);
+
+    if (!workOrder) {
+      return res.status(404).json({ msg: 'Work Order not found' });
+    }
+
+    // Checking to see if work order belows to user
+    if (user.role === 'Owner') {
+      if (user._id.toString() !== workOrder.owner.toString()) {
+        return res.status(401).json({ msg: 'User Not Authorized' });
+      }
+    }
+
+    // Checking to see if work order belows to the same owner
+    if (user.role === 'Admin') {
+      if (user.owner.toString !== workOrder.owner.toString()) {
+        return res.status(401).json({ msg: 'User Not Authorized' });
+      }
+    }
+
+    workOrder.status = 'Completed';
+    workOrder.lastUpdate = Date.now();
+    workOrder.completedOn = Date.now();
+
+    await workOrder.save();
+
+    const customerInfo = await Customer.findById(workOrder.customer);
+
+    const index = customerInfo.activeWorkOrders.findIndex(
+      e => e.order._id === workOrder._id
+    );
+    customerInfo.activeWorkOrders.splice(index, 1);
+    customerInfo.save();
 
     return res.status(200).json(workOrder);
   } catch (err) {

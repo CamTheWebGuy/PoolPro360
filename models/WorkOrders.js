@@ -13,7 +13,7 @@ const WorkOrderSchema = new mongoose.Schema({
   },
   status: {
     type: String
-    // Unassigned, Approval Needed, Assigned, Completed, Closed
+    // Unassigned, Approval Needed, Approved, Completed, Closed
   },
   notifyCustomer: {
     type: Boolean
@@ -64,6 +64,9 @@ const WorkOrderSchema = new mongoose.Schema({
     type: Date
   },
   lastUpdated: {
+    type: Date
+  },
+  completedOn: {
     type: Date
   }
 });

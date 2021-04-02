@@ -189,6 +189,7 @@ const WorkOrders = ({
                 isOpen: true,
                 isEditOpen: false,
                 active: cell,
+                isLoading: false,
                 order: workOrders.findIndex(x => x._id === cell)
               });
             }}

@@ -37,7 +37,8 @@ import {
   getCustomerServiceNotes,
   sendServiceReport,
   unableService,
-  getWorkOrders
+  getWorkOrders,
+  completeWorkOrder
 } from '../../actions/customer';
 
 import { SpinnerCircular } from 'spinners-react';
@@ -73,6 +74,7 @@ const ViewMyRoute = ({
   sendServiceReport,
   unableService,
   getWorkOrders,
+  completeWorkOrder,
   customers: { checklist, serviceNotes, routeList, workOrders }
 }) => {
   useEffect(() => {
@@ -174,7 +176,8 @@ const ViewMyRoute = ({
     inProgress: false,
     equipment: null,
     type: null,
-    workOrders: null
+    workOrders: null,
+    isWorkOrderLoading: false
   });
 
   const [routeDay, setRouteDay] = useState('Today');
@@ -620,7 +623,10 @@ const ViewMyRoute = ({
 
                   {logModal.type === 'Work Order' && (
                     <Fragment>
-                      <p>This is a work order</p>
+                      <div className='form-control-label'>Job Type:</div>
+                      <Badge color='warning'>Work Order</Badge>
+                      <br />
+                      <br />
                       <ListGroup>
                         {workOrders.map(wo => (
                           <Fragment>
@@ -645,9 +651,7 @@ const ViewMyRoute = ({
                                         <h4 className='form-control-label'>
                                           Status:
                                         </h4>
-                                        <Badge color='success'>
-                                          {wo.status}
-                                        </Badge>
+                                        <Badge color='info'>{wo.status}</Badge>
                                       </Col>
                                     </Row>
                                     <br />
@@ -668,7 +672,68 @@ const ViewMyRoute = ({
                                         <h4 className='form-control-label'>
                                           Scheduled Date:
                                         </h4>
-                                        <small>{wo.scheduledDate}</small>
+                                        <small>
+                                          {moment(wo.scheduledDate).format(
+                                            'MMMM Do, YYYY'
+                                          )}
+                                        </small>
+                                      </Col>
+                                    </Row>
+                                    <Row>
+                                      <Col>
+                                        <Button
+                                          color='success'
+                                          className='btn-icon'
+                                          block
+                                          onClick={async () => {
+                                            setLogModal({
+                                              ...logModal,
+                                              isWorkOrderLoading: true
+                                            });
+                                            await completeWorkOrder(wo._id);
+                                            if (routeDay === 'Today') {
+                                              await getEmployeeRoute(
+                                                user._id,
+                                                moment(new Date()).format(
+                                                  'dddd'
+                                                )
+                                              );
+                                            } else {
+                                              await getEmployeeRoute(
+                                                user._id,
+                                                routeDay
+                                              );
+                                            }
+
+                                            setLogModal({
+                                              ...logModal,
+                                              isWorkOrderLoading: false,
+                                              isServiceInfoOpen: false
+                                            });
+                                          }}
+                                        >
+                                          {logModal.isWorkOrderLoading ? (
+                                            <span className='btn-inner--text'>
+                                              <SpinnerCircular
+                                                size={24}
+                                                thickness={180}
+                                                speed={100}
+                                                color='rgba(57, 125, 172, 1)'
+                                                secondaryColor='rgba(0, 0, 0, 0.44)'
+                                              />{' '}
+                                              Processing...
+                                            </span>
+                                          ) : (
+                                            <Fragment>
+                                              <span className='btn-inner--icon'>
+                                                <i className='fas fa-tint'></i>
+                                              </span>
+                                              <span className='btn-inner--text'>
+                                                Complete Work Order
+                                              </span>
+                                            </Fragment>
+                                          )}
+                                        </Button>
                                       </Col>
                                     </Row>
                                   </ListGroupItem>
@@ -683,63 +748,463 @@ const ViewMyRoute = ({
                     logModal.workOrders.length >= 1 &&
                     logModal.type !== 'Work Order' && (
                       <Fragment>
-                        <h4 className='form-control-label'>
-                          Open Work Orders:
-                        </h4>
+                        {workOrders.find(
+                          e =>
+                            (e.customer._id.toString() === logModal.active &&
+                              e.status === 'Approved' &&
+                              e.scheduledDate === null) ||
+                            (e.customer._id.toString() === logModal.active &&
+                              e.status === 'Approved' &&
+                              moment(e.scheduledDate).isSame(Date.now(), 'day'))
+                        ) && (
+                          <h4 className='form-control-label'>
+                            Open Work Orders:
+                          </h4>
+                        )}
+                        {/* Should the code below be a OR statement for the code above so as to not duplicate code? Yes. Did it work when it was setup in that way? Nope. This is the only way it'll work for the time being. Will investigate later. */}
                         <ListGroup>
                           {workOrders.map(wo => (
                             <Fragment>
-                              {(wo.customer._id.toString() ===
-                                logModal.active &&
+                              {wo.customer._id.toString() === logModal.active &&
                                 wo.status === 'Approved' &&
-                                wo.scheduledDate === null) ||
-                                (wo.customer._id.toString() ===
-                                  logModal.active &&
-                                  wo.status === 'Approved' &&
-                                  moment(wo.scheduledDate).isSame(
-                                    Date.now(),
-                                    'day'
-                                  ) && (
-                                    <ListGroupItem>
-                                      <Row>
-                                        <Col>
-                                          <h4 className='form-control-label'>
-                                            Order Type:
-                                          </h4>
-                                          <small>{wo.orderType}</small>
-                                        </Col>
-                                        <Col>
-                                          <h4 className='form-control-label'>
-                                            Status:
-                                          </h4>
-                                          <Badge color='success'>
-                                            {wo.status}
-                                          </Badge>
-                                        </Col>
-                                      </Row>
-                                      <br />
-                                      <Row>
-                                        <Col>
-                                          <h4 className='form-control-label'>
-                                            Description:
-                                          </h4>
-                                          <small>
-                                            {wo.description ? (
-                                              wo.description
-                                            ) : (
-                                              <span>N/A</span>
-                                            )}
-                                          </small>
-                                        </Col>
-                                        <Col>
-                                          <h4 className='form-control-label'>
-                                            Scheduled Date:
-                                          </h4>
-                                          <small>{wo.scheduledDate}</small>
-                                        </Col>
-                                      </Row>
-                                    </ListGroupItem>
-                                  ))}
+                                wo.scheduledDate === null && (
+                                  <ListGroupItem>
+                                    <Row>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Order Type:
+                                        </h4>
+                                        <small>{wo.orderType}</small>
+                                      </Col>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Status:
+                                        </h4>
+                                        <Badge color='info'>{wo.status}</Badge>
+                                      </Col>
+                                    </Row>
+                                    <br />
+                                    <Row>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Description:
+                                        </h4>
+                                        <small>
+                                          {wo.description ? (
+                                            wo.description
+                                          ) : (
+                                            <span>N/A</span>
+                                          )}
+                                        </small>
+                                      </Col>
+                                      <Col>
+                                        <h4 className='form-control-label'>
+                                          Scheduled Date:
+                                        </h4>
+                                        <small>
+                                          {wo.scheduledDate !== null ? (
+                                            moment(wo.scheduledDate).format(
+                                              'MMMM Do, YYYY'
+                                            )
+                                          ) : (
+                                            <span>
+                                              Next Scheduled Service Day
+                                            </span>
+                                          )}
+                                        </small>
+                                      </Col>
+                                    </Row>
+                                    <br />
+                                    <Row>
+                                      <Col>
+                                        <Button
+                                          color='success'
+                                          className='btn-icon'
+                                          block
+                                          onClick={async () => {
+                                            setLogModal({
+                                              ...logModal,
+                                              isWorkOrderLoading: true
+                                            });
+                                            await completeWorkOrder(wo._id);
+                                            await getWorkOrders();
+                                            setLogModal({
+                                              ...logModal,
+                                              isWorkOrderLoading: false
+                                            });
+                                          }}
+                                        >
+                                          {logModal.isWorkOrderLoading ? (
+                                            <Fragment>
+                                              <span className='btn-inner--text'>
+                                                <SpinnerCircular
+                                                  size={24}
+                                                  thickness={180}
+                                                  speed={100}
+                                                  color='rgba(57, 125, 172, 1)'
+                                                  secondaryColor='rgba(0, 0, 0, 0.44)'
+                                                />
+                                                Processing...
+                                              </span>
+                                            </Fragment>
+                                          ) : (
+                                            <Fragment>
+                                              <span className='btn-inner--icon'>
+                                                <i className='fas fa-tint'></i>
+                                              </span>
+
+                                              <span className='btn-inner--text'>
+                                                Complete Work Order
+                                              </span>
+                                            </Fragment>
+                                          )}
+                                        </Button>
+                                      </Col>
+                                    </Row>
+                                  </ListGroupItem>
+                                )}
+                            </Fragment>
+                          ))}
+                        </ListGroup>
+                      </Fragment>
+                    )}
+
+                  {workOrders.map(wo => (
+                    <Fragment>
+                      {wo.customer._id.toString() === logModal.active &&
+                        wo.status === 'Completed' &&
+                        logModal.type !== 'Work Order' &&
+                        moment(wo.completedOn).isSame(
+                          moment(Date.now()),
+                          'day'
+                        ) && (
+                          <ListGroupItem>
+                            <Row>
+                              <Col>
+                                <h4 className='form-control-label'>
+                                  Order Type:
+                                </h4>
+                                <small>{wo.orderType}</small>
+                              </Col>
+                              <Col>
+                                <h4 className='form-control-label'>Status:</h4>
+                                <Badge color='info'>{wo.status}</Badge>
+                              </Col>
+                            </Row>
+                            <br />
+                            <Row>
+                              <Col>
+                                <h4 className='form-control-label'>
+                                  Description:
+                                </h4>
+                                <small>
+                                  {wo.description ? (
+                                    wo.description
+                                  ) : (
+                                    <span>N/A</span>
+                                  )}
+                                </small>
+                              </Col>
+                              <Col>
+                                <h4 className='form-control-label'>
+                                  Scheduled Date:
+                                </h4>
+                                <small>
+                                  {wo.scheduledDate !== null ? (
+                                    moment(wo.scheduledDate).format(
+                                      'MMMM Do, YYYY'
+                                    )
+                                  ) : (
+                                    <span>Next Scheduled Service Day</span>
+                                  )}
+                                </small>
+                              </Col>
+                            </Row>
+                            <br />
+                            {wo.status !== 'Completed' &&
+                              wo.status !== 'Closed' && (
+                                <Row>
+                                  <Col>
+                                    <Button
+                                      color='success'
+                                      className='btn-icon'
+                                      block
+                                      onClick={async () => {
+                                        setLogModal({
+                                          ...logModal,
+                                          isWorkOrderLoading: true
+                                        });
+                                        await completeWorkOrder(wo._id);
+                                        await getWorkOrders();
+                                        setLogModal({
+                                          ...logModal,
+                                          isWorkOrderLoading: false
+                                        });
+                                      }}
+                                    >
+                                      {logModal.isWorkOrderLoading ? (
+                                        <Fragment>
+                                          <span className='btn-inner--text'>
+                                            <SpinnerCircular
+                                              size={24}
+                                              thickness={180}
+                                              speed={100}
+                                              color='rgba(57, 125, 172, 1)'
+                                              secondaryColor='rgba(0, 0, 0, 0.44)'
+                                            />
+                                            Processing...
+                                          </span>
+                                        </Fragment>
+                                      ) : (
+                                        <Fragment>
+                                          <span className='btn-inner--icon'>
+                                            <i className='fas fa-tint'></i>
+                                          </span>
+
+                                          <span className='btn-inner--text'>
+                                            Complete Work Order
+                                          </span>
+                                        </Fragment>
+                                      )}
+                                    </Button>
+                                  </Col>
+                                </Row>
+                              )}
+                          </ListGroupItem>
+                        )}
+                    </Fragment>
+                  ))}
+
+                  {workOrders.map(wo => (
+                    <Fragment>
+                      {wo.customer._id.toString() === logModal.active &&
+                        wo.status === 'Approved' &&
+                        logModal.type !== 'Work Order' &&
+                        moment(wo.scheduledDate).isSame(
+                          moment(Date.now()),
+                          'day'
+                        ) && (
+                          <ListGroupItem>
+                            <Row>
+                              <Col>
+                                <h4 className='form-control-label'>
+                                  Order Type:
+                                </h4>
+                                <small>{wo.orderType}</small>
+                              </Col>
+                              <Col>
+                                <h4 className='form-control-label'>Status:</h4>
+                                <Badge color='info'>{wo.status}</Badge>
+                              </Col>
+                            </Row>
+                            <br />
+                            <Row>
+                              <Col>
+                                <h4 className='form-control-label'>
+                                  Description:
+                                </h4>
+                                <small>
+                                  {wo.description ? (
+                                    wo.description
+                                  ) : (
+                                    <span>N/A</span>
+                                  )}
+                                </small>
+                              </Col>
+                              <Col>
+                                <h4 className='form-control-label'>
+                                  Scheduled Date:
+                                </h4>
+                                <small>
+                                  {wo.scheduledDate !== null ? (
+                                    moment(wo.scheduledDate).format(
+                                      'MMMM Do, YYYY'
+                                    )
+                                  ) : (
+                                    <span>Next Scheduled Service Day</span>
+                                  )}
+                                </small>
+                              </Col>
+                            </Row>
+                            <br />
+                            <Row>
+                              <Col>
+                                <Button
+                                  color='success'
+                                  className='btn-icon'
+                                  block
+                                  onClick={async () => {
+                                    setLogModal({
+                                      ...logModal,
+                                      isWorkOrderLoading: true
+                                    });
+                                    await completeWorkOrder(wo._id);
+                                    await getWorkOrders();
+                                    setLogModal({
+                                      ...logModal,
+                                      isWorkOrderLoading: false
+                                    });
+                                  }}
+                                >
+                                  {logModal.isWorkOrderLoading ? (
+                                    <Fragment>
+                                      <span className='btn-inner--text'>
+                                        <SpinnerCircular
+                                          size={24}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />
+                                        Processing...
+                                      </span>
+                                    </Fragment>
+                                  ) : (
+                                    <Fragment>
+                                      <span className='btn-inner--icon'>
+                                        <i className='fas fa-tint'></i>
+                                      </span>
+
+                                      <span className='btn-inner--text'>
+                                        Complete Work Order
+                                      </span>
+                                    </Fragment>
+                                  )}
+                                </Button>
+                              </Col>
+                            </Row>
+                          </ListGroupItem>
+                        )}
+                    </Fragment>
+                  ))}
+
+                  <br />
+
+                  {logModal.customerChecklist &&
+                    logModal.customerNotes &&
+                    logModal.type !== 'Work Order' && (
+                      <Fragment>
+                        <h4 className='form-control-label'>Service Notes:</h4>
+                        <ListGroup>
+                          <Fragment>
+                            {logModal.customerNotes.length < 1 && (
+                              <h4>No Service Notes...</h4>
+                            )}
+                          </Fragment>
+                          {logModal.customerNotes &&
+                            logModal.customerNotes.map(note => (
+                              <Fragment key={note._id}>
+                                {note.showDuringVisit && (
+                                  <ListGroupItem>{note.content}</ListGroupItem>
+                                )}
+                              </Fragment>
+                            ))}
+                        </ListGroup>
+                        <br />
+                        <h4 className='form-control-label'>
+                          Service Checklist:
+                        </h4>
+                        <ListGroup>
+                          <Fragment>
+                            {logModal.customerChecklist.length < 1 && (
+                              <h4>No Service Checklist...</h4>
+                            )}
+                          </Fragment>
+                          {logModal.customerChecklist.map(list => (
+                            <Fragment key={list._id}>
+                              {logModal.checkedItems &&
+                              logModal.checkedItems.find(
+                                e => e === list._id
+                              ) ? (
+                                <ListGroupItem
+                                  className='bg-green-wf'
+                                  onClick={() => {
+                                    if (
+                                      logModal.checkedItems.length === 0 ||
+                                      logModal.checkedItems == undefined
+                                    ) {
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: [list._id],
+                                        checkedNames: [list.item]
+                                      });
+                                    } else if (
+                                      logModal.checkedItems.length >= 1 &&
+                                      logModal.checkedItems.find(
+                                        e => e === list._id
+                                      )
+                                    ) {
+                                      const updated = logModal.checkedItems.filter(
+                                        id => id !== list._id
+                                      );
+                                      const names = logModal.checkedNames.filter(
+                                        name => name !== list.item
+                                      );
+
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: updated,
+                                        checkedNames: names
+                                      });
+                                    } else if (
+                                      logModal.checkedItems.length >= 1 &&
+                                      logModal.checkedItems.find(
+                                        e => e === list._id
+                                      )
+                                    ) {
+                                      const updated = [
+                                        ...logModal.checkedItems
+                                      ];
+                                      const names = [...logModal.checkedNames];
+
+                                      updated.push(list._id);
+                                      names.push(list.item);
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: updated,
+                                        checkedNames: names
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <i className='fas fa-times-circle'></i>{' '}
+                                  <strong>{list.item}</strong>
+                                </ListGroupItem>
+                              ) : (
+                                <ListGroupItem
+                                  className='bg-red'
+                                  onClick={() => {
+                                    if (
+                                      logModal.checkedItems === undefined ||
+                                      logModal.checkedItems.length === 0
+                                    ) {
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: [list._id],
+                                        checkedNames: [list.item]
+                                      });
+                                    } else if (
+                                      logModal.checkedItems.length >= 1
+                                    ) {
+                                      const updated = [
+                                        ...logModal.checkedItems
+                                      ];
+                                      const names = [...logModal.checkedNames];
+
+                                      updated.push(list._id);
+                                      names.push(list.item);
+                                      setLogModal({
+                                        ...logModal,
+                                        checkedItems: updated,
+                                        checkedNames: names
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <i className='fas fa-times-circle'></i>{' '}
+                                  <strong>{list.item}</strong>
+                                </ListGroupItem>
+                              )}
                             </Fragment>
                           ))}
                         </ListGroup>
@@ -748,128 +1213,6 @@ const ViewMyRoute = ({
 
                   <br />
 
-                  {logModal.customerChecklist && logModal.customerNotes && (
-                    <Fragment>
-                      <h4 className='form-control-label'>Service Notes:</h4>
-                      <ListGroup>
-                        <Fragment>
-                          {logModal.customerNotes.length < 1 && (
-                            <h4>No Service Notes...</h4>
-                          )}
-                        </Fragment>
-                        {logModal.customerNotes &&
-                          logModal.customerNotes.map(note => (
-                            <Fragment key={note._id}>
-                              {note.showDuringVisit && (
-                                <ListGroupItem>{note.content}</ListGroupItem>
-                              )}
-                            </Fragment>
-                          ))}
-                      </ListGroup>
-                      <br />
-                      <h4 className='form-control-label'>Service Checklist:</h4>
-                      <ListGroup>
-                        <Fragment>
-                          {logModal.customerChecklist.length < 1 && (
-                            <h4>No Service Checklist...</h4>
-                          )}
-                        </Fragment>
-                        {logModal.customerChecklist.map(list => (
-                          <Fragment key={list._id}>
-                            {logModal.checkedItems &&
-                            logModal.checkedItems.find(e => e === list._id) ? (
-                              <ListGroupItem
-                                className='bg-green-wf'
-                                onClick={() => {
-                                  if (
-                                    logModal.checkedItems.length === 0 ||
-                                    logModal.checkedItems == undefined
-                                  ) {
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: [list._id],
-                                      checkedNames: [list.item]
-                                    });
-                                  } else if (
-                                    logModal.checkedItems.length >= 1 &&
-                                    logModal.checkedItems.find(
-                                      e => e === list._id
-                                    )
-                                  ) {
-                                    const updated = logModal.checkedItems.filter(
-                                      id => id !== list._id
-                                    );
-                                    const names = logModal.checkedNames.filter(
-                                      name => name !== list.item
-                                    );
-
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: updated,
-                                      checkedNames: names
-                                    });
-                                  } else if (
-                                    logModal.checkedItems.length >= 1 &&
-                                    logModal.checkedItems.find(
-                                      e => e === list._id
-                                    )
-                                  ) {
-                                    const updated = [...logModal.checkedItems];
-                                    const names = [...logModal.checkedNames];
-
-                                    updated.push(list._id);
-                                    names.push(list.item);
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: updated,
-                                      checkedNames: names
-                                    });
-                                  }
-                                }}
-                              >
-                                <i className='fas fa-times-circle'></i>{' '}
-                                <strong>{list.item}</strong>
-                              </ListGroupItem>
-                            ) : (
-                              <ListGroupItem
-                                className='bg-red'
-                                onClick={() => {
-                                  if (
-                                    logModal.checkedItems === undefined ||
-                                    logModal.checkedItems.length === 0
-                                  ) {
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: [list._id],
-                                      checkedNames: [list.item]
-                                    });
-                                  } else if (
-                                    logModal.checkedItems.length >= 1
-                                  ) {
-                                    const updated = [...logModal.checkedItems];
-                                    const names = [...logModal.checkedNames];
-
-                                    updated.push(list._id);
-                                    names.push(list.item);
-                                    setLogModal({
-                                      ...logModal,
-                                      checkedItems: updated,
-                                      checkedNames: names
-                                    });
-                                  }
-                                }}
-                              >
-                                <i className='fas fa-times-circle'></i>{' '}
-                                <strong>{list.item}</strong>
-                              </ListGroupItem>
-                            )}
-                          </Fragment>
-                        ))}
-                      </ListGroup>
-                    </Fragment>
-                  )}
-
-                  <br />
                   <div className='text-center'>
                     <Button
                       className='btn-icon mgn-btm-10'
@@ -883,90 +1226,120 @@ const ViewMyRoute = ({
                       <span className='btn-inner--text'>View Equipment</span>
                     </Button>
                     <hr />
-                    <Button
-                      className='btn-icon mgn-btm-10'
-                      color='warning'
-                      block
-                      onClick={() => setShowUnableService(!showUnableService)}
-                    >
-                      <span className='btn-inner--icon'>
-                        <i className='fas fa-times'></i>
-                      </span>
-                      <span className='btn-inner--text'>Unable to Service</span>
-                    </Button>
-                    {showUnableService && (
+
+                    {logModal.type !== 'Work Order' && (
                       <Fragment>
-                        <Label className='form-control-label'>
-                          Reason Unable To Service (May Be Sent to Customer):
-                        </Label>
-                        <Input
-                          type='textarea'
-                          onChange={e => onUnableChange(e)}
-                        />
-                        <br />
                         <Button
-                          className='btn-icon'
-                          color='default'
+                          className='btn-icon mgn-btm-10'
+                          color='warning'
                           block
-                          onClick={submitUnableService}
+                          onClick={() =>
+                            setShowUnableService(!showUnableService)
+                          }
                         >
                           <span className='btn-inner--icon'>
-                            <i className='fas fa-exclamation-circle'></i>
+                            <i className='fas fa-times'></i>
                           </span>
-                          {unableProcessing ? (
-                            <span className='btn-inner--text'>
-                              <SpinnerCircular
-                                size={24}
-                                thickness={180}
-                                speed={100}
-                                color='rgba(57, 125, 172, 1)'
-                                secondaryColor='rgba(0, 0, 0, 0.44)'
-                              />
-                              Processing...
-                            </span>
-                          ) : (
-                            <span className='btn-inner--text'>
-                              Mark Unable To Service
-                            </span>
-                          )}
+                          <span className='btn-inner--text'>
+                            Unable to Service
+                          </span>
                         </Button>
-                        <br />
-                      </Fragment>
-                    )}
-
-                    {logModal.customerChecklist &&
-                    logModal.customerChecklist.length >= 1 ? (
-                      <Fragment>
-                        {logModal.checkedItems === undefined ||
-                        logModal.checkedItems.length === 0 ? (
+                        {showUnableService && (
                           <Fragment>
+                            <Label className='form-control-label'>
+                              Reason Unable To Service (May Be Sent to
+                              Customer):
+                            </Label>
+                            <Input
+                              type='textarea'
+                              onChange={e => onUnableChange(e)}
+                            />
+                            <br />
                             <Button
-                              className='btn-icon mgn-btm-10'
-                              color='primary'
+                              className='btn-icon'
+                              color='default'
                               block
-                              disabled
-                              onClick={() => {
-                                setLogModal({
-                                  ...logModal,
-                                  isServiceInfoOpen: false,
-                                  isOpen: true
-                                });
-                              }}
+                              onClick={submitUnableService}
                             >
                               <span className='btn-inner--icon'>
-                                <i className='ni ni-check-bold'></i>
+                                <i className='fas fa-exclamation-circle'></i>
                               </span>
-                              <span className='btn-inner--text'>
-                                Log Service
-                              </span>
-                            </Button>
-                            {logModal.customerChecklist &&
-                              logModal.customerChecklist.length >= 1 && (
-                                <p>
-                                  Must have completed at least one item from
-                                  service checklist
-                                </p>
+                              {unableProcessing ? (
+                                <span className='btn-inner--text'>
+                                  <SpinnerCircular
+                                    size={24}
+                                    thickness={180}
+                                    speed={100}
+                                    color='rgba(57, 125, 172, 1)'
+                                    secondaryColor='rgba(0, 0, 0, 0.44)'
+                                  />
+                                  Processing...
+                                </span>
+                              ) : (
+                                <span className='btn-inner--text'>
+                                  Mark Unable To Service
+                                </span>
                               )}
+                            </Button>
+                            <br />
+                          </Fragment>
+                        )}
+
+                        {logModal.customerChecklist &&
+                        logModal.customerChecklist.length >= 1 ? (
+                          <Fragment>
+                            {logModal.checkedItems === undefined ||
+                            logModal.checkedItems.length === 0 ? (
+                              <Fragment>
+                                <Button
+                                  className='btn-icon mgn-btm-10'
+                                  color='primary'
+                                  block
+                                  disabled
+                                  onClick={() => {
+                                    setLogModal({
+                                      ...logModal,
+                                      isServiceInfoOpen: false,
+                                      isOpen: true
+                                    });
+                                  }}
+                                >
+                                  <span className='btn-inner--icon'>
+                                    <i className='ni ni-check-bold'></i>
+                                  </span>
+                                  <span className='btn-inner--text'>
+                                    Log Service
+                                  </span>
+                                </Button>
+                                {logModal.customerChecklist &&
+                                  logModal.customerChecklist.length >= 1 && (
+                                    <p>
+                                      Must have completed at least one item from
+                                      service checklist
+                                    </p>
+                                  )}
+                              </Fragment>
+                            ) : (
+                              <Button
+                                className='btn-icon mgn-btm-10'
+                                color='primary'
+                                block
+                                onClick={() => {
+                                  setLogModal({
+                                    ...logModal,
+                                    isServiceInfoOpen: false,
+                                    isOpen: true
+                                  });
+                                }}
+                              >
+                                <span className='btn-inner--icon'>
+                                  <i className='ni ni-check-bold'></i>
+                                </span>
+                                <span className='btn-inner--text'>
+                                  Log Service
+                                </span>
+                              </Button>
+                            )}
                           </Fragment>
                         ) : (
                           <Button
@@ -988,24 +1361,6 @@ const ViewMyRoute = ({
                           </Button>
                         )}
                       </Fragment>
-                    ) : (
-                      <Button
-                        className='btn-icon mgn-btm-10'
-                        color='primary'
-                        block
-                        onClick={() => {
-                          setLogModal({
-                            ...logModal,
-                            isServiceInfoOpen: false,
-                            isOpen: true
-                          });
-                        }}
-                      >
-                        <span className='btn-inner--icon'>
-                          <i className='ni ni-check-bold'></i>
-                        </span>
-                        <span className='btn-inner--text'>Log Service</span>
-                      </Button>
                     )}
                   </div>
                 </ModalBody>
@@ -3777,11 +4132,13 @@ const ViewMyRoute = ({
                                   <ListGroupItem>
                                     <Row>
                                       <Col md='2'>
-                                        {moment(
+                                        {(moment(
                                           customer.customer.lastServiced
                                         ).isSame(Date.now(), 'day') &&
-                                        customer.customer.lastServiced !=
-                                          undefined ? (
+                                          customer.customer.lastServiced !=
+                                            undefined) ||
+                                        (customer.type === 'Work Order' &&
+                                          customer.status === 'Completed') ? (
                                           <div className='route-box bg-green text-center'>
                                             <h2>
                                               <i className='fas fa-check-circle'></i>
@@ -3832,11 +4189,15 @@ const ViewMyRoute = ({
                                             <span></span>
                                           ) : (
                                             <Row>
-                                              {customer.customer
+                                              {(customer.customer
                                                 .unableService !== undefined &&
-                                              moment(
-                                                customer.customer.unableService
-                                              ).isSame(Date.now(), 'day') ? (
+                                                moment(
+                                                  customer.customer
+                                                    .unableService
+                                                ).isSame(Date.now(), 'day')) ||
+                                              (customer.type === 'Work Order' &&
+                                                customer.status ===
+                                                  'Completed') ? (
                                                 <Fragment></Fragment>
                                               ) : (
                                                 <Fragment>
@@ -3935,7 +4296,8 @@ ViewMyRoute.propTypes = {
   getEmployeeRoute: PropTypes.func.isRequired,
   sendServiceReport: PropTypes.func.isRequired,
   unableService: PropTypes.func.isRequired,
-  getWorkOrders: PropTypes.func.isRequired
+  getWorkOrders: PropTypes.func.isRequired,
+  completeWorkOrder: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -3950,5 +4312,6 @@ export default connect(mapStateToProps, {
   getEmployeeRoute,
   sendServiceReport,
   unableService,
-  getWorkOrders
+  getWorkOrders,
+  completeWorkOrder
 })(ViewMyRoute);
