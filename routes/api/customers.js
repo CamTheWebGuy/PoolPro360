@@ -2460,6 +2460,12 @@ router.post(
   [
     auth,
     [
+      check('emailSendWorkOrder')
+        .not()
+        .isEmpty()
+        .trim()
+        .escape()
+        .toBoolean(),
       check('emailSendUnable')
         .not()
         .isEmpty()
@@ -2512,6 +2518,7 @@ router.post(
     }
 
     const {
+      emailSendWorkOrder,
       emailSendUnable,
       emailSendSummary,
       emailSendChecklist,
@@ -2551,7 +2558,7 @@ router.post(
         if (!owner) {
           return res.status(404).json({ msg: 'User not found' });
         }
-
+        owner.emailSettings.emailSendWorkOrder = emailSendWorkOrder;
         owner.emailSettings.emailSendUnable = emailSendUnable;
         owner.emailSettings.emailSendSummary = emailSendSummary;
         owner.emailSettings.emailSendChecklist = emailSendChecklist;
@@ -2566,6 +2573,7 @@ router.post(
       }
 
       if (user.role === 'Owner') {
+        user.emailSettings.emailSendWorkOrder = emailSendWorkOrder;
         user.emailSettings.emailSendUnable = emailSendUnable;
         user.emailSettings.emailSendSummary = emailSendSummary;
         user.emailSettings.emailSendChecklist = emailSendChecklist;
@@ -2917,12 +2925,14 @@ router.post(
       await workOrder.save();
 
       const customerInfo = await Customer.findById(customer);
+      console.log(customerInfo.activeWorkOrders);
       if (workOrder.status === 'Approved') {
         const newOrder = {
           order: workOrder._id
         };
         customerInfo.activeWorkOrders.push(newOrder);
-        customerInfo.save();
+        console.log(customerInfo.activeWorkOrders);
+        await customerInfo.save();
       }
 
       if (notifyCustomer === true || notifyCustomer === 'true') {
@@ -3257,6 +3267,78 @@ router.patch('/workOrder/:id/completed', auth, async (req, res) => {
     );
     customerInfo.activeWorkOrders.splice(index, 1);
     customerInfo.save();
+
+    // Nodemailer Auth
+    const auth = {
+      auth: {
+        api_key: config.get('mailgun_api_key'),
+        domain: config.get('mailgun_domain')
+      }
+    };
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+    }
+
+    if (
+      (isOwner && user.emailSettings.emailSendWorkOrder) ||
+      (!isOwner && owner.emailSettings.emailSendWorkOrder)
+    ) {
+      // Nodemailer Transporter
+      let transporter = nodemailer.createTransport(nodemailMailgun(auth));
+
+      // Mail Options
+      const mailOptions = {
+        from: `${
+          isOwner
+            ? user.businessInfo.businessName
+            : owner.businessInfo.businessName
+        } <no-reply@poolpro360.com>`,
+        to: 'cameronanchondo@gmail.com',
+        replyTo: isOwner ? user.email : owner.email,
+        subject: `${workOrder.orderType} has been completed on your pool.`,
+        template: 'workordercomplete',
+        'h:X-Mailgun-Variables': JSON.stringify({
+          firstName: customerInfo.firstName,
+          businessName: isOwner
+            ? user.businessInfo.businessName
+            : owner.businessInfo.businessName,
+          businessEmail: isOwner
+            ? user.businessInfo.businessEmail
+            : owner.businessInfo.businessEmail,
+          businessAddress: isOwner
+            ? user.businessInfo.businessAddress
+            : owner.businessInfo.businessAddress,
+          businessPhone: isOwner
+            ? user.businessInfo.businessPhone
+            : owner.businessInfo.businessPhone,
+          businessLogo: isOwner
+            ? user.businessInfo.businessLogo
+            : owner.businessInfo.businessLogo,
+          orderType: workOrder.orderType,
+          orderCompleted: workOrder.completedOn
+        })
+      };
+
+      // Send Email
+      transporter.sendMail(mailOptions, (err, data) => {
+        if (err) {
+          return console.log('Error: ', err);
+        } else {
+          console.log('Message has been sent');
+        }
+      });
+    }
 
     return res.status(200).json(workOrder);
   } catch (err) {

@@ -30,7 +30,7 @@ import {
   ModalHeader
 } from 'reactstrap';
 
-import { getEmployeeRoute } from '../../actions/employee';
+import { getEmployeeRoute, getEmployeeRouteRB } from '../../actions/employee';
 import {
   addServiceLog,
   getChecklist,
@@ -75,6 +75,7 @@ const ViewMyRoute = ({
   unableService,
   getWorkOrders,
   completeWorkOrder,
+  getEmployeeRouteRB,
   customers: { checklist, serviceNotes, routeList, workOrders }
 }) => {
   useEffect(() => {
@@ -219,14 +220,17 @@ const ViewMyRoute = ({
 
   useEffect(async () => {
     if (user) {
-      if (routeDay === 'Today') {
+      if (
+        routeDay === 'Today' ||
+        routeDay === moment(Date.now()).format('dddd')
+      ) {
         return await getEmployeeRoute(
           user._id,
           moment(new Date()).format('dddd')
         );
       }
 
-      await getEmployeeRoute(user._id, routeDay);
+      await getEmployeeRouteRB(user._id, routeDay);
     }
   }, [routeDay]);
 
@@ -393,7 +397,11 @@ const ViewMyRoute = ({
                                             moment(new Date()).format(
                                               'dddd'
                                             )) ||
-                                        c.type === 'Work Order'
+                                        c.type === 'Work Order' ||
+                                        (c.customer.scheduledDay !==
+                                          moment(new Date()).format('dddd') &&
+                                          c.customer.activeWorkOrders.length >=
+                                            1)
                                     ).length
                                   }
                                 </span>
@@ -420,13 +428,18 @@ const ViewMyRoute = ({
                                   {
                                     routeList.filter(
                                       c =>
-                                        moment(c.customer.lastServiced).isSame(
+                                        (moment(c.customer.lastServiced).isSame(
                                           Date.now(),
                                           'day'
                                         ) &&
-                                        c.customer.scheduledDay ===
+                                          c.customer.scheduledDay ===
+                                            moment(new Date()).format('dddd') &&
+                                          c.customer.lastServiced !==
+                                            undefined) ||
+                                        (c.scheduledDay !==
                                           moment(new Date()).format('dddd') &&
-                                        c.customer.lastServiced !== undefined
+                                          c.customer.activeWorkOrders.length ===
+                                            0)
                                     ).length
                                   }
                                 </span>
@@ -1082,7 +1095,8 @@ const ViewMyRoute = ({
 
                   {logModal.customerChecklist &&
                     logModal.customerNotes &&
-                    logModal.type !== 'Work Order' && (
+                    logModal.type !== 'Work Order' &&
+                    logModal.serviceDay === moment(Date.now).format('dddd') && (
                       <Fragment>
                         <h4 className='form-control-label'>Service Notes:</h4>
                         <ListGroup>
@@ -1227,75 +1241,105 @@ const ViewMyRoute = ({
                     </Button>
                     <hr />
 
-                    {logModal.type !== 'Work Order' && (
-                      <Fragment>
-                        <Button
-                          className='btn-icon mgn-btm-10'
-                          color='warning'
-                          block
-                          onClick={() =>
-                            setShowUnableService(!showUnableService)
-                          }
-                        >
-                          <span className='btn-inner--icon'>
-                            <i className='fas fa-times'></i>
-                          </span>
-                          <span className='btn-inner--text'>
-                            Unable to Service
-                          </span>
-                        </Button>
-                        {showUnableService && (
-                          <Fragment>
-                            <Label className='form-control-label'>
-                              Reason Unable To Service (May Be Sent to
-                              Customer):
-                            </Label>
-                            <Input
-                              type='textarea'
-                              onChange={e => onUnableChange(e)}
-                            />
-                            <br />
-                            <Button
-                              className='btn-icon'
-                              color='default'
-                              block
-                              onClick={submitUnableService}
-                            >
-                              <span className='btn-inner--icon'>
-                                <i className='fas fa-exclamation-circle'></i>
-                              </span>
-                              {unableProcessing ? (
-                                <span className='btn-inner--text'>
-                                  <SpinnerCircular
-                                    size={24}
-                                    thickness={180}
-                                    speed={100}
-                                    color='rgba(57, 125, 172, 1)'
-                                    secondaryColor='rgba(0, 0, 0, 0.44)'
-                                  />
-                                  Processing...
+                    {logModal.type !== 'Work Order' &&
+                      logModal.serviceDay ===
+                        moment(Date.now).format('dddd') && (
+                        <Fragment>
+                          <Button
+                            className='btn-icon mgn-btm-10'
+                            color='warning'
+                            block
+                            onClick={() =>
+                              setShowUnableService(!showUnableService)
+                            }
+                          >
+                            <span className='btn-inner--icon'>
+                              <i className='fas fa-times'></i>
+                            </span>
+                            <span className='btn-inner--text'>
+                              Unable to Service
+                            </span>
+                          </Button>
+                          {showUnableService && (
+                            <Fragment>
+                              <Label className='form-control-label'>
+                                Reason Unable To Service (May Be Sent to
+                                Customer):
+                              </Label>
+                              <Input
+                                type='textarea'
+                                onChange={e => onUnableChange(e)}
+                              />
+                              <br />
+                              <Button
+                                className='btn-icon'
+                                color='default'
+                                block
+                                onClick={submitUnableService}
+                              >
+                                <span className='btn-inner--icon'>
+                                  <i className='fas fa-exclamation-circle'></i>
                                 </span>
-                              ) : (
-                                <span className='btn-inner--text'>
-                                  Mark Unable To Service
-                                </span>
-                              )}
-                            </Button>
-                            <br />
-                          </Fragment>
-                        )}
+                                {unableProcessing ? (
+                                  <span className='btn-inner--text'>
+                                    <SpinnerCircular
+                                      size={24}
+                                      thickness={180}
+                                      speed={100}
+                                      color='rgba(57, 125, 172, 1)'
+                                      secondaryColor='rgba(0, 0, 0, 0.44)'
+                                    />
+                                    Processing...
+                                  </span>
+                                ) : (
+                                  <span className='btn-inner--text'>
+                                    Mark Unable To Service
+                                  </span>
+                                )}
+                              </Button>
+                              <br />
+                            </Fragment>
+                          )}
 
-                        {logModal.customerChecklist &&
-                        logModal.customerChecklist.length >= 1 ? (
-                          <Fragment>
-                            {logModal.checkedItems === undefined ||
-                            logModal.checkedItems.length === 0 ? (
-                              <Fragment>
+                          {logModal.customerChecklist &&
+                          logModal.customerChecklist.length >= 1 ? (
+                            <Fragment>
+                              {logModal.checkedItems === undefined ||
+                              logModal.checkedItems.length === 0 ? (
+                                <Fragment>
+                                  <Button
+                                    className='btn-icon mgn-btm-10'
+                                    color='primary'
+                                    block
+                                    disabled
+                                    onClick={() => {
+                                      setLogModal({
+                                        ...logModal,
+                                        isServiceInfoOpen: false,
+                                        isOpen: true
+                                      });
+                                    }}
+                                  >
+                                    <span className='btn-inner--icon'>
+                                      <i className='ni ni-check-bold'></i>
+                                    </span>
+                                    <span className='btn-inner--text'>
+                                      Log Service
+                                    </span>
+                                  </Button>
+                                  {logModal.customerChecklist &&
+                                    logModal.customerChecklist.length >= 1 && (
+                                      <p>
+                                        Must have completed at least one item
+                                        from service checklist
+                                      </p>
+                                    )}
+                                </Fragment>
+                              ) : (
                                 <Button
                                   className='btn-icon mgn-btm-10'
                                   color='primary'
                                   block
-                                  disabled
                                   onClick={() => {
                                     setLogModal({
                                       ...logModal,
@@ -1311,57 +1355,31 @@ const ViewMyRoute = ({
                                     Log Service
                                   </span>
                                 </Button>
-                                {logModal.customerChecklist &&
-                                  logModal.customerChecklist.length >= 1 && (
-                                    <p>
-                                      Must have completed at least one item from
-                                      service checklist
-                                    </p>
-                                  )}
-                              </Fragment>
-                            ) : (
-                              <Button
-                                className='btn-icon mgn-btm-10'
-                                color='primary'
-                                block
-                                onClick={() => {
-                                  setLogModal({
-                                    ...logModal,
-                                    isServiceInfoOpen: false,
-                                    isOpen: true
-                                  });
-                                }}
-                              >
-                                <span className='btn-inner--icon'>
-                                  <i className='ni ni-check-bold'></i>
-                                </span>
-                                <span className='btn-inner--text'>
-                                  Log Service
-                                </span>
-                              </Button>
-                            )}
-                          </Fragment>
-                        ) : (
-                          <Button
-                            className='btn-icon mgn-btm-10'
-                            color='primary'
-                            block
-                            onClick={() => {
-                              setLogModal({
-                                ...logModal,
-                                isServiceInfoOpen: false,
-                                isOpen: true
-                              });
-                            }}
-                          >
-                            <span className='btn-inner--icon'>
-                              <i className='ni ni-check-bold'></i>
-                            </span>
-                            <span className='btn-inner--text'>Log Service</span>
-                          </Button>
-                        )}
-                      </Fragment>
-                    )}
+                              )}
+                            </Fragment>
+                          ) : (
+                            <Button
+                              className='btn-icon mgn-btm-10'
+                              color='primary'
+                              block
+                              onClick={() => {
+                                setLogModal({
+                                  ...logModal,
+                                  isServiceInfoOpen: false,
+                                  isOpen: true
+                                });
+                              }}
+                            >
+                              <span className='btn-inner--icon'>
+                                <i className='ni ni-check-bold'></i>
+                              </span>
+                              <span className='btn-inner--text'>
+                                Log Service
+                              </span>
+                            </Button>
+                          )}
+                        </Fragment>
+                      )}
                   </div>
                 </ModalBody>
               )}
@@ -4138,7 +4156,11 @@ const ViewMyRoute = ({
                                           customer.customer.lastServiced !=
                                             undefined) ||
                                         (customer.type === 'Work Order' &&
-                                          customer.status === 'Completed') ? (
+                                          customer.status === 'Completed') ||
+                                        (customer.customer.scheduledDay !==
+                                          moment(Date.now).format('ddd') &&
+                                          customer.customer.activeWorkOrders
+                                            .length === 0) ? (
                                           <div className='route-box bg-green text-center'>
                                             <h2>
                                               <i className='fas fa-check-circle'></i>
@@ -4163,7 +4185,13 @@ const ViewMyRoute = ({
                                           <h3>
                                             {customer.customer.firstName}{' '}
                                             {customer.customer.lastName}{' '}
-                                            {customer.type === 'Work Order' ? (
+                                            {customer.type === 'Work Order' ||
+                                            (customer.customer.scheduledDay !==
+                                              routeDay &&
+                                              customer.customer.scheduledDay !==
+                                                moment(Date.now).format(
+                                                  'dddd'
+                                                )) ? (
                                               <Badge color='warning'>
                                                 Work Order
                                               </Badge>
@@ -4197,7 +4225,26 @@ const ViewMyRoute = ({
                                                 ).isSame(Date.now(), 'day')) ||
                                               (customer.type === 'Work Order' &&
                                                 customer.status ===
-                                                  'Completed') ? (
+                                                  'Completed') ||
+                                              (customer.type !== 'Work Order' &&
+                                                customer.customer
+                                                  .scheduledDay !==
+                                                  moment(Date.now).format(
+                                                    'ddd'
+                                                  ) &&
+                                                workOrders.filter(
+                                                  e =>
+                                                    e.customer._id ===
+                                                      customer.customer._id &&
+                                                    moment(
+                                                      e.scheduledDate
+                                                    ).isSame(
+                                                      Date.now(),
+                                                      'day'
+                                                    ) &&
+                                                    e.status === 'Approved'
+                                                ).length === 0) ? (
+                                                //and there are no work orders assigned today that are still open
                                                 <Fragment></Fragment>
                                               ) : (
                                                 <Fragment>
@@ -4250,7 +4297,10 @@ const ViewMyRoute = ({
                                                           type: customer.type,
                                                           workOrders:
                                                             customer.customer
-                                                              .activeWorkOrders
+                                                              .activeWorkOrders,
+                                                          serviceDay:
+                                                            customer.customer
+                                                              .scheduledDay
                                                         });
                                                       }}
                                                     >
@@ -4297,7 +4347,8 @@ ViewMyRoute.propTypes = {
   sendServiceReport: PropTypes.func.isRequired,
   unableService: PropTypes.func.isRequired,
   getWorkOrders: PropTypes.func.isRequired,
-  completeWorkOrder: PropTypes.func.isRequired
+  completeWorkOrder: PropTypes.func.isRequired,
+  getEmployeeRouteRB: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -4313,5 +4364,6 @@ export default connect(mapStateToProps, {
   sendServiceReport,
   unableService,
   getWorkOrders,
-  completeWorkOrder
+  completeWorkOrder,
+  getEmployeeRouteRB
 })(ViewMyRoute);

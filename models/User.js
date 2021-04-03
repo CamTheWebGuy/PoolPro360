@@ -69,6 +69,7 @@ const UserSchema = new mongoose.Schema({
     businessAddress: { type: String }
   },
   emailSettings: {
+    emailSendWorkOrder: { type: Boolean, default: true },
     emailSendUnable: { type: Boolean, default: true },
     emailSendSummary: { type: Boolean, default: true },
     emailSendChecklist: { type: Boolean, default: true },

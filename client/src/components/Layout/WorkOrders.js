@@ -254,7 +254,7 @@ const WorkOrders = ({
   return (
     <Fragment>
       <Alert />
-      <Sidebar active='work-orders' />
+      <Sidebar active='workorders' />
       <div className='main-content' id='panel'>
         <Dashnav />
         <div className='header bg-primary pb-6'>

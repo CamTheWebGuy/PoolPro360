@@ -683,6 +683,8 @@ const Settings = ({
                             {!emailLoading && emailSettings ? (
                               <Formik
                                 initialValues={{
+                                  emailSendWorkOrder:
+                                    emailSettings.emailSendWorkOrder,
                                   emailSendUnable:
                                     emailSettings.emailSendUnable,
                                   emailSendSummary:
@@ -700,6 +702,7 @@ const Settings = ({
                                 }}
                                 onSubmit={async data => {
                                   setIsProcessing(true);
+
                                   await updateAccountEmailSettings(data);
                                   setIsProcessing(false);
                                 }}
@@ -721,6 +724,40 @@ const Settings = ({
                                         <Row>
                                           <Col>
                                             {' '}
+                                            <FormGroup>
+                                              <Label className='form-control-label'>
+                                                Send Email When Work Order
+                                                Completed? <br />
+                                                <small>
+                                                  <em>
+                                                    Default: Enabled - If
+                                                    enabled, a email is sent to
+                                                    the customer any time a work
+                                                    order is marked "Completed".
+                                                    An email will NOT be sent if
+                                                    a work order is marked as
+                                                    "Closed"
+                                                  </em>
+                                                </small>
+                                              </Label>
+
+                                              <br />
+                                              <Label className='custom-toggle'>
+                                                <Input
+                                                  type='checkbox'
+                                                  name='emailSendWorkOrder'
+                                                  onChange={handleChange}
+                                                  checked={
+                                                    values.emailSendWorkOrder
+                                                  }
+                                                />
+                                                <span
+                                                  className='custom-toggle-slider rounded-circle'
+                                                  data-label-off='No'
+                                                  data-label-on='Yes'
+                                                ></span>
+                                              </Label>
+                                            </FormGroup>
                                             <FormGroup>
                                               <Label className='form-control-label'>
                                                 Send Email If Unable To Service?{' '}
