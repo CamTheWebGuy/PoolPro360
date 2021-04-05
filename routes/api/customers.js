@@ -1347,23 +1347,99 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
 
     // console.log(filteredCustomers);
 
+    // const insert = (arr, index, ...newItems) => [
+    //   ...arr.slice(0, index),
+    //   ...newItems,
+    //   ...arr.slice(index)
+    // ];
+
     orders.map(e => {
+      let index = filteredCustomers.findIndex(
+        customer =>
+          customer.customer._id.toString() === e.customer._id.toString() &&
+          customer.type !== 'Work Order'
+      );
+
       if (
-        filteredCustomers.find(customer => customer._id === e._id) ||
-        e.technician.toString() === e.customer.technician.toString()
+        moment(e.scheduledDate).isSame(Date.now(), 'day') &&
+        filteredCustomers.find(
+          customer =>
+            customer.customer._id.toString() === e.customer._id.toString()
+        )
       ) {
-        return;
+        const newCustomer = {
+          customer: e.customer,
+          type: 'Work Order',
+          status: e.status,
+          _id: e._id,
+          scheduledDate: e.scheduledDate
+        };
+
+        // filteredCustomers = insert(filteredCustomers, index, newCustomer);
+
+        filteredCustomers.splice(index + 1, 0, newCustomer);
       } else {
         if (moment(e.scheduledDate).isSame(Date.now(), 'day')) {
           const newCustomer = {
             customer: e.customer,
             type: 'Work Order',
-            status: e.status
+            status: e.status,
+            _id: e._id,
+            scheduledDate: e.scheduledDate
           };
           filteredCustomers.push(newCustomer);
         }
       }
     });
+
+    // orders.map(e => {
+    //   // console.log(
+    //   //   filteredCustomers.filter(
+    //   //     c => c.customer._id.toString() === e.customer._id.toString()
+    //   //   )
+    //   // );
+    //   if (
+    //     e.technician.toString() === e.customer.technician.toString() &&
+    //     moment(e.customer.scheduledDay).isSame(Date.now(), 'day')
+    //   ) {
+    //     // filteredCustomers.filter(
+    //     //   c => c.customer._id.toString() === e.customer._id.toString()
+    //     // ).length >= 1
+    //     return;
+    //   } else {
+    //     if (moment(e.scheduledDate).isSame(Date.now(), 'day')) {
+    //       if (
+    //         filteredCustomers.find(
+    //           customer =>
+    //             customer.customer._id.toString() === e.customer._id.toString()
+    //         )
+    //       ) {
+    //         const index = filteredCustomers.findIndex(
+    //           customer =>
+    //             customer.customer._id.toString() ===
+    //               e.customer._id.toString() && customer.type !== 'Work Order'
+    //         );
+
+    //         // console.log(index, filteredCustomers);
+
+    //         const newCustomer = {
+    //           customer: e.customer,
+    //           type: 'Work Order',
+    //           status: e.status
+    //         };
+
+    //         filteredCustomers.splice(index, 0, newCustomer);
+    //       } else {
+    //         const newCustomer = {
+    //           customer: e.customer,
+    //           type: 'Work Order',
+    //           status: e.status
+    //         };
+    //         filteredCustomers.push(newCustomer);
+    //       }
+    //     }
+    //   }
+    // });
 
     res.status(200).json(filteredCustomers);
   } catch (err) {
@@ -1421,7 +1497,11 @@ router.get('/route/builder/:techId/:day', auth, async (req, res) => {
           .json({ msg: 'User not found or not authorized' });
       }
     } else {
-      if (route.technician._id.toString() !== user._id.toString()) {
+      const tech = await User.findById(req.params.techId);
+      if (
+        route.technician._id.toString() !== user._id.toString() &&
+        tech.owner.toString() !== user._id.toString()
+      ) {
         return res
           .status(401)
           .json({ msg: 'User not found or not authorized' });
@@ -2796,7 +2876,7 @@ router.post('/workOrders/', auth, async (req, res) => {
 
     // Make sure the user making request exists
     if (!user) {
-      return res.status(404).json({ msg: 'User not found or Not Authorized' });
+      return res.status(401).json({ msg: 'User not found or Not Authorized' });
     }
 
     const orders = await WorkOrders.find({
@@ -3225,7 +3305,8 @@ router.patch('/workOrder/:id/completed', auth, async (req, res) => {
     const user = await User.findOne({
       $or: [
         { _id: req.user.id, role: 'Admin', owner: req.user.owner },
-        { _id: req.user.id, role: 'Owner' }
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
       ]
     });
 
