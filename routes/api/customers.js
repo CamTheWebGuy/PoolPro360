@@ -24,6 +24,10 @@ const { v4: uuidv4 } = require('uuid');
 const { Service } = require('aws-sdk');
 const WorkOrders = require('../../models/WorkOrders');
 
+const Stripe = require('stripe');
+
+const stripe = Stripe(config.get('stripe_sk'));
+
 aws.config.update({
   secretAccessKey: config.get('aws_secret_key'),
   accessKeyId: config.get('aws_access_key'),
@@ -139,6 +143,11 @@ router.post(
       serviceState,
       serviceZip,
       gateCode,
+      serviceDay,
+      serviceFrequency,
+      dogName,
+      rate,
+      rateType,
       servicePackageAndRate,
       technician,
       billingSame,
@@ -194,8 +203,24 @@ router.post(
       const serviceLng = result.data.results[0].geometry.location.lng;
       const serviceLat = result.data.results[0].geometry.location.lat;
 
+      // await customer.save();
+
+      const user = await User.findById(req.user.id);
+
+      let stripeCustomer = await stripe.customers.create(
+        {
+          description: 'Pro360 Customer',
+          email: email,
+          name: firstName + ' ' + lastName
+        },
+        {
+          stripeAccount: user.stripe_account_id
+        }
+      );
+
       let customer = new Customer({
         user: req.user.id,
+        stripeCustomerId: stripeCustomer.id,
         name: { first: firstName, last: lastName },
         firstName,
         lastName,
@@ -207,6 +232,11 @@ router.post(
         serviceCity,
         serviceState,
         serviceZip,
+        scheduledDay: serviceDay,
+        frequency: serviceFrequency,
+        serviceRate: rate,
+        rateType,
+        dogName,
         gateCode,
         canText,
         poolType,

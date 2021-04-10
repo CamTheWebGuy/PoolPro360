@@ -6,6 +6,9 @@ const CustomerSchema = new mongoose.Schema({
     type: Schema.Types.ObjectId,
     ref: 'users'
   },
+  stripeCustomerId: {
+    type: String
+  },
   name: {
     first: {
       type: String
@@ -78,6 +81,13 @@ const CustomerSchema = new mongoose.Schema({
     type: String
   },
   serviceRate: {
+    type: String
+  },
+  rateType: {
+    type: String,
+    default: 'Per Stop (Chemicals Included)'
+  },
+  dogName: {
     type: String
   },
   servicePackageAndRate: {

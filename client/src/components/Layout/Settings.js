@@ -1,5 +1,7 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 
+import stripepic from '../../img/stripe/stripe-pic.png';
+
 import classnames from 'classnames';
 
 import { Link } from 'react-router-dom';
@@ -16,6 +18,13 @@ import {
   updateAccountEmailReadings,
   getEmailSettings
 } from '../../actions/customer';
+
+import {
+  createConnectAccount,
+  getAccountBalance,
+  createProduct
+} from '../../actions/stripe';
+
 import {
   updateBusinessInfo,
   getBusinessInfo,
@@ -72,9 +81,23 @@ const Settings = ({
   getEmailSettings,
   updateMyInfo,
   updateMyPassword,
+  createConnectAccount,
+  getAccountBalance,
+  createProduct,
   businessInfo: { businessInfo, emailSettings, loading, emailLoading },
   auth: { user, isAuthenticated }
 }) => {
+  useEffect(() => {
+    if (
+      user &&
+      isAuthenticated &&
+      user.stripe_seller &&
+      user.stripe_seller.charges_enabled
+    ) {
+      getAccountBalance();
+    }
+  }, [user, isAuthenticated, getAccountBalance]);
+
   const [activeTab, setActiveTab] = useState('1');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -145,6 +168,15 @@ const Settings = ({
       getEmailSettings();
     }
   }, [getBusinessInfo, getEmailSettings, user]);
+
+  const [loadingStripe, setLoadingStripe] = useState(false);
+
+  const stripeSetupHandler = async () => {
+    setLoadingStripe(true);
+    const res = await createConnectAccount();
+    await createProduct();
+    setLoadingStripe(false);
+  };
 
   return (
     <Fragment>
@@ -449,6 +481,20 @@ const Settings = ({
                               My Information
                             </NavLink>
                           </NavItem>
+
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
+                                active: activeTab === '4'
+                              })}
+                              onClick={() => {
+                                toggle('4');
+                              }}
+                            >
+                              Payment Information
+                            </NavLink>
+                          </NavItem>
+
                           <NavItem>
                             <NavLink
                               className={classnames({
@@ -472,19 +518,6 @@ const Settings = ({
                               }}
                             >
                               Email Chemical Fields
-                            </NavLink>
-                          </NavItem>
-
-                          <NavItem>
-                            <NavLink
-                              className={classnames({
-                                active: activeTab === '4'
-                              })}
-                              onClick={() => {
-                                toggle('4');
-                              }}
-                            >
-                              User Permissions
                             </NavLink>
                           </NavItem>
                         </Nav>
@@ -1350,11 +1383,69 @@ const Settings = ({
                         </TabPane>
 
                         <TabPane tabId='4'>
-                          <Row>
-                            <Col sm='12'>
-                              <h4>User Permissions</h4>
-                            </Col>
-                          </Row>
+                          <Container>
+                            <Row>
+                              {user &&
+                              isAuthenticated &&
+                              user.stripe_seller &&
+                              user.stripe_seller.charges_enabled ? (
+                                <Fragment>
+                                  <Col sm='12'>
+                                    <div className='text-center mgn-top-50'>
+                                      <i className='fas fa-check-circle fa-2x color-green'></i>
+                                      <h1>
+                                        <i className='fab fa-stripe fa-3x'></i>
+                                        <br />
+                                        Is Connected
+                                      </h1>
+                                      <p className='text-muted'>
+                                        You can now accept payments through
+                                        PoolPro360. To view account balance and
+                                        payout information, goto the
+                                        "Payments/Billing" page.
+                                      </p>
+                                    </div>
+                                  </Col>
+                                </Fragment>
+                              ) : (
+                                <Fragment>
+                                  <Col sm='7'>
+                                    <div className='text-center mgn-top-50'>
+                                      <h4>
+                                        Connect With Stripe to Accept Automatic
+                                        Payments
+                                      </h4>
+                                      <p>
+                                        PoolPro360 partners with stripe to
+                                        transfer payments directly to your bank
+                                        account.
+                                      </p>
+                                      <Button
+                                        disabled={loadingStripe}
+                                        onClick={stripeSetupHandler}
+                                        color='primary'
+                                      >
+                                        {loadingStripe ? (
+                                          <span>Processing...</span>
+                                        ) : (
+                                          <span>Setup Payouts</span>
+                                        )}
+                                      </Button>
+                                      <p className='text-muted mgn-top-10'>
+                                        <small>
+                                          You'll be redirected to Stripe to
+                                          complete the setup process.
+                                        </small>
+                                      </p>
+                                    </div>
+                                  </Col>
+                                  <Col sm='5'>
+                                    <img src={stripepic} alt='' />
+                                  </Col>
+                                </Fragment>
+                              )}
+                            </Row>
+                          </Container>
                         </TabPane>
 
                         <TabPane tabId='5'>
@@ -1609,6 +1700,9 @@ Settings.propTypes = {
   getEmailSettings: PropTypes.func.isRequired,
   updateMyInfo: PropTypes.func.isRequired,
   updateMyPassword: PropTypes.func.isRequired,
+  createConnectAccount: PropTypes.func.isRequired,
+  getAccountBalance: PropTypes.func.isRequired,
+  createProduct: PropTypes.func.isRequired,
   businessInfo: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired
   // emailSettings: PropTypes.object.isRequired
@@ -1626,5 +1720,8 @@ export default connect(mapStateToProps, {
   updateAccountEmailReadings,
   getEmailSettings,
   updateMyInfo,
-  updateMyPassword
+  updateMyPassword,
+  createConnectAccount,
+  getAccountBalance,
+  createProduct
 })(Settings);

@@ -61,6 +61,18 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  stripe_account_id: {
+    type: String
+  },
+  stripe_seller: {
+    type: Object
+  },
+  stripesession: {
+    type: Object
+  },
+  stripeProduct: {
+    type: String
+  },
   businessInfo: {
     businessLogo: { type: String },
     businessName: { type: String },

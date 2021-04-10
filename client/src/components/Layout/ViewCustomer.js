@@ -51,6 +51,9 @@ import {
   Form,
   Label,
   Input,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText,
   FormGroup,
   Badge,
   ListGroup,
@@ -2425,7 +2428,9 @@ const ViewCustomer = ({
                         billingAddress: customer[0].billingAddress,
                         billingCity: customer[0].billingCity,
                         billingState: customer[0].billingState,
-                        billingZip: customer[0].billingZip
+                        billingZip: customer[0].billingZip,
+                        rate: customer[0].serviceRate,
+                        billingFrequency: customer[0].rateType
                       }}
                       onSubmit={async data => {
                         setEditBillingLoading(true);
@@ -2547,7 +2552,7 @@ const ViewCustomer = ({
                                 for='billingType'
                                 className='form-control-label'
                               >
-                                Billing Type
+                                Billing Type:
                               </Label>
                               <Input
                                 type='select'
@@ -2561,12 +2566,59 @@ const ViewCustomer = ({
                                 <option>Manual Billing</option>
                               </Input>
                             </FormGroup>
+
+                            {values.billingType === 'Autobilling' && (
+                              <Fragment>
+                                <FormGroup>
+                                  <Label
+                                    for='rate'
+                                    className='form-control-label'
+                                  >
+                                    Rate:
+                                  </Label>
+                                  <InputGroup>
+                                    <InputGroupAddon addonType='prepend'>
+                                      <InputGroupText>$</InputGroupText>
+                                    </InputGroupAddon>
+                                    <Input
+                                      type='number'
+                                      name='rate'
+                                      value={values.rate}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                    />
+                                  </InputGroup>
+                                </FormGroup>
+
+                                <FormGroup>
+                                  <Label
+                                    for='billingFrequency'
+                                    className='form-control-label'
+                                  >
+                                    Billing Frequency:
+                                  </Label>
+                                  <Input
+                                    type='select'
+                                    name='billingFrequency'
+                                    value={values.billingFrequency}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                  >
+                                    <option>Weekly</option>
+                                    <option>Bi-Weekly (Every 2 Weeks)</option>
+                                    <option>Tri-Weekly (Every 3 Weeks)</option>
+                                    <option>Monthly (Every 4 Weeks)</option>
+                                  </Input>
+                                </FormGroup>
+                              </Fragment>
+                            )}
+
                             <FormGroup>
                               <Label
                                 for='billingType'
                                 className='form-control-label'
                               >
-                                Payment Method
+                                Payment Method:
                               </Label>
                               <Input
                                 type='select'
@@ -2575,10 +2627,8 @@ const ViewCustomer = ({
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                               >
-                                <option>PayPal</option>
-                                <option>Stripe</option>
-                                <option>Check</option>
-                                <option>Other</option>
+                                <option>Credit Card</option>
+                                <option>Invoice</option>
                               </Input>
                             </FormGroup>
                           </Form>

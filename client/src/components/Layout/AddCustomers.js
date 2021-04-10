@@ -20,7 +20,10 @@ import {
   Input,
   Form,
   Label,
-  FormGroup
+  FormGroup,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupText
 } from 'reactstrap';
 
 import { Formik } from 'formik';
@@ -139,6 +142,11 @@ const AddCustomers = ({
                   technician: 'N/A',
                   servicePackageAndRate:
                     'Inactive (Customer Will Not Be Serviced)',
+                  serviceDay: 'Monday',
+                  serviceFrequency: 'Weekly',
+                  dogName: '',
+                  rate: '',
+                  rateType: 'Per Stop (Chemicals Included)',
                   billingSame: false,
                   billingType: 'Manual Billing',
                   paymentMethod: 'N/A',
@@ -410,42 +418,164 @@ const AddCustomers = ({
                         </Row>
                         <Row>
                           <Col lg='6'>
-                            <Label
-                              for='gateCode'
-                              className='form-control-label'
-                            >
-                              Gate/Lock Code
-                            </Label>
-                            <Input
-                              type='text'
-                              name='gateCode'
-                              placeholder='12345'
-                              value={values.gateCode}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                            />
+                            <FormGroup>
+                              <Label
+                                for='gateCode'
+                                className='form-control-label'
+                              >
+                                Gate/Lock Code
+                              </Label>
+                              <Input
+                                type='text'
+                                name='gateCode'
+                                placeholder='12345'
+                                value={values.gateCode}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              />
+                            </FormGroup>
                           </Col>
                           <Col lg='6'>
-                            <Label
-                              for='technician'
-                              className='form-control-label'
-                            >
-                              Assigned Technician
-                            </Label>
-                            <Input
-                              type='select'
-                              name='technician'
-                              value={values.technician}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                            >
-                              <option>N/A</option>
-                              {employees.map(employee => (
-                                <option key={employee._id} value={employee._id}>
-                                  {employee.firstName} {employee.lastName}
-                                </option>
-                              ))}
-                            </Input>
+                            <FormGroup>
+                              <Label
+                                for='technician'
+                                className='form-control-label'
+                              >
+                                Assigned Technician
+                              </Label>
+                              <Input
+                                type='select'
+                                name='technician'
+                                value={values.technician}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              >
+                                <option>N/A</option>
+                                {employees.map(employee => (
+                                  <option
+                                    key={employee._id}
+                                    value={employee._id}
+                                  >
+                                    {employee.firstName} {employee.lastName}
+                                  </option>
+                                ))}
+                              </Input>
+                            </FormGroup>
+                          </Col>
+                        </Row>
+
+                        <Row>
+                          <Col lg='6'>
+                            <FormGroup>
+                              <Label
+                                for='serviceDay'
+                                className='form-control-label'
+                              >
+                                Service Day
+                              </Label>
+                              <Input
+                                type='select'
+                                name='serviceDay'
+                                value={values.serviceDay}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              >
+                                <option>Monday</option>
+                                <option>Tuesday</option>
+                                <option>Wednesday</option>
+                                <option>Thursday</option>
+                                <option>Friday</option>
+                                <option>Saturday</option>
+                                <option>Sunday</option>
+                              </Input>
+                            </FormGroup>
+                          </Col>
+                          <Col lg='6'>
+                            <FormGroup>
+                              <Label
+                                for='serviceFrequency'
+                                className='form-control-label'
+                              >
+                                Service Frequency
+                              </Label>
+                              <Input
+                                type='select'
+                                name='serviceFrequency'
+                                value={values.serviceFrequency}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              >
+                                <option>Weekly</option>
+                                <option>Bi-Weekly (Every 2 Weeks)</option>
+                                <option>Tri-Weekly (Every 3 Weeks)</option>
+                                <option>Monthly (Every 4 Weeks)</option>
+                              </Input>
+                            </FormGroup>
+                          </Col>
+                        </Row>
+
+                        <Row>
+                          <Col lg='4'>
+                            <FormGroup>
+                              <Label
+                                for='dogName'
+                                className='form-control-label'
+                              >
+                                Dog's Name
+                              </Label>
+                              <Input
+                                type='text'
+                                name='dogName'
+                                placeholder='Maggie'
+                                value={values.dogName}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              />
+                            </FormGroup>
+                          </Col>
+                          <Col lg='4'>
+                            <FormGroup>
+                              <Label for='rate' className='form-control-label'>
+                                Rate
+                              </Label>
+                              <InputGroup>
+                                <InputGroupAddon addonType='prepend'>
+                                  <InputGroupText>$</InputGroupText>
+                                </InputGroupAddon>
+                                <Input
+                                  type='number'
+                                  name='rate'
+                                  placeholder='120'
+                                  value={values.rate}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                />
+                              </InputGroup>
+                            </FormGroup>
+                          </Col>
+
+                          <Col lg='4'>
+                            <FormGroup>
+                              <Label
+                                for='rateType'
+                                className='form-control-label'
+                              >
+                                Rate Type
+                              </Label>
+                              <Input
+                                type='select'
+                                name='rateType'
+                                placeholder='12345'
+                                value={values.rateType}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                              >
+                                <option>Per Stop (Chemicals Included)</option>
+                                <option>Per Stop Plus Chemicals</option>
+                                <option>Per Month (Chemicals Included)</option>
+                                <option>Per Month Plus Chemicals</option>
+                              </Input>
+                            </FormGroup>
                           </Col>
                         </Row>
                       </div>

@@ -76,7 +76,9 @@ router.post(
         user: {
           id: user.id,
           role: user.role,
-          owner: user.owner
+          owner: user.owner,
+          stripe_account_id: user.stripe_account_id,
+          stripe_seller: user.stripe_seller
         }
       };
 
