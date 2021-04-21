@@ -49,3 +49,32 @@ Features/functions listed below are subject to change as time goes on, this is b
 - [x] Email Customers System
 - [ ] Import Customers from CSV - Working On
 - [ ] Income Tracking - DELAYED
+
+# How To Run:
+
+1. CD into the directory that contains this project on your computer using your command prompt.
+2. Make sure you are in the root directory. (The folder containing server.js)
+3. Run the command: npm install
+4. CD into the client directory and run the command: npm install
+5. CD beck into the root directory and run the command: npm run dev
+6. The server should now start.
+
+The backend will start on localhost:5000 and the frontend will start on localhost:3000
+
+Note: You will need database access & the config.json file (not uploaded to GitHub) in order for the server to launch properly.
+
+## Development Logins:
+
+http://localhost:3000/login
+
+Role: Owner
+Username: cameron@gmail.com
+Password: pass1234
+
+Role: Technician
+Username: nataliedobrik@gmail.com
+Password: Pass1234
+
+## Database/API Access:
+
+Contact support to obtain Database/API access files.
