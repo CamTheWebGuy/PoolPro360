@@ -298,6 +298,7 @@ const RouteBuilder = ({
                 <Col md={{ size: 4, offset: 4 }}>
                   <Button
                     color='primary'
+                    disabled={isProcessing}
                     onClick={async () => {
                       setIsProcessing(true);
                       await optimizeRoute(
@@ -388,6 +389,7 @@ const RouteBuilder = ({
                                               <Button
                                                 size='sm'
                                                 color='success'
+                                                disabled={isProcessing}
                                                 onClick={async () => {
                                                   setIsProcessing(true);
                                                   await updateTech(
@@ -411,6 +413,7 @@ const RouteBuilder = ({
                                               <br />
                                               <Button
                                                 size='sm'
+                                                disabled={isProcessing}
                                                 color='success'
                                                 onClick={async () => {
                                                   setIsProcessing(true);
@@ -522,6 +525,7 @@ const RouteBuilder = ({
                                               <Button
                                                 size='sm'
                                                 color='success'
+                                                disabled={isProcessing}
                                                 onClick={async () => {
                                                   setIsProcessing(true);
                                                   await updateTech(
@@ -546,6 +550,7 @@ const RouteBuilder = ({
                                               <Button
                                                 size='sm'
                                                 color='success'
+                                                disabled={isProcessing}
                                                 onClick={async () => {
                                                   setIsProcessing(true);
                                                   await updateTech(
@@ -605,6 +610,7 @@ const RouteBuilder = ({
                                           <br />
                                           <Button
                                             size='sm'
+                                            disabled={isProcessing}
                                             color='success'
                                             onClick={() =>
                                               addToRoute(customer._id)
@@ -664,6 +670,7 @@ const RouteBuilder = ({
                             <br />
                             <Button
                               size='sm'
+                              disabled={isProcessing}
                               color='success'
                               onClick={() => addToRoute(c._id)}
                             >
@@ -688,6 +695,7 @@ const RouteBuilder = ({
                               </Badge>
                               <Button
                                 size='sm'
+                                disabled={isProcessing}
                                 color='success'
                                 onClick={async () => {
                                   await removeFromRoute(c._id);
@@ -794,6 +802,7 @@ const RouteBuilder = ({
                                                 <br />
                                                 <Button
                                                   size='sm'
+                                                  disabled={isProcessing}
                                                   color='danger'
                                                   onClick={() =>
                                                     removeFromRoute(c._id)

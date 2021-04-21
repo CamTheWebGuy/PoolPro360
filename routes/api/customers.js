@@ -337,8 +337,16 @@ router.get('/emailSettings', auth, async (req, res) => {
 // @access   Private/User
 router.get('/:id', auth, async (req, res) => {
   try {
+    // Search for User Making Request in DB
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
     const customer = await Customer.find({
-      user: req.user.id,
+      user: user.role === 'Owner' ? req.user.id : user.owner,
       _id: req.params.id
     });
 
@@ -430,6 +438,61 @@ router.post('/:customerId/deleteImage', auth, async (req, res) => {
         }
       }
     );
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/serviceRate
+// @desc     Update Customer Service Rate
+// @access   Private/User
+router.patch('/:customerId/serviceRate', auth, async (req, res) => {
+  const { rate } = req.body;
+  try {
+    // Get user making request
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    // Make sure the user making request exists
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found or Not Authorized' });
+    }
+
+    let owner = null;
+    let isOwner = null;
+
+    if (user.role === 'Owner') {
+      isOwner = true;
+    } else {
+      isOwner = false;
+      owner = await User.findOne({
+        _id: user.owner,
+        role: 'Owner'
+      });
+    }
+
+    const customer = await Customer.findOne({
+      user: isOwner ? user._id : owner._id,
+      _id: req.params.customerId
+    });
+
+    if (!customer) {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+
+    customer.serviceRate = rate;
+
+    await customer.save();
+
+    res.status(200).json({ msg: 'Updated Customer Service Rate' });
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {
@@ -903,7 +966,6 @@ router.patch('/:customerId/billing', auth, async (req, res) => {
   const {
     billingSame,
     billingType,
-    paymentMethod,
     billingAddress,
     billingCity,
     billingState,
@@ -926,7 +988,6 @@ router.patch('/:customerId/billing', auth, async (req, res) => {
     (customer.billingCity = billingCity),
       (customer.billingState = billingState),
       (customer.billingZip = billingZip);
-    customer.paymentMethod = paymentMethod;
 
     await customer.save();
 
@@ -1333,6 +1394,13 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
 
     let filteredCustomers = route.customers.filter(e => {
       const frequency = e.customer.frequency;
+
+      if (
+        e.customer.stripeSubscriptionStatus === 'Paused' ||
+        e.customer.stripeSubscriptionStatus === 'Canceled'
+      ) {
+        return;
+      }
 
       if (
         frequency === 'Weekly' ||

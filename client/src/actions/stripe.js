@@ -83,3 +83,131 @@ export const payoutSettings = () => async dispatch => {
     }
   }
 };
+
+// Add Payment Method to Customer
+export const addPaymentMethod = (
+  { cvc, expiry, name, number },
+  customerId,
+  billingFrequency
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    cvc,
+    expiry,
+    name,
+    number,
+    billingFrequency
+  });
+
+  try {
+    const res = await axios.post(
+      `/api/stripe/payment-method/${customerId}`,
+      body,
+      config
+    );
+    dispatch(setAlert('Billing Settings Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Customer Billing Rate
+export const updateBillingRate = (
+  { billingFrequency, rate },
+  customerId
+) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    rate,
+    billingFrequency
+  });
+
+  try {
+    const res = await axios.patch(
+      `/api/stripe/subscriptionInfo/${customerId}`,
+      body,
+      config
+    );
+    dispatch(setAlert('Billing Info Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Add Customer Subscription
+export const addSubscription = (billingStart, customerId) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    billingStart
+  });
+
+  try {
+    const res = await axios.post(
+      `/api/stripe/subscription/${customerId}`,
+      body,
+      config
+    );
+    dispatch(setAlert('Autobilling Enabled', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Pause Customer Subscription
+export const pauseSubscription = (date, customerId) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    date
+  });
+
+  try {
+    const res = await axios.post(
+      `/api/stripe/subscription/pause/${customerId}`,
+      body,
+      config
+    );
+    dispatch(setAlert('Subscription Paused', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};

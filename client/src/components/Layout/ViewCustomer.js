@@ -14,6 +14,8 @@ import moment from 'moment';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
+import CreditCardInput from 'react-credit-card-input';
+
 import {
   getSingleCustomer,
   addServiceNote,
@@ -28,9 +30,15 @@ import {
   updateActivityComment
 } from '../../actions/customer';
 
+import { addPaymentMethod } from '../../actions/stripe';
+
 import { SpinnerCircular } from 'spinners-react';
 import ImageUploader from 'react-images-upload';
+import Cards from 'react-credit-cards';
+
 import { useHistory } from 'react-router-dom';
+
+import 'react-credit-cards/es/styles-compiled.css';
 
 import {
   Container,
@@ -89,6 +97,7 @@ const ViewCustomer = ({
   recentActivity,
   serviceChecklist,
   updateActivityComment,
+  addPaymentMethod,
   match
 }) => {
   useEffect(() => {
@@ -112,6 +121,8 @@ const ViewCustomer = ({
       billingRef.current.handleSubmit();
     }
   };
+
+  const [changeCard, setChangeCard] = useState(false);
 
   const [serviceNoteModal, setServiceNoteModal] = useState(false);
   const toggleServiceNoteModal = () => setServiceNoteModal(!serviceNoteModal);
@@ -238,6 +249,24 @@ const ViewCustomer = ({
     await deleteRecentActivity(match.params.id, noteId);
     await getRecentActivity(match.params.id);
     setDeleteActivity({ active: null, isLoading: false, isOpen: false });
+  };
+
+  const [cardState, setCardState] = useState({
+    cvc: '',
+    expiry: '',
+    focus: '',
+    name: '',
+    number: ''
+  });
+
+  const handleCardFocus = e => {
+    setCardState({ ...cardState, focus: e.target.name });
+  };
+
+  const handleCardInput = e => {
+    const { name, value } = e.target;
+
+    setCardState({ ...cardState, [name]: value });
   };
 
   return (
@@ -2384,33 +2413,70 @@ const ViewCustomer = ({
                       </div>
                     </Fragment>
                   ) : (
-                    <Row className='mb-4'>
-                      <Col sm='4'>
-                        <div className='form-control-label'>Billing Type</div>
-                        <p>{customer[0].billingType}</p>
-                      </Col>
-                      <Col sm='4'>
-                        <div className='form-control-label'>
-                          Billing Address
-                        </div>
-                        <p>
-                          {customer[0].billingSame ? (
-                            <span>Same as Service Address</span>
-                          ) : (
-                            <span>
-                              {customer[0].billingAddress},{' '}
-                              {customer[0].billingCity}{' '}
-                              {customer[0].billingState},{' '}
-                              {customer[0].billingZip}
-                            </span>
-                          )}
-                        </p>
-                      </Col>
-                      <Col sm='4'>
-                        <div className='form-control-label'>Payment Method</div>
-                        <p>{customer[0].paymentMethod}</p>
-                      </Col>
-                    </Row>
+                    <Fragment>
+                      <Row className='mb-4'>
+                        <Col sm='4'>
+                          <div className='form-control-label'>Billing Type</div>
+                          <p>{customer[0].billingType}</p>
+                        </Col>
+                        <Col sm='4'>
+                          <div className='form-control-label'>
+                            Billing Address
+                          </div>
+                          <p>
+                            {customer[0].billingSame ? (
+                              <span>Same as Service Address</span>
+                            ) : (
+                              <span>
+                                {customer[0].billingAddress},{' '}
+                                {customer[0].billingCity}{' '}
+                                {customer[0].billingState},{' '}
+                                {customer[0].billingZip}
+                              </span>
+                            )}
+                          </p>
+                        </Col>
+                        <Col sm='4'>
+                          <div className='form-control-label'>
+                            Card On File?
+                          </div>
+                          <p>{customer[0].paymentMethod ? 'Yes' : 'No'}</p>
+                        </Col>
+                      </Row>
+                      {customer[0].billingType === 'Autobilling' && (
+                        <Row>
+                          <Col sm='4'>
+                            <div className='form-control-label'>
+                              Billing Status
+                            </div>
+                            <Badge
+                              color={
+                                customer[0].stripeSubscription.status ===
+                                'active'
+                                  ? 'success'
+                                  : 'danger'
+                              }
+                            >
+                              {customer[0].stripeSubscription.status}
+                            </Badge>
+                          </Col>
+
+                          <Col sm='4'>
+                            <div className='form-control-label'>
+                              Billing Rate
+                            </div>
+                            <p>${customer[0].stripeSubscription.quantity}.00</p>
+                          </Col>
+
+                          <Col sm='4'>
+                            <div className='form-control-label'>
+                              Billing Frequency
+                            </div>
+                            <p>{customer[0].billingFrequency}</p>
+                          </Col>
+                        </Row>
+                      )}
+                    </Fragment>
                   )}
                 </CardBody>
               </Card>
@@ -2424,17 +2490,23 @@ const ViewCustomer = ({
                       initialValues={{
                         billingSame: customer[0].billingSame,
                         billingType: customer[0].billingType,
-                        paymentMethod: customer[0].paymentMethod,
+                        // paymentMethod: customer[0].paymentMethod,
                         billingAddress: customer[0].billingAddress,
                         billingCity: customer[0].billingCity,
                         billingState: customer[0].billingState,
                         billingZip: customer[0].billingZip,
                         rate: customer[0].serviceRate,
-                        billingFrequency: customer[0].rateType
+                        billingFrequency: customer[0].billingFrequency
                       }}
                       onSubmit={async data => {
                         setEditBillingLoading(true);
                         await updateBilling(match.params.id, data);
+                        await getSingleCustomer(match.params.id);
+                        await addPaymentMethod(
+                          cardState,
+                          match.params.id,
+                          data.billingFrequency
+                        );
                         await getSingleCustomer(match.params.id);
                         setEditBillingLoading(false);
                         toggleBillingModal();
@@ -2590,6 +2662,162 @@ const ViewCustomer = ({
                                   </InputGroup>
                                 </FormGroup>
 
+                                {customer[0].paymentMethod ? (
+                                  <Row>
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Card On File:
+                                        </Label>
+
+                                        <p>
+                                          {customer[0].paymentMethod ? (
+                                            <span>Yes</span>
+                                          ) : (
+                                            <span>No</span>
+                                          )}
+                                        </p>
+                                      </FormGroup>
+                                    </Col>
+
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Last 4 Digits:
+                                        </Label>
+
+                                        <p>{customer[0].paymentLast4}</p>
+                                      </FormGroup>
+                                    </Col>
+
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Exp Date:
+                                        </Label>
+
+                                        <p>{customer[0].paymentExpDate}</p>
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+                                ) : (
+                                  <Row>
+                                    <Col>
+                                      <FormGroup>
+                                        <Label className='form-control-label'>
+                                          Card On File:
+                                        </Label>
+
+                                        <p>No</p>
+                                      </FormGroup>
+                                    </Col>
+                                  </Row>
+                                )}
+
+                                <Button
+                                  color='info'
+                                  block
+                                  className='btn-icon'
+                                  onClick={() => {
+                                    setChangeCard(!changeCard);
+                                  }}
+                                >
+                                  {customer[0].paymentMethod ? (
+                                    <Fragment>
+                                      <span class='btn-inner--icon'>
+                                        <i class='ni ni-credit-card'></i>
+                                      </span>
+                                      <span class='btn-inner--text'>
+                                        Change Card On File
+                                      </span>
+                                    </Fragment>
+                                  ) : (
+                                    <Fragment>
+                                      <span class='btn-inner--icon'>
+                                        <i class='ni ni-fat-plus'></i>
+                                      </span>
+                                      <span class='btn-inner--text'>
+                                        Add Card On File
+                                      </span>
+                                    </Fragment>
+                                  )}
+                                </Button>
+
+                                <br />
+
+                                <Collapse isOpen={changeCard}>
+                                  <Card>
+                                    <CardBody>
+                                      <Row>
+                                        <Col lg='12'>
+                                          <FormGroup>
+                                            <Cards
+                                              cvc={cardState.cvc}
+                                              expiry={cardState.expiry.replace(
+                                                ' / ',
+                                                ''
+                                              )}
+                                              focused={cardState.focus}
+                                              name={cardState.name}
+                                              number={cardState.number}
+                                            />
+                                          </FormGroup>
+                                        </Col>
+                                      </Row>
+
+                                      <Row>
+                                        <Col lg='12'>
+                                          <FormGroup>
+                                            <Label className='form-control-label'>
+                                              Card Number
+                                            </Label>
+
+                                            <CreditCardInput
+                                              cardNumberInputProps={{
+                                                value: cardState.number,
+                                                onChange: handleCardInput,
+                                                onFocus: handleCardFocus,
+                                                name: 'number'
+                                              }}
+                                              cardExpiryInputProps={{
+                                                value: cardState.expiry,
+                                                onChange: handleCardInput,
+                                                onFocus: handleCardFocus,
+                                                name: 'expiry'
+                                              }}
+                                              cardCVCInputProps={{
+                                                value: cardState.cvc,
+                                                onChange: handleCardInput,
+                                                onFocus: handleCardFocus,
+                                                name: 'cvc'
+                                              }}
+                                            />
+                                          </FormGroup>
+                                        </Col>
+                                      </Row>
+
+                                      <Row>
+                                        <Col lg='12'>
+                                          <FormGroup>
+                                            <Label className='form-control-label'>
+                                              Name On Card
+                                            </Label>
+                                            <Input
+                                              type='text'
+                                              name='name'
+                                              placeholder='Name On Card'
+                                              onChange={handleCardInput}
+                                              onFocus={handleCardFocus}
+                                            />
+                                          </FormGroup>
+                                        </Col>
+                                      </Row>
+                                    </CardBody>
+                                  </Card>
+                                </Collapse>
+
+                                <br />
+
                                 <FormGroup>
                                   <Label
                                     for='billingFrequency'
@@ -2605,15 +2833,13 @@ const ViewCustomer = ({
                                     onBlur={handleBlur}
                                   >
                                     <option>Weekly</option>
-                                    <option>Bi-Weekly (Every 2 Weeks)</option>
-                                    <option>Tri-Weekly (Every 3 Weeks)</option>
-                                    <option>Monthly (Every 4 Weeks)</option>
+                                    <option>Monthly</option>
                                   </Input>
                                 </FormGroup>
                               </Fragment>
                             )}
 
-                            <FormGroup>
+                            {/* <FormGroup>
                               <Label
                                 for='billingType'
                                 className='form-control-label'
@@ -2630,7 +2856,7 @@ const ViewCustomer = ({
                                 <option>Credit Card</option>
                                 <option>Invoice</option>
                               </Input>
-                            </FormGroup>
+                            </FormGroup> */}
                           </Form>
                         </Container>
                       )}
@@ -2732,6 +2958,7 @@ ViewCustomer.propTypes = {
   deleteRecentActivity: PropTypes.func.isRequired,
   getChecklist: PropTypes.func.isRequired,
   updateBilling: PropTypes.func.isRequired,
+  addPaymentMethod: PropTypes.func.isRequired,
   customer: PropTypes.object.isRequired,
   serviceNotes: PropTypes.array.isRequired,
   recentActivity: PropTypes.array.isRequired,
@@ -2756,5 +2983,6 @@ export default connect(mapStateToProps, {
   deleteRecentActivity,
   getChecklist,
   updateBilling,
-  updateActivityComment
+  updateActivityComment,
+  addPaymentMethod
 })(ViewCustomer);

@@ -437,7 +437,6 @@ export const updateBilling = (
   {
     billingSame,
     billingType,
-    paymentMethod,
     billingAddress,
     billingState,
     billingCity,
@@ -453,7 +452,6 @@ export const updateBilling = (
   const body = JSON.stringify({
     billingSame,
     billingType,
-    paymentMethod,
     billingAddress,
     billingState,
     billingCity,
@@ -1210,6 +1208,32 @@ export const completeWorkOrder = orderId => async dispatch => {
     await axios.patch(`/api/customers/workOrder/${orderId}/completed`);
 
     dispatch(setAlert('Activity Updated', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Update Rate
+export const updateRate = (customerId, rate) => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    rate
+  });
+
+  try {
+    await axios.patch(`/api/customers/${customerId}/serviceRate`, body, config);
+
+    dispatch(setAlert('Customer Updated', 'success'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;

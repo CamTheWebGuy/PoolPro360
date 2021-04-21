@@ -87,11 +87,34 @@ const CustomerSchema = new mongoose.Schema({
     type: String,
     default: 'Per Stop (Chemicals Included)'
   },
+  paymentMethod: {
+    type: String
+  },
+  paymentLast4: {
+    type: String
+  },
+  paymentExpDate: {
+    type: String
+  },
+  stripeSubscriptionStatus: {
+    type: String,
+    default: 'None'
+  },
+  stripeSubscriptionId: {
+    type: String
+  },
+  stripeSubscription: {
+    type: Object
+  },
   dogName: {
     type: String
   },
   servicePackageAndRate: {
     type: String
+  },
+  billingFrequency: {
+    type: String,
+    default: 'Monthly'
   },
   billingSame: {
     type: Boolean,
@@ -110,9 +133,6 @@ const CustomerSchema = new mongoose.Schema({
     type: String
   },
   billingType: {
-    type: String
-  },
-  paymentMethod: {
     type: String
   },
   poolEquipment: {

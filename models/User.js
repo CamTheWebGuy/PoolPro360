@@ -73,6 +73,12 @@ const UserSchema = new mongoose.Schema({
   stripeProduct: {
     type: String
   },
+  stripePriceWeekly: {
+    type: String
+  },
+  stripePriceMonthly: {
+    type: String
+  },
   businessInfo: {
     businessLogo: { type: String },
     businessName: { type: String },
