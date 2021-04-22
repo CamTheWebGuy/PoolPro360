@@ -428,47 +428,66 @@ router.post('/updateLogo', auth, async (req, res) => {
 
     let s3Object = null;
 
-    if (isOwner) {
+    if (isOwner && user.businessInfo.businessLogo) {
       s3Object = user.businessInfo.businessLogo.split(
         'https://s3-us-west-2.amazonaws.com/poolpro360/'
       );
-    } else {
+    } else if (!isOwner && owner.businessInfo.businessLogo) {
       s3Object = owner.businessInfo.businessLogo.split(
         'https://s3-us-west-2.amazonaws.com/poolpro360/'
       );
     }
 
-    // return console.log(s3Object[1]);
-
-    await s3.deleteObject(
-      {
-        Bucket: 'poolpro360',
-        Key: `${s3Object[1]}`
-      },
-      async (err, data) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).send(err);
-        } else {
-          try {
-            const downloadUrl = await uploadToS3(req, res);
-
-            if (isOwner) {
-              user.businessInfo.businessLogo = downloadUrl;
-              await user.save();
-              return res.json(user.businessInfo.businessLogo);
-            } else {
-              owner.businessInfo.businessLogo = downloadUrl;
-              await owner.save();
-              return res.json(owner.businessInfo.businessLogo);
-            }
-          } catch (err) {
+    if (
+      (isOwner && user.businessInfo.businessLogo) ||
+      (!isOwner && owner.businessInfo.businessLogo)
+    ) {
+      await s3.deleteObject(
+        {
+          Bucket: 'poolpro360',
+          Key: `${s3Object[1]}`
+        },
+        async (err, data) => {
+          if (err) {
             console.log(err);
+            return res.status(500).send(err);
+          } else {
+            try {
+              const downloadUrl = await uploadToS3(req, res);
+
+              if (isOwner) {
+                user.businessInfo.businessLogo = downloadUrl;
+                await user.save();
+                return res.json(user.businessInfo.businessLogo);
+              } else {
+                owner.businessInfo.businessLogo = downloadUrl;
+                await owner.save();
+                return res.json(owner.businessInfo.businessLogo);
+              }
+            } catch (err) {
+              console.log(err);
+            }
+            return res.status(200).send('File deleted');
           }
-          return res.status(200).send('File deleted');
         }
+      );
+    } else {
+      try {
+        const downloadUrl = await uploadToS3(req, res);
+
+        if (isOwner) {
+          user.businessInfo.businessLogo = downloadUrl;
+          await user.save();
+          return res.json(user.businessInfo.businessLogo);
+        } else {
+          owner.businessInfo.businessLogo = downloadUrl;
+          await owner.save();
+          return res.json(owner.businessInfo.businessLogo);
+        }
+      } catch (err) {
+        console.log(err);
       }
-    );
+    }
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {
