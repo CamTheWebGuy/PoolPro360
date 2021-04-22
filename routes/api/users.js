@@ -117,6 +117,7 @@ router.post(
       user = new User({
         firstName,
         lastName,
+        name = { first: firstName, last: lastName },
         businessName,
         country,
         state,
@@ -232,7 +233,7 @@ router.post(
       user = new User({
         firstName,
         lastName,
-        name: firstName + ' ' + lastName,
+        name = { first: firstName, last: lastName },
         phone,
         businessName,
         country,
@@ -574,7 +575,7 @@ router.post(
         // Mail Options
         const mailOptions = {
           from: `${'PoolPro360'} <no-reply@poolpro360.com>`,
-          to: 'cameronanchondo@gmail.com',
+          to: user.email,
           replyTo: 'support@poolpro360.com',
           subject: `Confirm Email Change Request`,
           template: 'changeemail',
