@@ -48,7 +48,7 @@ router.post(
     const { name, phone, role, email, password } = req.body;
 
     try {
-      let employee = await Employee.findOne({ email });
+      let employee = await User.findOne({ email });
 
       if (employee) {
         return res
@@ -56,7 +56,7 @@ router.post(
           .json({ errors: [{ msg: 'Employee already exists' }] });
       }
 
-      employee = new Employee({
+      employee = new User({
         admin: req.user.id,
         name,
         phone,
@@ -148,6 +148,7 @@ router.patch('/:employeeId/information', auth, async (req, res) => {
 
     employee.firstName = firstName;
     employee.lastName = lastName;
+    employee.name = firstName + ' ' + lastName;
     employee.email = email;
     employee.role = role;
     employee.phone = phone;

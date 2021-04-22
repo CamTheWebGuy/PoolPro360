@@ -154,7 +154,7 @@ router.post(
   }
 );
 
-// @route    POST api/users
+// @route    POST api/users/subuser
 // @desc     Register Sub User
 // @access   Private/User
 router.post(
@@ -232,6 +232,7 @@ router.post(
       user = new User({
         firstName,
         lastName,
+        name: firstName + ' ' + lastName,
         phone,
         businessName,
         country,
