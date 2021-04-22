@@ -117,7 +117,6 @@ router.post(
       user = new User({
         firstName,
         lastName,
-        name = { first: firstName, last: lastName },
         businessName,
         country,
         state,
@@ -126,6 +125,8 @@ router.post(
         password,
         role
       });
+
+      user.name = { first: firstName, last: lastName };
 
       const salt = await bcrypt.genSalt(10);
 
@@ -233,7 +234,7 @@ router.post(
       user = new User({
         firstName,
         lastName,
-        name = { first: firstName, last: lastName },
+
         phone,
         businessName,
         country,
@@ -246,6 +247,8 @@ router.post(
         isSubUser: true,
         owner: req.user.id
       });
+
+      user.name = { first: firstName, last: lastName };
 
       const salt = await bcrypt.genSalt(10);
 

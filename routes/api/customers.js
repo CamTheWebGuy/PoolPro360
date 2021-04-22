@@ -205,7 +205,25 @@ router.post(
 
       // await customer.save();
 
-      const user = await User.findById(req.user.id);
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      let isOwner = null;
+      let owner = null;
+
+      if (user.role === 'Owner') {
+        isOwner = true;
+      } else {
+        isOwner = false;
+      }
+
+      if (isOwner === false) {
+        owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+      }
 
       let stripeCustomer = await stripe.customers.create(
         {
@@ -219,7 +237,7 @@ router.post(
       );
 
       let customer = new Customer({
-        user: req.user.id,
+        user: isOwner ? user._id : owner._id,
         stripeCustomerId: stripeCustomer.id,
         name: { first: firstName, last: lastName },
         firstName,
