@@ -27,16 +27,29 @@ import {
   deleteRecentActivity,
   getChecklist,
   updateBilling,
-  updateActivityComment
+  updateActivityComment,
+  getWorkOrders,
+  createWorkOrder
 } from '../../actions/customer';
 
-import { addPaymentMethod } from '../../actions/stripe';
+import { getEmployees } from '../../actions/employee';
+
+import {
+  addPaymentMethod,
+  addSubscription,
+  cancelSubscription,
+  updateBillingRate
+} from '../../actions/stripe';
 
 import { SpinnerCircular } from 'spinners-react';
 import ImageUploader from 'react-images-upload';
 import Cards from 'react-credit-cards';
 
 import { useHistory } from 'react-router-dom';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
+import WorkOrderModal from './WorkOrderModal';
+import ViewWorkOrdersModal from './ViewWorkOrdersModal';
 
 import 'react-credit-cards/es/styles-compiled.css';
 
@@ -77,9 +90,8 @@ import Footer from '../Layout/Footer';
 
 import EditServiceNoteModal from '../Layout/EditServiceNoteModal';
 
-import { Formik } from 'formik';
-import * as Yup from 'yup';
 import axios from 'axios';
+import ConfirmModal from './ConfirmModal';
 
 const ViewCustomer = ({
   getSingleCustomer,
@@ -93,25 +105,66 @@ const ViewCustomer = ({
   getChecklist,
   updateBilling,
   customer: { customer, singleLoading },
+  customers: { workOrders },
+  employees: { employees },
+  getWorkOrders,
   serviceNotes,
   recentActivity,
   serviceChecklist,
   updateActivityComment,
   addPaymentMethod,
+  createWorkOrder,
+  getEmployees,
+  addSubscription,
+  cancelSubscription,
+  updateBillingRate,
   match
 }) => {
   useEffect(() => {
     getSingleCustomer(match.params.id);
+    getWorkOrders();
     getCustomerServiceNotes(match.params.id);
     getRecentActivity(match.params.id);
     getChecklist(match.params.id);
   }, [
     getSingleCustomer,
+    getWorkOrders,
     getCustomerServiceNotes,
     getRecentActivity,
     getChecklist,
     match.params.id
   ]);
+
+  const formSchema = Yup.object().shape({
+    customer: Yup.string()
+      .required('Must Select a Customer')
+      .notOneOf(['Select Customer'], 'Must Select a Customer'),
+    technician: Yup.string()
+      .required('Must Select a Technician')
+      .notOneOf(['Select Technician'], 'Must Select a Technician')
+  });
+
+  let [customers, setCustomers] = useState([
+    {
+      firstName: 'John',
+      lastName: 'Doe',
+      name: { first: 'John', last: 'Doe' },
+      _id: 123456
+    }
+  ]);
+
+  useEffect(() => {
+    if (customer) {
+      setCustomers([
+        {
+          firstName: customer[0].firstName,
+          lastName: customer[0].lastName,
+          name: customer[0].name,
+          _id: customer[0]._id
+        }
+      ]);
+    }
+  }, [getSingleCustomer, customer]);
 
   const history = useHistory();
   const billingRef = useRef();
@@ -121,6 +174,19 @@ const ViewCustomer = ({
       billingRef.current.handleSubmit();
     }
   };
+
+  const [confirmAutobilling, setConfirmAutobilling] = useState(false);
+  const [confirmDisableBilling, setConfirmDisableBilling] = useState(false);
+
+  const [addModal, setAddModal] = useState({
+    isOpen: false,
+    isLoading: false
+  });
+
+  const [workOrdersModal, setWorkOrdersModal] = useState({
+    isOpen: false,
+    isLoading: false
+  });
 
   const [changeCard, setChangeCard] = useState(false);
 
@@ -316,7 +382,20 @@ const ViewCustomer = ({
                         <Badge color='danger'>No Tech Assigned</Badge>{' '}
                       </Fragment>
                     )}
-                    <Badge color='success'>No Open Work Orders</Badge>{' '}
+                    {workOrders.filter(e => e.customer._id === match.params.id)
+                      .length >= 1 ? (
+                      <Badge color='warning'>
+                        {
+                          workOrders.filter(
+                            e => e.customer._id === match.params.id
+                          ).length
+                        }{' '}
+                        Open Work Order(s)
+                      </Badge>
+                    ) : (
+                      <Badge color='success'>No Open Work Orders</Badge>
+                    )}
+
                     {/* <Badge color='secondary'>No Pending Expenses</Badge>{' '} */}
                     <h1 className='display-2 text-white'>
                       {customer[0].serviceAddress}
@@ -332,7 +411,7 @@ const ViewCustomer = ({
                         {moment(customer[0].lastServiced).format(
                           'MMM Do, YYYY'
                         )}{' '}
-                        <br /> Next Service:{' '}
+                        {/* <br /> Next Service:{' '}
                         {customer[0].frequency === 'Weekly' ? (
                           <span>
                             {moment(customer[0].lastServiced)
@@ -362,7 +441,7 @@ const ViewCustomer = ({
                           </span>
                         ) : (
                           <span></span>
-                        )}
+                        )} */}
                       </em>
                     </p>
                   </Fragment>
@@ -523,6 +602,23 @@ const ViewCustomer = ({
           </ModalBody>
         </Modal>
 
+        <ViewWorkOrdersModal
+          workOrdersModal={workOrdersModal}
+          setWorkOrdersModal={setWorkOrdersModal}
+          customers={customers}
+          workOrders={workOrders}
+        />
+
+        <WorkOrderModal
+          addModal={addModal}
+          setAddModal={setAddModal}
+          createWorkOrder={createWorkOrder}
+          getWorkOrders={getWorkOrders}
+          formSchema={formSchema}
+          customers={customers}
+          employees={employees}
+        />
+
         <Container className='mgn-ng-top-60' fluid>
           <Row>
             <Col>
@@ -542,9 +638,29 @@ const ViewCustomer = ({
                       {/* <a href='#!' className='btn btn-primary'>
                         Add Expense
                       </a> */}
-                      <Link to='/work-orders' className='btn btn-success'>
+                      {workOrders.filter(
+                        e => e.customer._id === match.params.id
+                      ).length >= 1 && (
+                        <Button
+                          color='primary'
+                          onClick={() =>
+                            setWorkOrdersModal({
+                              ...workOrdersModal,
+                              isOpen: true
+                            })
+                          }
+                        >
+                          View Work Order(s)
+                        </Button>
+                      )}
+                      <Button
+                        color='success'
+                        onClick={() =>
+                          setAddModal({ ...addModal, isOpen: true })
+                        }
+                      >
                         Add Work Order
-                      </Link>
+                      </Button>
                     </div>
                     <div className='col-4 text-right'>
                       <UncontrolledDropdown>
@@ -656,16 +772,18 @@ const ViewCustomer = ({
                       </Row>
                       <Row>
                         <Col sm='3'>
-                          <div className='form-control-label'>Service Type</div>
+                          <div className='form-control-label'>
+                            Service Type:
+                          </div>
                           <p>{customer[0].poolType}</p>
                         </Col>
                         <Col sm='3'>
-                          <div className='form-control-label'>Technician</div>
+                          <div className='form-control-label'>Technician:</div>
                           <Link to={`/users/${customer[0].technician}/view`}>
                             {customer[0].technicianName}
                           </Link>
                         </Col>
-                        <Col sm='3'>
+                        {/* <Col sm='3'>
                           <div className='form-control-label'>Rate/Package</div>
                           {customer[0].serviceRate ? (
                             <p>{customer[0].servicePackageAndRate}</p>
@@ -676,8 +794,8 @@ const ViewCustomer = ({
                               </strong>
                             </p>
                           )}
-                        </Col>
-                        <Col>
+                        </Col> */}
+                        <Col sm='3'>
                           <div className='form-control-label'>
                             Gate/Lock Code:
                           </div>
@@ -2440,7 +2558,9 @@ const ViewCustomer = ({
                           <div className='form-control-label'>
                             Card On File?
                           </div>
-                          <p>{customer[0].paymentMethod ? 'Yes' : 'No'}</p>
+                          <p>
+                            {customer[0].paymentMethod !== 'N/A' ? 'Yes' : 'No'}
+                          </p>
                         </Col>
                       </Row>
                       {customer[0].billingType === 'Autobilling' && (
@@ -2449,23 +2569,34 @@ const ViewCustomer = ({
                             <div className='form-control-label'>
                               Billing Status
                             </div>
-                            <Badge
-                              color={
-                                customer[0].stripeSubscription.status ===
-                                'active'
-                                  ? 'success'
-                                  : 'danger'
-                              }
-                            >
-                              {customer[0].stripeSubscription.status}
-                            </Badge>
+
+                            {customer[0].stripeSubscription ? (
+                              <Badge
+                                color={
+                                  customer[0].stripeSubscription.status ===
+                                  'active'
+                                    ? 'success'
+                                    : 'danger'
+                                }
+                              >
+                                {customer[0].stripeSubscription.status}
+                              </Badge>
+                            ) : (
+                              <Badge color='danger'>N/A</Badge>
+                            )}
                           </Col>
 
                           <Col sm='4'>
                             <div className='form-control-label'>
                               Billing Rate
                             </div>
-                            <p>${customer[0].stripeSubscription.quantity}.00</p>
+                            {customer[0].stripeSubscription ? (
+                              <p>
+                                ${customer[0].stripeSubscription.quantity}.00
+                              </p>
+                            ) : (
+                              <p>N/A</p>
+                            )}
                           </Col>
 
                           <Col sm='4'>
@@ -2489,7 +2620,7 @@ const ViewCustomer = ({
                     <Formik
                       initialValues={{
                         billingSame: customer[0].billingSame,
-                        billingType: customer[0].billingType,
+                        billingType: 'Autobilling',
                         // paymentMethod: customer[0].paymentMethod,
                         billingAddress: customer[0].billingAddress,
                         billingCity: customer[0].billingCity,
@@ -2507,7 +2638,25 @@ const ViewCustomer = ({
                           match.params.id,
                           data.billingFrequency
                         );
+
                         await getSingleCustomer(match.params.id);
+
+                        // if (
+                        //   customer[0].billingType === 'Manual Billing' &&
+                        //   customer[0].stripeSubscriptionId
+                        // ) {
+                        //   await cancelSubscription(match.params.id);
+                        //   await getSingleCustomer(match.params.id);
+                        // }
+
+                        // if (
+                        //   customer[0].billingType === 'Autobilling' &&
+                        //   customer[0].stripeSubscriptionId === undefined
+                        // ) {
+                        //   await addSubscription(undefined, match.params.id);
+                        //   await getSingleCustomer(match.params.id);
+                        // }
+
                         setEditBillingLoading(false);
                         toggleBillingModal();
                       }}
@@ -2619,7 +2768,7 @@ const ViewCustomer = ({
                                 </Row>
                               </Fragment>
                             )}
-                            <FormGroup>
+                            {/* <FormGroup>
                               <Label
                                 for='billingType'
                                 className='form-control-label'
@@ -2637,31 +2786,10 @@ const ViewCustomer = ({
                                 <option>Autobilling</option>
                                 <option>Manual Billing</option>
                               </Input>
-                            </FormGroup>
+                            </FormGroup> */}
 
                             {values.billingType === 'Autobilling' && (
                               <Fragment>
-                                <FormGroup>
-                                  <Label
-                                    for='rate'
-                                    className='form-control-label'
-                                  >
-                                    Rate:
-                                  </Label>
-                                  <InputGroup>
-                                    <InputGroupAddon addonType='prepend'>
-                                      <InputGroupText>$</InputGroupText>
-                                    </InputGroupAddon>
-                                    <Input
-                                      type='number'
-                                      name='rate'
-                                      value={values.rate}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    />
-                                  </InputGroup>
-                                </FormGroup>
-
                                 {customer[0].paymentMethod ? (
                                   <Row>
                                     <Col>
@@ -2671,7 +2799,8 @@ const ViewCustomer = ({
                                         </Label>
 
                                         <p>
-                                          {customer[0].paymentMethod ? (
+                                          {customer[0].paymentMethod !==
+                                          'N/A' ? (
                                             <span>Yes</span>
                                           ) : (
                                             <span>No</span>
@@ -2816,7 +2945,36 @@ const ViewCustomer = ({
                                   </Card>
                                 </Collapse>
 
+                                <Button
+                                  color='success'
+                                  block
+                                  onClick={saveBilling}
+                                >
+                                  Save Billing Information
+                                </Button>
+
                                 <br />
+
+                                <FormGroup>
+                                  <Label
+                                    for='rate'
+                                    className='form-control-label'
+                                  >
+                                    Service Rate:
+                                  </Label>
+                                  <InputGroup>
+                                    <InputGroupAddon addonType='prepend'>
+                                      <InputGroupText>$</InputGroupText>
+                                    </InputGroupAddon>
+                                    <Input
+                                      type='number'
+                                      name='rate'
+                                      value={values.rate}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                    />
+                                  </InputGroup>
+                                </FormGroup>
 
                                 <FormGroup>
                                   <Label
@@ -2836,6 +2994,134 @@ const ViewCustomer = ({
                                     <option>Monthly</option>
                                   </Input>
                                 </FormGroup>
+
+                                <Button
+                                  color='success'
+                                  block
+                                  onClick={async () => {
+                                    setEditBillingLoading(true);
+                                    await updateBillingRate(
+                                      values,
+                                      match.params.id
+                                    );
+                                    await getSingleCustomer(match.params.id);
+                                    setEditBillingLoading(false);
+                                  }}
+                                >
+                                  {editBillingLoading ? (
+                                    <span>Processing...</span>
+                                  ) : (
+                                    <span>Save Billing Settings</span>
+                                  )}
+                                </Button>
+
+                                <br />
+
+                                <ConfirmModal
+                                  openState={confirmAutobilling}
+                                  toggle={() => {
+                                    setConfirmAutobilling(!confirmAutobilling);
+                                  }}
+                                  header='Are you sure you want to enable Autobilling?'
+                                  action='enable autobilling for this customer'
+                                  result='This action will charge the card on file the defined service rate immediately.'
+                                  loading={editBillingLoading}
+                                  confirm={async () => {
+                                    setEditBillingLoading(true);
+                                    await addSubscription(
+                                      undefined,
+                                      match.params.id,
+                                      values.billingFrequency
+                                    );
+                                    await getSingleCustomer(match.params.id);
+                                    setConfirmAutobilling(false);
+                                    setEditBillingLoading(false);
+                                  }}
+                                />
+
+                                <ConfirmModal
+                                  openState={confirmDisableBilling}
+                                  toggle={() => {
+                                    setConfirmDisableBilling(
+                                      !confirmDisableBilling
+                                    );
+                                  }}
+                                  header='Are you sure you want to disable autobilling?'
+                                  action='disable autobilling for this customer'
+                                  result='This action will cancel autobilling for this customer. This customer will not be billed again until you re-enable autobilling.'
+                                  loading={editBillingLoading}
+                                  confirm={async () => {
+                                    setEditBillingLoading(true);
+                                    await cancelSubscription(match.params.id);
+                                    await getSingleCustomer(match.params.id);
+                                    setConfirmDisableBilling(false);
+                                    // setEditBillingModal(false);
+                                    setEditBillingLoading(false);
+                                  }}
+                                />
+
+                                {customer[0].billingType ===
+                                'Manual Billing' ? (
+                                  <Button
+                                    color='warning'
+                                    block
+                                    onClick={async () => {
+                                      setConfirmAutobilling(true);
+                                      // setEditBillingLoading(true);
+                                      // await addSubscription(
+                                      //   undefined,
+                                      //   match.params.id,
+                                      //   values.billingFrequency
+                                      // );
+                                      // await getSingleCustomer(match.params.id);
+                                      // setEditBillingLoading(false);
+                                    }}
+                                  >
+                                    {!editBillingLoading ? (
+                                      <span>Enable Autobilling</span>
+                                    ) : (
+                                      <span>
+                                        {' '}
+                                        <SpinnerCircular
+                                          size={24}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />{' '}
+                                        Processing...
+                                      </span>
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    color='danger'
+                                    block
+                                    onClick={async () => {
+                                      setConfirmDisableBilling(true);
+                                      // setEditBillingLoading(true);
+                                      // await cancelSubscription(match.params.id);
+                                      // await getSingleCustomer(match.params.id);
+                                      // setEditBillingLoading(false);
+                                    }}
+                                  >
+                                    {!editBillingLoading ? (
+                                      <span>Disable Autobilling</span>
+                                    ) : (
+                                      <span>
+                                        {' '}
+                                        <SpinnerCircular
+                                          size={24}
+                                          thickness={180}
+                                          speed={100}
+                                          color='rgba(57, 125, 172, 1)'
+                                          secondaryColor='rgba(0, 0, 0, 0.44)'
+                                        />{' '}
+                                        Processing...
+                                      </span>
+                                    )}
+                                  </Button>
+                                )}
                               </Fragment>
                             )}
 
@@ -2864,8 +3150,10 @@ const ViewCustomer = ({
                   </ModalBody>
                 )}
                 <ModalFooter>
-                  <Button onClick={toggleBillingModal}>Cancel</Button>
-                  <Button onClick={saveBilling} color='success'>
+                  <Button block onClick={toggleBillingModal}>
+                    Cancel
+                  </Button>
+                  {/* <Button onClick={saveBilling} color='success'>
                     {editBillingLoading ? (
                       <span>
                         {' '}
@@ -2881,7 +3169,7 @@ const ViewCustomer = ({
                     ) : (
                       <span>Save Changes</span>
                     )}
-                  </Button>
+                  </Button> */}
                 </ModalFooter>
               </Modal>
             </Col>
@@ -2959,6 +3247,12 @@ ViewCustomer.propTypes = {
   getChecklist: PropTypes.func.isRequired,
   updateBilling: PropTypes.func.isRequired,
   addPaymentMethod: PropTypes.func.isRequired,
+  getWorkOrders: PropTypes.func.isRequired,
+  createWorkOrder: PropTypes.func.isRequired,
+  getEmployees: PropTypes.func.isRequired,
+  addSubscription: PropTypes.func.isRequired,
+  cancelSubscription: PropTypes.func.isRequired,
+  updateBillingRate: PropTypes.func.isRequired,
   customer: PropTypes.object.isRequired,
   serviceNotes: PropTypes.array.isRequired,
   recentActivity: PropTypes.array.isRequired,
@@ -2966,6 +3260,8 @@ ViewCustomer.propTypes = {
 };
 
 const mapStateToProps = state => ({
+  customers: state.customer,
+  employees: state.employee,
   customer: state.customer.singleCustomer,
   serviceNotes: state.customer.serviceNotes,
   recentActivity: state.customer.recentActivity,
@@ -2984,5 +3280,11 @@ export default connect(mapStateToProps, {
   getChecklist,
   updateBilling,
   updateActivityComment,
-  addPaymentMethod
+  addPaymentMethod,
+  getWorkOrders,
+  createWorkOrder,
+  getEmployees,
+  addSubscription,
+  cancelSubscription,
+  updateBillingRate
 })(ViewCustomer);

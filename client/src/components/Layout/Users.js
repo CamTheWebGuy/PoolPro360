@@ -118,14 +118,23 @@ const Users = ({
     );
   };
 
+  const nameFormatter = cell => {
+    if (cell === undefined) {
+      return <span></span>;
+    } else {
+      return (
+        <span>
+          {cell.first} {cell.last}
+        </span>
+      );
+    }
+  };
+
   const columns = [
     {
-      dataField: 'firstName',
-      text: 'First Name'
-    },
-    {
-      dataField: 'lastName',
-      text: 'Last Name'
+      dataField: 'name',
+      text: 'Name',
+      formatter: nameFormatter
     },
     {
       dataField: 'email',

@@ -131,7 +131,7 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                           <span className='nav-link-text'>Customers</span>
                         </Link>
                       </li>
-                      <li className='nav-item nav-ctrl'>
+                      {/* <li className='nav-item nav-ctrl'>
                         <Link
                           className={`nav-link ${
                             active === 'bookingforms' ? 'active' : ''
@@ -141,7 +141,7 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                           <i className='ni ni-single-copy-04 text-pink' />
                           <span className='nav-link-text'>Booking Forms</span>
                         </Link>{' '}
-                      </li>
+                      </li> */}
                       <li className='nav-item nav-ctrl'>
                         <Link
                           className={`nav-link ${

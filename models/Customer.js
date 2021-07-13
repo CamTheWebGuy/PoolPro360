@@ -29,6 +29,9 @@ const CustomerSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  altEmail: {
+    type: String
+  },
   mobilePhone: {
     type: String
   },

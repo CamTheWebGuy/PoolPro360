@@ -3359,7 +3359,7 @@ const RouteViewer = ({
         <Card className='shadow'>
           <CardHeader>
             <h3>{routeDay}'s Route</h3>
-            <Progress
+            {/* <Progress
               animated
               value={
                 (100 *
@@ -3375,7 +3375,7 @@ const RouteViewer = ({
                   ).length) /
                 routeList.length
               }
-            />
+            /> */}
           </CardHeader>
           <CardBody>
             <ListGroup>

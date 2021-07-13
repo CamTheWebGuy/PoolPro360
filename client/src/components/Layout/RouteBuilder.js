@@ -689,9 +689,9 @@ const RouteBuilder = ({
                         {c.isScheduled === true &&
                           c.scheduledDay !== dateSelected && (
                             <ListGroupItem>
-                              {c.firstName} {c.lastName}{' '}
+                              {c.firstName} {c.lastName} <br />
                               <Badge color='primary' className='mgn-btm-10'>
-                                Scheduled - {c.scheduledDay} @ 2:40pm - 4:40pm
+                                Scheduled - {c.scheduledDay}
                               </Badge>
                               <Button
                                 size='sm'

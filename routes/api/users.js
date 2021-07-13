@@ -117,6 +117,7 @@ router.post(
       user = new User({
         firstName,
         lastName,
+        name: { first: firstName, last: lastName },
         businessName,
         country,
         state,
@@ -234,7 +235,7 @@ router.post(
       user = new User({
         firstName,
         lastName,
-
+        name: { first: firstName, last: lastName },
         phone,
         businessName,
         country,

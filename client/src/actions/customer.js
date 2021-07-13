@@ -40,7 +40,8 @@ export const addCustomer = ({
   billingAddress,
   billingCity,
   billingState,
-  billingZip
+  billingZip,
+  billingFrequency
 }) => async dispatch => {
   const config = {
     headers: {
@@ -73,7 +74,8 @@ export const addCustomer = ({
     billingAddress,
     billingCity,
     billingState,
-    billingZip
+    billingZip,
+    billingFrequency
   });
 
   try {
@@ -377,12 +379,55 @@ export const addItemChecklist = (customerId, data) => async dispatch => {
   }
 };
 
+// Add Global Checklist Item
+export const addItemGlobalChecklist = data => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    item: data.item
+  });
+  try {
+    await axios.post(`/api/customers/globalChecklist/add`, body, config);
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
 // Get Checklist Items
 export const getChecklist = customerId => async dispatch => {
   try {
     const checklist = await axios.get(
       `/api/customers/${customerId}/checklist/`
     );
+
+    dispatch({
+      type: GET_CUSTOMER_CHECKLIST,
+      payload: checklist.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Get Global Checklist Items
+export const getGlobalChecklist = () => async dispatch => {
+  try {
+    const checklist = await axios.get(`/api/customers/globalChecklist/`);
+    // console.log('made it to action');
 
     dispatch({
       type: GET_CUSTOMER_CHECKLIST,
@@ -431,6 +476,39 @@ export const updateChecklist = (customerId, list) => async dispatch => {
   }
 };
 
+// Update Global Checklist Items
+export const updateGlobalChecklist = list => async dispatch => {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const body = JSON.stringify({
+    list
+  });
+
+  try {
+    const checklist = await axios.patch(
+      `/api/customers/globalChecklist/`,
+      body,
+      config
+    );
+
+    dispatch({
+      type: GET_CUSTOMER_CHECKLIST,
+      payload: checklist.data
+    });
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
 // Update Billing Info
 export const updateBilling = (
   customerId,
@@ -440,7 +518,8 @@ export const updateBilling = (
     billingAddress,
     billingState,
     billingCity,
-    billingZip
+    billingZip,
+    rate
   }
 ) => async dispatch => {
   const config = {
@@ -455,7 +534,8 @@ export const updateBilling = (
     billingAddress,
     billingState,
     billingCity,
-    billingZip
+    billingZip,
+    rate
   });
 
   try {
@@ -552,7 +632,7 @@ export const updateCustomer = (
     serviceState,
     serviceZip,
     gateCode,
-    servicePackageAndRate,
+    poolType,
     technician
   }
 ) => async dispatch => {
@@ -574,8 +654,7 @@ export const updateCustomer = (
     serviceState,
     serviceZip,
     gateCode,
-    servicePackageAndRate,
-    technician
+    poolType
   });
 
   try {
@@ -584,6 +663,9 @@ export const updateCustomer = (
       body,
       config
     );
+    if (technician && technician !== null) {
+      await axios.patch(`/api/customers/${customerId}/tech/${technician}`);
+    }
     dispatch(setAlert('Changes Saved', 'success'));
   } catch (err) {
     console.log(err);

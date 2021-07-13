@@ -364,7 +364,7 @@ router.post('/payment-method/:customerId', auth, async (req, res) => {
 // @desc     Create Stripe Customer Subscription
 // @access   Private/User
 router.post('/subscription/:customerId', auth, async (req, res) => {
-  const { billingStart } = req.body;
+  const { billingStart, billingFrequency } = req.body;
   try {
     // Get user making request
     const user = await User.findOne({
@@ -395,7 +395,7 @@ router.post('/subscription/:customerId', auth, async (req, res) => {
           items: [
             {
               price:
-                customer.billingFrequency === 'Monthly'
+                billingFrequency === 'Monthly'
                   ? user.stripePriceMonthly
                   : user.stripePriceWeekly,
               quantity: customer.serviceRate
@@ -408,6 +408,7 @@ router.post('/subscription/:customerId', auth, async (req, res) => {
         }
       );
       customer.billingType = 'Autobilling';
+      customer.billingFrequency = billingFrequency;
       customer.stripeSubscriptionStatus = 'Active';
       customer.stripeSubscriptionId = subscription.id;
       customer.stripeSubscription = subscription;
@@ -420,7 +421,7 @@ router.post('/subscription/:customerId', auth, async (req, res) => {
           items: [
             {
               price:
-                customer.billingFrequency === 'Monthly'
+                billingFrequency === 'Monthly'
                   ? user.stripePriceMonthly
                   : user.stripePriceWeekly,
               quantity: customer.serviceRate
@@ -432,6 +433,7 @@ router.post('/subscription/:customerId', auth, async (req, res) => {
         }
       );
       customer.billingType = 'Autobilling';
+      customer.billingFrequency = billingFrequency;
       customer.stripeSubscriptionId = subscription.id;
       customer.stripeSubscription = subscription;
       await customer.save();
@@ -608,7 +610,6 @@ router.post('/subscription/pause/:customerId', auth, async (req, res) => {
 // @desc     Cancel Stripe Customer Subscription
 // @access   Private/User
 router.post('/subscription/cancel/:customerId', auth, async (req, res) => {
-  const { date } = req.body;
   try {
     // Get user making request
     const user = await User.findOne({
@@ -635,9 +636,9 @@ router.post('/subscription/cancel/:customerId', auth, async (req, res) => {
       }
     );
 
-    customer.stripeSubscriptionId = subscription.id;
+    customer.stripeSubscriptionId = undefined;
     customer.stripeSubscriptionStatus = 'Canceled';
-    customer.stripeSubscription = subscription;
+    customer.stripeSubscription = undefined;
     customer.billingType = 'Manual Billing';
 
     await customer.save();

@@ -98,14 +98,14 @@ const AddCustomers = ({
                     </ol>
                   </nav>
                 </div>
-                <div className='col-lg-6 col-5 text-right'>
+                {/* <div className='col-lg-6 col-5 text-right'>
                   <a href='#' className='btn btn-sm btn-neutral'>
                     New
                   </a>
                   <a href='#' className='btn btn-sm btn-neutral'>
                     Filters
                   </a>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -142,6 +142,7 @@ const AddCustomers = ({
                   technician: 'N/A',
                   servicePackageAndRate:
                     'Inactive (Customer Will Not Be Serviced)',
+                  billingFrequency: '',
                   serviceDay: 'Monday',
                   serviceFrequency: 'Weekly',
                   dogName: '',
@@ -465,7 +466,7 @@ const AddCustomers = ({
                         </Row>
 
                         <Row>
-                          <Col lg='6'>
+                          {/* <Col lg='6'>
                             <FormGroup>
                               <Label
                                 for='serviceDay'
@@ -489,8 +490,8 @@ const AddCustomers = ({
                                 <option>Sunday</option>
                               </Input>
                             </FormGroup>
-                          </Col>
-                          <Col lg='6'>
+                          </Col> */}
+                          {/* <Col lg='6'>
                             <FormGroup>
                               <Label
                                 for='serviceFrequency'
@@ -511,7 +512,7 @@ const AddCustomers = ({
                                 <option>Monthly (Every 4 Weeks)</option>
                               </Input>
                             </FormGroup>
-                          </Col>
+                          </Col> */}
                         </Row>
 
                         <Row>
@@ -557,23 +558,21 @@ const AddCustomers = ({
                           <Col lg='4'>
                             <FormGroup>
                               <Label
-                                for='rateType'
+                                for='billingFrequency'
                                 className='form-control-label'
                               >
-                                Rate Type
+                                Billing Frequency
                               </Label>
                               <Input
                                 type='select'
-                                name='rateType'
+                                name='billingFrequency'
                                 placeholder='12345'
-                                value={values.rateType}
+                                value={values.billingFrequency}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                               >
-                                <option>Per Stop (Chemicals Included)</option>
-                                <option>Per Stop Plus Chemicals</option>
-                                <option>Per Month (Chemicals Included)</option>
-                                <option>Per Month Plus Chemicals</option>
+                                <option>Monthly</option>
+                                <option>Weekly</option>
                               </Input>
                             </FormGroup>
                           </Col>

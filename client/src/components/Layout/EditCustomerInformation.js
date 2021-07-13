@@ -176,6 +176,7 @@ const EditCustomerInformation = ({
                     // console.log(data);
                     setLoadingSave(true);
                     await updateCustomer(match.params.id, data);
+
                     setLoadingSave(false);
                   }}
                   render={({
@@ -419,19 +420,22 @@ const EditCustomerInformation = ({
                               </Col>
                               <Col lg='4'>
                                 <Label
-                                  for='servicePackage'
+                                  for='poolType'
                                   className='form-control-label'
                                 >
-                                  Rate / Service Package
+                                  Pool Type
                                 </Label>
                                 <Input
-                                  type='text'
-                                  name='servicePackageAndRate'
-                                  value={values.servicePackageAndRate}
-                                  placeholder='12345'
+                                  type='select'
+                                  name='poolType'
+                                  value={values.poolType}
+                                  placeholder='Residential'
                                   onChange={handleChange}
                                   onBlur={handleBlur}
-                                />
+                                >
+                                  <option>Residential</option>
+                                  <option>Commercial</option>
+                                </Input>
                               </Col>
                               <Col lg='4'>
                                 <Label

@@ -14,12 +14,32 @@
   background: #172b4d;
 }
 
+.border-2 {
+  border: 2px solid #cacaca;
+}
+
+.border-green-600 {
+  --border-opacity: 1;
+  border-color: #38a169;
+  border-color: rgba(56, 161, 105, var(--border-opacity));
+}
+
+.border-green-100 {
+  --border-opacity: 1;
+  border-color: #f0fff4;
+  border-color: rgba(240, 255, 244, var(--border-opacity));
+}
+
 .pr-0 {
   padding-right: 0;
 }
 
 .mgn-top-10 {
   margin-top: 10px;
+}
+
+.mgn-top-30 {
+  margin-top: 30px;
 }
 
 .mgn-top-50 {

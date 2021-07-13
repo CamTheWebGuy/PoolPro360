@@ -1,11 +1,16 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
 
 import { Link } from 'react-router-dom';
 
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { parse } from 'papaparse';
 
-import { getCustomers, resetCustomerLoading } from '../../actions/customer';
+import {
+  getCustomers,
+  resetCustomerLoading,
+  addCustomer
+} from '../../actions/customer';
 
 import Sidebar from '../dashboard/Sidebar';
 import Dashnav from '../dashboard/Dashnav';
@@ -18,7 +23,10 @@ import {
   UncontrolledDropdown,
   DropdownToggle,
   DropdownItem,
-  DropdownMenu
+  DropdownMenu,
+  Modal,
+  ModalHeader,
+  ModalBody
 } from 'reactstrap';
 
 import { SpinnerCircular } from 'spinners-react';
@@ -164,11 +172,21 @@ const columns = [
 const Customers = ({
   getCustomers,
   resetCustomerLoading,
+  addCustomer,
   customers: { customers, loading }
 }) => {
   useEffect(() => {
     getCustomers();
   }, [getCustomers]);
+
+  const [importModal, setImportModal] = useState(false);
+
+  const toggleImportModal = () => {
+    setImportModal(!importModal);
+  };
+
+  const [highlighted, setHighlighted] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
 
   return (
     <Fragment>
@@ -266,6 +284,13 @@ const Customers = ({
                             >
                               <i className='ni ni-align-left-2'></i> Export CSV
                             </ExportCSVButton>
+                            <Button
+                              size='sm'
+                              color='secondary'
+                              onClick={toggleImportModal}
+                            >
+                              Import Customers from Skimmer
+                            </Button>
                           </Col>
                           <Col md={{ size: 'auto', offset: 3 }}>
                             <SearchBar
@@ -276,6 +301,104 @@ const Customers = ({
                           </Col>
                         </Row>
                       </div>
+
+                      <Modal isOpen={importModal} toggle={toggleImportModal}>
+                        <ModalHeader toggle={toggleImportModal}>
+                          Import Customers from Skimmer
+                        </ModalHeader>
+                        <ModalBody>
+                          <Fragment>
+                            <p>
+                              You must convert xlsx file to a csv file before
+                              you can import the customers list.
+                              <br />
+                              <br />
+                              For instructions, see:{' '}
+                              <a href='https://google.com'>
+                                https://poolpro360.com/video-guides/import-customers-skimmer
+                              </a>
+                            </p>
+                            <div
+                              className={`text-center p-6 my-2 mx-auto mx-w-md border-2 ${
+                                highlighted
+                                  ? 'border-green-600 bg-green-100'
+                                  : ''
+                              }`}
+                              onDragOver={e => {
+                                e.preventDefault();
+                              }}
+                              onDragEnter={() => {
+                                setHighlighted(true);
+                              }}
+                              onDragLeave={() => {
+                                setHighlighted(false);
+                              }}
+                              onDrop={e => {
+                                e.preventDefault();
+                                setHighlighted(false);
+
+                                Array.from(e.dataTransfer.files)
+                                  .filter(
+                                    file =>
+                                      file.type === 'text/csv' ||
+                                      file.type === 'application/vnd.ms-excel'
+                                  )
+                                  .forEach(async file => {
+                                    const text = await file.text();
+
+                                    const result = await parse(text, {
+                                      header: true
+                                    });
+
+                                    setImportLoading(true);
+
+                                    await result.data.map(async c => {
+                                      let newCustomer = {
+                                        firstName: c.FirstName,
+                                        lastName: c.LastName,
+                                        email: c.Email1,
+                                        altEmail: c.Email2,
+                                        mobilePhone: c.MobilePhone1,
+                                        altPhone: c.MobilePhone2,
+                                        serviceAddress: c.LocationAddress,
+                                        serviceCity: c.LocationCity,
+                                        serviceState: c.LocationState,
+                                        serviceZip: c.LocationZip,
+                                        email: c.Email1,
+                                        altEmail: c.Email2,
+                                        gateCode: c.GateCode,
+                                        serviceRate: c.Rate,
+                                        billingSame: true,
+                                        billingAddress: c.BillingAddress,
+                                        billingCity: c.BillingCity,
+                                        billingState: c.BillingState,
+                                        billingZip: c.BillingZip,
+                                        dogName: c.DogsName,
+                                        poolType: 'Residential',
+                                        billingFrequency: 'Monthly',
+                                        technician: 'N/A'
+                                      };
+
+                                      await addCustomer(newCustomer);
+                                    });
+
+                                    await getCustomers();
+                                    setImportLoading(false);
+                                    toggleImportModal(false);
+                                  });
+                              }}
+                            >
+                              {importLoading ? (
+                                <span>
+                                  Processing... Please do not close this window.
+                                </span>
+                              ) : (
+                                <span>DROP CSV HERE</span>
+                              )}
+                            </div>
+                          </Fragment>
+                        </ModalBody>
+                      </Modal>
 
                       <BootstrapTable
                         {...props.baseProps}
@@ -299,6 +422,7 @@ const Customers = ({
 Customers.propTypes = {
   getCustomers: PropTypes.func.isRequired,
   resetCustomerLoading: PropTypes.func.isRequired,
+  addCustomer: PropTypes.func.isRequired,
   customers: PropTypes.object.isRequired
 };
 
@@ -306,6 +430,8 @@ const mapStateToProps = state => ({
   customers: state.customer
 });
 
-export default connect(mapStateToProps, { getCustomers, resetCustomerLoading })(
-  Customers
-);
+export default connect(mapStateToProps, {
+  getCustomers,
+  addCustomer,
+  resetCustomerLoading
+})(Customers);

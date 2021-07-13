@@ -9,6 +9,14 @@ const UserSchema = new mongoose.Schema({
   lastName: {
     type: String
   },
+  name: {
+    first: {
+      type: String
+    },
+    last: {
+      type: String
+    }
+  },
   email: {
     type: String,
     required: true,
@@ -86,6 +94,9 @@ const UserSchema = new mongoose.Schema({
     businessEmail: { type: String },
     businessAddress: { type: String }
   },
+  settings: {
+    useGlobalChecklist: { type: Boolean, default: false }
+  },
   emailSettings: {
     emailSendWorkOrder: { type: Boolean, default: true },
     emailSendUnable: { type: Boolean, default: true },
@@ -102,7 +113,12 @@ const UserSchema = new mongoose.Schema({
     emailSendHardness: { type: Boolean, default: false },
     emailSendPhosphateLevel: { type: Boolean, default: false },
     emailSendSaltLevel: { type: Boolean, default: false }
-  }
+  },
+  globalServiceChecklist: [
+    {
+      item: { type: String, required: true }
+    }
+  ]
 });
 
 module.exports = User = mongoose.model('user', UserSchema);

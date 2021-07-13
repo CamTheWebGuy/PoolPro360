@@ -8,7 +8,8 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import {
   getChecklist,
   updateChecklist,
-  addItemChecklist
+  addItemChecklist,
+  getSingleCustomer
 } from '../../actions/customer';
 
 import {
@@ -43,7 +44,9 @@ const ManageChecklist = ({
   getChecklist,
   updateChecklist,
   addItemChecklist,
-  checklist
+  getSingleCustomer,
+  checklist,
+  customer: { customer, singleLoading }
 }) => {
   const [itemList, updateItemList] = useState(null);
   const [itemListLoading, setItemListLoading] = useState(false);
@@ -139,6 +142,10 @@ const ManageChecklist = ({
     // console.log('updated');
   }, [checklist]);
 
+  useEffect(() => {
+    getSingleCustomer(match.params.id);
+  }, [getSingleCustomer]);
+
   const onSaveHandler = async () => {
     setItemListLoading(true);
     await updateChecklist(match.params.id, itemList);
@@ -175,11 +182,13 @@ const ManageChecklist = ({
                       <li className='breadcrumb-item'>
                         <Link to='/customers'>Customers</Link>
                       </li>
-                      <li className='breadcrumb-item'>
-                        <Link to={`/customers/${match.params.id}`}>
-                          {match.params.id}
-                        </Link>
-                      </li>
+                      {customer && customer.length >= 1 && (
+                        <li className='breadcrumb-item'>
+                          <Link to={`/customers/${match.params.id}`}>
+                            {customer[0].firstName} {customer[0].lastName}
+                          </Link>
+                        </li>
+                      )}
                       <li className='breadcrumb-item active'>
                         <Link to={`/customers/${match.params.id}/deleteImage`}>
                           Manage Service Checklist
@@ -201,7 +210,7 @@ const ManageChecklist = ({
                   <h3 className='mb-0'>Manage Checklist</h3>
                   <small>Drag and Drop Items to Rearrange Their Order.</small>
                 </Col>
-                <Col lg={{ size: 'auto', offset: 6 }}>
+                <Col lg={{ size: 'auto', offset: 9 }}>
                   <Button
                     className='btn-icon'
                     color='success'
@@ -468,15 +477,18 @@ ManageChecklist.propTypes = {
   getChecklist: PropTypes.func.isRequired,
   updateChecklist: PropTypes.func.isRequired,
   addItemChecklist: PropTypes.func.isRequired,
+  getSingleCustomer: PropTypes.func.isRequired,
   checklist: PropTypes.array.isRequired
 };
 
 const mapStateToProps = state => ({
-  checklist: state.customer.checklist
+  checklist: state.customer.checklist,
+  customer: state.customer.singleCustomer
 });
 
 export default connect(mapStateToProps, {
   getChecklist,
   updateChecklist,
-  addItemChecklist
+  addItemChecklist,
+  getSingleCustomer
 })(ManageChecklist);

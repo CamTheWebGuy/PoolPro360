@@ -80,6 +80,47 @@ const uploadToS3 = (req, res) => {
 //   );
 // };
 
+// @route    GET api/customers/globalChecklist/
+// @desc     Get Users Global Checklist Service Checklist
+// @access   Private/User
+router.get('/globalChecklist', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+      res.status(200).json(owner.globalServiceChecklist);
+    } else {
+      res.status(200).json(user.globalServiceChecklist);
+    }
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route    POST api/customers
 // @desc     Add Customer
 // @access   Private/User
@@ -156,12 +197,37 @@ router.post(
       billingAddress,
       billingCity,
       billingState,
-      billingZip
+      billingZip,
+      billingFrequency
     } = req.body;
 
     try {
+      const user = await User.findOne({
+        $or: [
+          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+          { _id: req.user.id, role: 'Owner' }
+        ]
+      });
+
+      if (!user) {
+        return res.status(401).json({ msg: 'User not authorized' });
+      }
+
+      let isOwner = null;
+      let owner = null;
+
+      if (user.role === 'Owner') {
+        isOwner = true;
+      } else {
+        isOwner = false;
+      }
+
+      if (isOwner === false) {
+        owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+      }
+
       const existingCustomer = await Customer.find({
-        user: req.user.id,
+        user: isOwner ? req.user.id : req.user.owner,
         email: email
       });
 
@@ -205,26 +271,6 @@ router.post(
 
       // await customer.save();
 
-      const user = await User.findOne({
-        $or: [
-          { _id: req.user.id, role: 'Admin', owner: req.user.owner },
-          { _id: req.user.id, role: 'Owner' }
-        ]
-      });
-
-      let isOwner = null;
-      let owner = null;
-
-      if (user.role === 'Owner') {
-        isOwner = true;
-      } else {
-        isOwner = false;
-      }
-
-      if (isOwner === false) {
-        owner = await User.findOne({ _id: user.owner, role: 'Owner' });
-      }
-
       let stripeCustomer = await stripe.customers.create(
         {
           description: 'Pro360 Customer',
@@ -267,7 +313,11 @@ router.post(
         billingAddress,
         billingCity,
         billingState,
-        billingZip
+        billingZip,
+        billingFrequency,
+        serviceChecklist: isOwner
+          ? user.globalServiceChecklist
+          : owner.globalServiceChecklist
       });
 
       await customer.save();
@@ -387,8 +437,33 @@ router.get('/:id', auth, async (req, res) => {
 // @access   Private/User
 router.post('/:customerId/uploadImage', auth, async (req, res) => {
   try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ errors: [{ msg: 'User not authorized' }] });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+    }
+
     const customer = await Customer.findOne({
-      user: req.user.id,
+      user: isOwner ? user._id : owner._id,
       _id: req.params.customerId
     });
 
@@ -423,8 +498,33 @@ router.post('/:customerId/uploadImage', auth, async (req, res) => {
 // @access   Private/User
 router.post('/:customerId/deleteImage', auth, async (req, res) => {
   try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ errors: [{ msg: 'User not authorized' }] });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+    }
+
     const customer = await Customer.findOne({
-      user: req.user.id,
+      user: isOwner ? user._id : owner._id,
       _id: req.params.customerId
     });
 
@@ -626,7 +726,36 @@ router.delete('/:customerId/serviceNotes/:noteId', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Note not found' });
     }
 
-    if (note.user.toString() !== req.user.id) {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ errors: [{ msg: 'User not authorized' }] });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    let owner = null;
+
+    if (isOwner === false) {
+      owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+    }
+
+    if (
+      (user.isOwner && note.user.toString() !== user._id.toString()) ||
+      (!user.isOwner && note.user.toString() !== user.owner.toString())
+    ) {
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
@@ -702,6 +831,9 @@ router.post(
         .escape(),
       check('type')
         .trim()
+        .escape(),
+      check('icon')
+        .trim()
         .escape()
     ]
   ],
@@ -774,7 +906,13 @@ router.post(
 // @desc     Update Activity Images by ID
 // @access   Private/User
 router.patch('/recentActivity/edit/:activityId', auth, async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.find({
+    $or: [
+      { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+      { _id: req.user.id, role: 'Owner' },
+      { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+    ]
+  });
 
   const activity = await Activity.findById(req.params.activityId);
 
@@ -860,7 +998,10 @@ router.delete('/:customerId/recentActivity/:id', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Note not found' });
     }
 
-    if (activity.user.toString() !== req.user.id) {
+    if (
+      activity.user.toString() !== req.user.id &&
+      activity.user.toString() !== req.user.owner
+    ) {
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
@@ -887,8 +1028,27 @@ router.delete('/:customerId/recentActivity/:id', auth, async (req, res) => {
 // @access   Private/User
 router.post('/:customerId/checklist/add', auth, async (req, res) => {
   try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ errors: [{ msg: 'User not authorized' }] });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
     const customer = await Customer.findOne({
-      user: req.user.id,
+      user: isOwner ? user._id : user.owner,
       _id: req.params.customerId
     });
 
@@ -912,6 +1072,55 @@ router.post('/:customerId/checklist/add', auth, async (req, res) => {
     if (err.kind === 'ObjectId') {
       return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
     }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    POST api/customers/globalChecklist/add
+// @desc     Add Item Global Service Checklist
+// @access   Private/User
+router.post('/globalChecklist/add', auth, async (req, res) => {
+  try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ errors: [{ msg: 'User not authorized' }] });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    const { item } = req.body;
+
+    const newItem = {
+      item
+    };
+
+    if (isOwner) {
+      await user.globalServiceChecklist.push(newItem);
+      await user.save();
+      return res.json(user.globalServiceChecklist);
+    } else {
+      const owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+      await owner.globalServiceChecklist.push(newItem);
+      await owner.save();
+      return res.json(owner.globalServiceChecklist);
+    }
+  } catch (err) {
+    console.log(err.message);
+    // if (err.kind === 'ObjectId') {
+    //   return res.status(404).json({ errors: [{ msg: 'User not found' }] });
+    // }
     res.status(500).send('Server Error');
   }
 });
@@ -959,7 +1168,10 @@ router.patch('/:customerId/checklist', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Customer not found' });
     }
 
-    if (customer.user.toString() !== req.user.id) {
+    if (
+      customer.user.toString() !== req.user.id &&
+      customer.user.toString !== req.user.owner
+    ) {
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
@@ -968,6 +1180,50 @@ router.patch('/:customerId/checklist', auth, async (req, res) => {
     await customer.save();
 
     res.status(200).json(customer.serviceChecklist);
+  } catch (err) {
+    console.log(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ errors: [{ msg: 'Customer not found' }] });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route    PATCH api/customers/:customerId/checklist
+// @desc     Update Global Checklist
+// @access   Private/User
+router.patch('/globalChecklist', auth, async (req, res) => {
+  const { list } = req.body;
+  try {
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' }
+      ]
+    });
+
+    if (!user) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
+
+    if (isOwner) {
+      user.globalServiceChecklist = list;
+      await user.save();
+      return res.status(200).json(user.globalServiceChecklist);
+    } else {
+      const owner = await User.findOne({ _id: user.owner, role: 'Owner' });
+      owner.globalServiceChecklist = list;
+      await owner.save();
+      return res.status(200).json(owner.globalServiceChecklist);
+    }
   } catch (err) {
     console.log(err.message);
     if (err.kind === 'ObjectId') {
@@ -1130,21 +1386,40 @@ router.patch('/:customerId/information', auth, async (req, res) => {
     serviceState,
     serviceZip,
     gateCode,
-    servicePackageAndRate,
-    technician
+    poolType
   } = req.body;
 
   try {
-    const customer = await Customer.findById(req.params.customerId);
-    const tech = await User.findById(technician);
+    const user = await User.findOne({
+      $or: [
+        { _id: req.user.id, role: 'Admin', owner: req.user.owner },
+        { _id: req.user.id, role: 'Owner' },
+        { _id: req.user.id, role: 'Technician', owner: req.user.owner }
+      ]
+    });
 
-    const technicianName = tech.firstName + ' ' + tech.lastName;
+    if (!user) {
+      return res.status(401).json({ msg: 'User not found or not authorized' });
+    }
+
+    const customer = await Customer.findById(req.params.customerId);
+
+    let isOwner = null;
+
+    if (user.role !== 'Owner') {
+      isOwner = false;
+    } else {
+      isOwner = true;
+    }
 
     if (!customer) {
       return res.status(404).json({ msg: 'Customer not found' });
     }
 
-    if (customer.user.toString() !== req.user.id) {
+    if (
+      (isOwner && customer.user.toString() !== user._id.toString()) ||
+      (!isOwner && customer.user.toString !== user.owner.toString())
+    ) {
       return res.status(401).json({ msg: 'User not authorized' });
     }
 
@@ -1160,10 +1435,8 @@ router.patch('/:customerId/information', auth, async (req, res) => {
       (customer.serviceZip = serviceZip),
       (customer.email = email),
       (customer.gateCode = gateCode),
-      (customer.servicePackageAndRate = servicePackageAndRate),
-      (customer.technician = technician),
-      (customer.technicianName = technicianName);
-    await customer.save();
+      (customer.poolType = poolType),
+      await customer.save();
 
     res.status(200).json(customer);
   } catch (err) {
@@ -1483,6 +1756,7 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
             customer.customer._id.toString() === e.customer._id.toString()
         )
       ) {
+        return;
         const newCustomer = {
           customer: e.customer,
           type: 'Work Order',
@@ -1507,6 +1781,8 @@ router.get('/route/:techId/:day', auth, async (req, res) => {
         }
       }
     });
+
+    console.log(filteredCustomers);
 
     // orders.map(e => {
     //   // console.log(

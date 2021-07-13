@@ -13,10 +13,15 @@ import emailExample from '../../img/emails/Example.JPG';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
 import {
   updateAccountEmailSettings,
   updateAccountEmailReadings,
-  getEmailSettings
+  getEmailSettings,
+  getGlobalChecklist,
+  updateGlobalChecklist,
+  addItemGlobalChecklist
 } from '../../actions/customer';
 
 import {
@@ -59,7 +64,9 @@ import {
   NavItem,
   NavLink,
   CardText,
-  CardTitle
+  CardTitle,
+  ListGroup,
+  ListGroupItem
 } from 'reactstrap';
 
 import { Formik } from 'formik';
@@ -84,6 +91,11 @@ const Settings = ({
   createConnectAccount,
   getAccountBalance,
   createProduct,
+  match,
+  getGlobalChecklist,
+  updateGlobalChecklist,
+  addItemGlobalChecklist,
+  checklist,
   businessInfo: { businessInfo, emailSettings, loading, emailLoading },
   auth: { user, isAuthenticated }
 }) => {
@@ -97,6 +109,108 @@ const Settings = ({
       getAccountBalance();
     }
   }, [user, isAuthenticated, getAccountBalance]);
+
+  const [itemList, updateItemList] = useState(null);
+  const [itemListLoading, setItemListLoading] = useState(false);
+
+  const [addItemModal, setAddItemModal] = useState({
+    isOpen: false,
+    isLoading: false
+  });
+
+  const toggleAddModal = () => {
+    setAddItemModal({ ...addItemModal, isOpen: !addItemModal.isOpen });
+  };
+
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    active: null,
+    isLoading: false
+  });
+
+  const deleteModalToggle = itemId => {
+    setDeleteModal({
+      ...deleteModal,
+      isOpen: !deleteModal.isOpen,
+      active: itemId
+    });
+  };
+
+  const deleteItemHandler = async () => {
+    setDeleteModal({ ...deleteModal, isLoading: true });
+    let newList = [...itemList];
+
+    newList.splice(
+      itemList.findIndex(item => item._id === deleteModal.active),
+      1
+    );
+
+    await updateItemList(newList);
+    await updateGlobalChecklist(newList);
+
+    setDeleteModal({ ...deleteModal, isLoading: false, isOpen: false });
+  };
+
+  const [editModal, setEditModal] = useState({
+    active: null,
+    activeContent: null,
+    isOpen: false,
+    isLoading: false
+  });
+
+  const toggleEditModal = (itemId, itemContent) => {
+    setEditModal({
+      ...editModal,
+      active: itemId,
+      activeContent: itemContent,
+      isOpen: !editModal.isOpen
+    });
+  };
+
+  const formRef = useRef();
+
+  const handleSubmit = () => {
+    if (formRef.current) {
+      formRef.current.handleSubmit();
+    }
+  };
+
+  const addRef = useRef();
+
+  const handleAddItem = () => {
+    if (addRef.current) {
+      addRef.current.handleSubmit();
+    }
+  };
+
+  const handleOnDragEnd = result => {
+    if (!result.destination) return;
+    const items = Array.from(itemList);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    updateItemList(items);
+  };
+
+  useEffect(() => {
+    // if (itemListLoading === true) return;
+    updateItemList(checklist);
+    // console.log('updated');
+  }, [checklist]);
+
+  useEffect(() => {
+    async function getData() {
+      await getGlobalChecklist();
+    }
+    getData();
+  }, [getGlobalChecklist]);
+
+  const onSaveHandler = async () => {
+    setItemListLoading(true);
+    await updateGlobalChecklist(itemList);
+    await getGlobalChecklist();
+    setItemListLoading(false);
+  };
 
   const [activeTab, setActiveTab] = useState('1');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -518,6 +632,19 @@ const Settings = ({
                               }}
                             >
                               Email Chemical Fields
+                            </NavLink>
+                          </NavItem>
+
+                          <NavItem>
+                            <NavLink
+                              className={classnames({
+                                active: activeTab === '6'
+                              })}
+                              onClick={() => {
+                                toggle('6');
+                              }}
+                            >
+                              Default Service Checklist
                             </NavLink>
                           </NavItem>
                         </Nav>
@@ -1678,6 +1805,342 @@ const Settings = ({
                             </Col>
                           </Row>
                         </TabPane>
+
+                        <TabPane tabId='6'>
+                          <Row>
+                            <Col sm='12'>
+                              <Container className='mgn-top-30'>
+                                {' '}
+                                <div className='row align-items-center'>
+                                  <Col lg={{ size: 'auto' }}>
+                                    <h3 className='mb-0'>
+                                      Manage Default Checklist
+                                    </h3>
+                                    <small>
+                                      Drag and Drop Items to Rearrange Their
+                                      Order.
+                                    </small>
+                                  </Col>
+                                  <Col lg={{ size: 'auto', offset: 5 }}>
+                                    <Button
+                                      className='btn-icon'
+                                      color='success'
+                                      onClick={onSaveHandler}
+                                    >
+                                      <span className='btn-inner--icon'>
+                                        <i className='fas fa-save'></i>
+                                      </span>
+                                      <span className='btn-inner--text'>
+                                        Save Changes
+                                      </span>
+                                    </Button>
+                                  </Col>
+                                </div>
+                                <br />
+                                {!checklist ||
+                                itemList === null ||
+                                checklist.length < 1 ? (
+                                  <Fragment>
+                                    <div className='text-center'>
+                                      <h3>No Items Found...</h3>
+
+                                      <p>Try adding one!</p>
+                                      <br />
+                                      <Button
+                                        className='btn-icon'
+                                        color='primary'
+                                        onClick={() => toggleAddModal()}
+                                      >
+                                        <span className='btn-inner--icon'>
+                                          <i className='fas fa-plus'></i>
+                                        </span>
+                                        <span className='btn-inner--text'>
+                                          Add Item
+                                        </span>
+                                      </Button>
+                                    </div>
+                                  </Fragment>
+                                ) : (
+                                  <DragDropContext onDragEnd={handleOnDragEnd}>
+                                    <Droppable droppableId='items'>
+                                      {provided => (
+                                        <div
+                                          {...provided.droppableProps}
+                                          ref={provided.innerRef}
+                                        >
+                                          {itemListLoading ? (
+                                            <div className='text-center'>
+                                              <SpinnerCircular
+                                                size={24}
+                                                thickness={180}
+                                                speed={100}
+                                                color='rgba(57, 125, 172, 1)'
+                                                secondaryColor='rgba(0, 0, 0, 0.44)'
+                                              />{' '}
+                                              <h3>Processing Changes...</h3>
+                                            </div>
+                                          ) : (
+                                            <Fragment>
+                                              <ListGroup>
+                                                {itemList.map((item, index) => (
+                                                  <Draggable
+                                                    key={item._id}
+                                                    draggableId={item._id}
+                                                    index={index}
+                                                  >
+                                                    {provided => (
+                                                      <div
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        ref={provided.innerRef}
+                                                      >
+                                                        <Fragment>
+                                                          <ListGroupItem className='mgn-btm-10'>
+                                                            <i className='fas fa-bars'></i>{' '}
+                                                            {item.item}{' '}
+                                                            <Button
+                                                              size='sm'
+                                                              color='primary'
+                                                              onClick={() =>
+                                                                toggleEditModal(
+                                                                  item._id,
+                                                                  item.item
+                                                                )
+                                                              }
+                                                            >
+                                                              Edit
+                                                            </Button>
+                                                            <Button
+                                                              size='sm'
+                                                              color='danger'
+                                                              onClick={() =>
+                                                                deleteModalToggle(
+                                                                  item._id
+                                                                )
+                                                              }
+                                                            >
+                                                              Delete
+                                                            </Button>
+                                                          </ListGroupItem>
+                                                        </Fragment>
+                                                      </div>
+                                                    )}
+                                                  </Draggable>
+                                                ))}
+                                                {provided.placeholder}
+                                              </ListGroup>
+                                              <Modal
+                                                isOpen={editModal.isOpen}
+                                                toggle={toggleEditModal}
+                                              >
+                                                <ModalHeader
+                                                  toggle={toggleEditModal}
+                                                >
+                                                  Edit Item:{' '}
+                                                  {editModal.activeContent}
+                                                </ModalHeader>
+
+                                                <Formik
+                                                  initialValues={{
+                                                    item:
+                                                      editModal.activeContent
+                                                  }}
+                                                  innerRef={formRef}
+                                                  onSubmit={async data => {
+                                                    const index = itemList.findIndex(
+                                                      item =>
+                                                        item._id ===
+                                                        editModal.active
+                                                    );
+                                                    const original = [
+                                                      ...itemList
+                                                    ];
+                                                    original[index].item =
+                                                      data.item;
+                                                    await updateItemList(
+                                                      original
+                                                    );
+                                                    onSaveHandler();
+                                                    setEditModal({
+                                                      ...editModal,
+                                                      isOpen: false
+                                                    });
+                                                  }}
+                                                  render={({
+                                                    handleSubmit,
+                                                    handleChange,
+                                                    handleBlur,
+                                                    values,
+                                                    errors,
+                                                    touched
+                                                  }) => (
+                                                    <Fragment>
+                                                      <ModalBody>
+                                                        <Form
+                                                          onSubmit={
+                                                            handleSubmit
+                                                          }
+                                                        >
+                                                          <Row>
+                                                            <Col lg='12'>
+                                                              <FormGroup>
+                                                                <Label>
+                                                                  Item:
+                                                                </Label>
+                                                                <Input
+                                                                  type='text'
+                                                                  name='item'
+                                                                  value={
+                                                                    values.item
+                                                                  }
+                                                                  onChange={
+                                                                    handleChange
+                                                                  }
+                                                                  onBlur={
+                                                                    handleBlur
+                                                                  }
+                                                                />
+                                                              </FormGroup>
+                                                            </Col>
+                                                          </Row>
+                                                        </Form>
+                                                      </ModalBody>
+                                                    </Fragment>
+                                                  )}
+                                                />
+
+                                                <ModalFooter>
+                                                  <Button
+                                                    onClick={toggleEditModal}
+                                                  >
+                                                    Cancel
+                                                  </Button>
+                                                  <Button
+                                                    color='success'
+                                                    onClick={handleSubmit}
+                                                  >
+                                                    Save Changes
+                                                  </Button>
+                                                </ModalFooter>
+                                              </Modal>
+                                              <div className='text-center mgn-top-50'>
+                                                <Button
+                                                  className='btn-icon'
+                                                  color='primary'
+                                                  onClick={toggleAddModal}
+                                                >
+                                                  <span className='btn-inner--icon'>
+                                                    <i className='fas fa-plus'></i>
+                                                  </span>
+                                                  <span className='btn-inner--text'>
+                                                    Add Item
+                                                  </span>
+                                                </Button>
+                                              </div>
+                                            </Fragment>
+                                          )}
+                                        </div>
+                                      )}
+                                    </Droppable>
+                                  </DragDropContext>
+                                )}
+                                <Modal
+                                  isOpen={addItemModal.isOpen}
+                                  toggle={toggleAddModal}
+                                >
+                                  <ModalHeader toggle={toggleAddModal}>
+                                    Add New Item:
+                                  </ModalHeader>
+                                  <ModalBody>
+                                    <Formik
+                                      initialValues={{
+                                        item: ''
+                                      }}
+                                      innerRef={addRef}
+                                      onSubmit={async data => {
+                                        await addItemGlobalChecklist(data);
+                                        await getGlobalChecklist();
+                                        toggleAddModal();
+                                      }}
+                                      render={({
+                                        handleSubmit,
+                                        handleChange,
+                                        handleBlur,
+                                        values,
+                                        errors,
+                                        touched
+                                      }) => (
+                                        <Fragment>
+                                          <Form onSubmit={handleSubmit}>
+                                            <FormGroup>
+                                              <Label>Item Content:</Label>
+                                              <Input
+                                                type='text'
+                                                name='item'
+                                                placeholder='Item Content...'
+                                                value={values.item}
+                                                onChange={handleChange}
+                                                onBlur={handleBlur}
+                                              />
+                                            </FormGroup>
+                                          </Form>
+                                        </Fragment>
+                                      )}
+                                    />
+                                  </ModalBody>
+                                  <ModalFooter>
+                                    <Button onClick={toggleAddModal}>
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      color='success'
+                                      onClick={handleAddItem}
+                                    >
+                                      Save Item
+                                    </Button>
+                                  </ModalFooter>
+                                </Modal>
+                                <Modal
+                                  isOpen={deleteModal.isOpen}
+                                  toggle={deleteModalToggle}
+                                >
+                                  <ModalHeader toggle={deleteModalToggle}>
+                                    Are You Sure?
+                                  </ModalHeader>
+                                  <ModalBody>
+                                    This will delete this item. This action is
+                                    permanent and cannot be undone.
+                                  </ModalBody>
+                                  <ModalFooter>
+                                    <Button onClick={deleteModalToggle}>
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      color='danger'
+                                      onClick={deleteItemHandler}
+                                    >
+                                      {deleteModal.isLoading ? (
+                                        <span>
+                                          <SpinnerCircular
+                                            size={24}
+                                            thickness={180}
+                                            speed={100}
+                                            color='rgba(57, 125, 172, 1)'
+                                            secondaryColor='rgba(0, 0, 0, 0.44)'
+                                          />
+                                          Processing...
+                                        </span>
+                                      ) : (
+                                        <span>Delete Item</span>
+                                      )}
+                                    </Button>
+                                  </ModalFooter>
+                                </Modal>
+                                <Footer />
+                              </Container>
+                            </Col>
+                          </Row>
+                        </TabPane>
                       </TabContent>
                     </CardBody>
                   </Fragment>
@@ -1703,6 +2166,10 @@ Settings.propTypes = {
   createConnectAccount: PropTypes.func.isRequired,
   getAccountBalance: PropTypes.func.isRequired,
   createProduct: PropTypes.func.isRequired,
+  getGlobalChecklist: PropTypes.func.isRequired,
+  updateGlobalChecklist: PropTypes.func.isRequired,
+  addItemGlobalChecklist: PropTypes.func.isRequired,
+  checklist: PropTypes.array.isRequired,
   businessInfo: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired
   // emailSettings: PropTypes.object.isRequired
@@ -1710,7 +2177,8 @@ Settings.propTypes = {
 
 const mapStateToProps = state => ({
   businessInfo: state.user,
-  auth: state.auth
+  auth: state.auth,
+  checklist: state.customer.checklist
 });
 
 export default connect(mapStateToProps, {
@@ -1723,5 +2191,8 @@ export default connect(mapStateToProps, {
   updateMyPassword,
   createConnectAccount,
   getAccountBalance,
-  createProduct
+  createProduct,
+  getGlobalChecklist,
+  updateGlobalChecklist,
+  addItemGlobalChecklist
 })(Settings);

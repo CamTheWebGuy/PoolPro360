@@ -155,7 +155,11 @@ export const updateBillingRate = (
 };
 
 // Add Customer Subscription
-export const addSubscription = (billingStart, customerId) => async dispatch => {
+export const addSubscription = (
+  billingStart,
+  customerId,
+  billingFrequency
+) => async dispatch => {
   const config = {
     headers: {
       'Content-Type': 'application/json'
@@ -163,7 +167,8 @@ export const addSubscription = (billingStart, customerId) => async dispatch => {
   };
 
   const body = JSON.stringify({
-    billingStart
+    billingStart,
+    billingFrequency
   });
 
   try {
@@ -202,6 +207,24 @@ export const pauseSubscription = (date, customerId) => async dispatch => {
       config
     );
     dispatch(setAlert('Subscription Paused', 'success'));
+  } catch (err) {
+    console.log(err);
+    const errors = err.response.data.errors;
+
+    if (errors) {
+      errors.forEach(error => dispatch(setAlert(error.msg, 'danger')));
+    }
+  }
+};
+
+// Cancel Customer Subscription
+export const cancelSubscription = customerId => async dispatch => {
+  try {
+    const res = await axios.post(
+      `/api/stripe/subscription/cancel/${customerId}`
+    );
+
+    dispatch(setAlert('Subscription Cancelled', 'success'));
   } catch (err) {
     console.log(err);
     const errors = err.response.data.errors;
