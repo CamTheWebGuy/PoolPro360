@@ -93,7 +93,12 @@ const Payments = ({
   customers: { customers, loading }
 }) => {
   useEffect(() => {
-    if (user && isAuthenticated && user.stripe_seller.charges_enabled) {
+    if (
+      user &&
+      isAuthenticated &&
+      user.stripe_seller &&
+      user.stripe_seller.charges_enabled
+    ) {
       getAccountBalance();
     }
   }, [user, isAuthenticated, getAccountBalance]);

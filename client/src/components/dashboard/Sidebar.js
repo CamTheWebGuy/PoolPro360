@@ -142,17 +142,19 @@ const Sidebar = ({ active, auth: { user, isAuthenticated, loading } }) => {
                           <span className='nav-link-text'>Booking Forms</span>
                         </Link>{' '}
                       </li> */}
-                      <li className='nav-item nav-ctrl'>
-                        <Link
-                          className={`nav-link ${
-                            active === 'users' ? 'active' : ''
-                          }`}
-                          to='/users'
-                        >
-                          <i className='ni ni-circle-08 text-default' />
-                          <span className='nav-link-text'>Users</span>
-                        </Link>
-                      </li>
+                      {user.role === 'Owner' && (
+                        <li className='nav-item nav-ctrl'>
+                          <Link
+                            className={`nav-link ${
+                              active === 'users' ? 'active' : ''
+                            }`}
+                            to='/users'
+                          >
+                            <i className='ni ni-circle-08 text-default' />
+                            <span className='nav-link-text'>Users</span>
+                          </Link>
+                        </li>
+                      )}
                     </Fragment>
                   )}
 
